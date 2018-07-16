@@ -84,9 +84,11 @@ class efficiency:
         
         ptbin  = self.ptBin
         etabin = self.etaBin
-        errData2 = 1.0 / (1.0/(self.errEffData*self.errEffData)+1.0/(eff.errEffData*eff.errEffData))
-        wData1   = 1.0 / (self.errEffData * self.errEffData) * errData2
-        wData2   = 1.0 / (eff .errEffData * eff .errEffData) * errData2
+        errEffData = self.errEffData if self.errEffData else 1.
+        efferrEffData = eff.errEffData if eff.errEffData else 1.
+        errData2 = 1.0 / (1.0/(errEffData*errEffData)+1.0/(efferrEffData*efferrEffData))
+        wData1   = 1.0 / (errEffData * errEffData) * errData2
+        wData2   = 1.0 / (efferrEffData * efferrEffData) * errData2
         newEffData      = wData1 * self.effData + wData2 * eff.effData;
         newErrEffData   = math.sqrt(errData2)
         
@@ -248,10 +250,10 @@ class efficiencyList:
         xbinsTab = np.array(xbins)
         ybinsTab = np.array(ybins)
 
-        htitle = 'e/#gamma scale factors'
+        htitle = 'lepton scale factors'
         hname  = 'h2_scaleFactorsEGamma' 
         if onlyError >= 0:
-            htitle = 'e/#gamma uncertainties'
+            htitle = 'lepton uncertainties'
             hname  = 'h2_uncertaintiesEGamma'             
 
         h2 = rt.TH2F(hname,htitle,xbinsTab.size-1,xbinsTab,ybinsTab.size-1,ybinsTab)
@@ -288,7 +290,7 @@ class efficiencyList:
                         else:                        
                             averageMC   = (effPlus.effMC   + effMinus.effMC  )/2.
                         ### so this is h2D bin is inside the bining used by e/gamma POG
-                        h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effData      / self.effList[ptBin][etaBin].effMC)
+                        h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effData      / (self.effList[ptBin][etaBin].effMC if self.effList[ptBin][etaBin].effMC else 1.) )
                         h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].systCombined / averageMC )
                         if onlyError   == 0 :
                             h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].systCombined      / averageMC  )
@@ -310,7 +312,7 @@ class efficiencyList:
                                 denominator = self.effList[ptBin][etaBin].systCombined
                             h2.SetBinContent(ix,iy, abs(self.effList[ptBin][etaBin].syst[onlyError-1]) / denominator )
 
-        h2.GetXaxis().SetTitle("SuperCluster #eta")
+        h2.GetXaxis().SetTitle("#eta")
         h2.GetYaxis().SetTitle("p_{T} [GeV]")
         return h2
         
@@ -345,8 +347,8 @@ class efficiencyList:
                     aValue  = effAverage.effData
                     anError = effAverage.systCombined 
                     if doScaleFactor :
-                        aValue  = effAverage.effData      / effAverage.effMC
-                        anError = effAverage.systCombined / effAverage.effMC  
+                        aValue  = effAverage.effData      / (effAverage.effMC if effAverage.effMC else 1.)
+                        anError = effAverage.systCombined / (effAverage.effMC if effAverage.effMC else 1.)
                     listOfGraphs[etaBin].append( {'min': ptBin[0], 'max': ptBin[1],
                                                   'val': aValue  , 'err': anError } ) 
                                                   
@@ -405,8 +407,8 @@ class efficiencyList:
                 aValue  = effAverage.effData
                 anError = effAverage.systCombined 
                 if typeGR == 1:
-                    aValue  = effAverage.effData      / effAverage.effMC
-                    anError = effAverage.systCombined / effAverage.effMC  
+                    aValue  = effAverage.effData      / ( effAverage.effMC if effAverage.effMC else 1.)
+                    anError = effAverage.systCombined / ( effAverage.effMC if effAverage.effMC else 1.)
                 if typeGR == -1:
                     aValue  = effAverage.effMC
                     anError = 0#effAverage.errEffMC

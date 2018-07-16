@@ -88,13 +88,17 @@ def histPlotter( filename, tnpBin, plotDir ):
 
     c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
     c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
+    c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
 
 
 def computeEffi( n1,n2,e1,e2):
     effout = []
-    eff   = n1/(n1+n2)
-    e_eff = 1/(n1+n2)*math.sqrt(e1*e1*n2*n2+e2*e2*n1*n1)/(n1+n2)
-    if e_eff < 0.001 : e_eff = 0.001
+    if (n1+n2):
+        eff   = n1/(n1+n2)
+        e_eff = 1/(n1+n2)*math.sqrt(e1*e1*n2*n2+e2*e2*n1*n1)/(n1+n2)
+        if e_eff < 0.001 : e_eff = 0.001
+    else:
+        eff, e_eff = 1.1, 0.01
 
     effout.append(eff)
     effout.append(e_eff)

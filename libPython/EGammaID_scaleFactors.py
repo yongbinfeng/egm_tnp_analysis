@@ -28,10 +28,15 @@ def isFloat( myFloat ):
 
 
 
-graphColors = [rt.kBlack, rt.kGray+1, rt.kRed +1, rt.kRed-2, rt.kAzure+2, rt.kAzure-1, 
-               rt.kSpring-1, rt.kYellow -2 , rt.kYellow+1,
-               rt.kBlack, rt.kBlack, rt.kBlack, 
-               rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack ]
+## graphColors = [rt.kBlack, rt.kGray+1, rt.kRed +1, rt.kRed-2, rt.kAzure+2, rt.kAzure-1, 
+##                rt.kSpring-1, rt.kYellow -2 , rt.kYellow+1,
+##                rt.kBlack, rt.kBlack, rt.kBlack, 
+##                rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack ]
+
+graphColors = [rt.kBlack, rt.kGray+1, rt.kBlue-3, rt.kBlue-9, rt.kAzure-4, rt.kAzure+8, #rt.kCyan-3, rt.kCyan-7,rt.kTeal-5, rt.kTeal+8,
+               rt.kGreen-3, rt.kSpring+10, 
+               rt.kOrange-2, rt.kOrange+1, rt.kRed-3, rt.kRed-9, rt.kPink-2,
+               rt.kMagenta-3, rt.kViolet, rt.kCyan-7, rt.kTeal-5, rt.kYellow+1, rt.kYellow-4, rt.kOrange-8, rt.kPink-4, rt.kGray+3]
 
 
 
@@ -103,7 +108,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     p1.SetLeftMargin( c.GetLeftMargin() )
     p2.SetLeftMargin( c.GetLeftMargin() )
     firstGraph = True
-    leg = rt.TLegend(0.5,0.80,0.95 ,0.92)
+    leg = rt.TLegend(0.7,0.55,0.95 ,0.92) if xAxis=='pT' else rt.TLegend(0.7, 0.7, 0.95, 0.92)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
 
@@ -115,10 +120,10 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     xMin = 10
     xMax = 200
     if 'pT' in xAxis or 'pt' in xAxis:
-        p1.SetLogx()
-        p2.SetLogx()    
-        xMin = 10
-        xMax = 500
+        ## p1.SetLogx()
+        ## p2.SetLogx()    
+        xMin = 20
+        xMax = 60
     elif 'vtx' in xAxis or 'Vtx' in xAxis or 'PV' in xAxis:
         xMin =  3
         xMax = 42
@@ -166,7 +171,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         
         grBinsSF.GetHistogram().GetXaxis().SetTitleOffset(1)
         if 'eta' in xAxis or 'Eta' in xAxis:
-            grBinsSF.GetHistogram().GetXaxis().SetTitle("SuperCluster #eta")
+            grBinsSF.GetHistogram().GetXaxis().SetTitle("lepton #eta")
         elif 'pt' in xAxis or 'pT' in xAxis:
             grBinsSF.GetHistogram().GetXaxis().SetTitle("p_{T}  [GeV]")  
         elif 'vtx' in xAxis or 'Vtx' in xAxis or 'PV' in xAxis:
@@ -265,8 +270,8 @@ def diagnosticErrorPlot( effgr, ierror, nameout ):
     h2_sfErrorAbs.SetMaximum(min(h2_sfErrorAbs.GetMaximum(),0.2))
     h2_sfErrorRel.SetMinimum(0)
     h2_sfErrorRel.SetMaximum(1)
-    h2_sfErrorAbs.SetTitle('e/#gamma absolute SF syst: %s ' % errorNames[ierror])
-    h2_sfErrorRel.SetTitle('e/#gamma relative SF syst: %s ' % errorNames[ierror])
+    h2_sfErrorAbs.SetTitle('lepton absolute SF syst: %s ' % errorNames[ierror])
+    h2_sfErrorRel.SetTitle('lepton relative SF syst: %s ' % errorNames[ierror])
     c2D_Err.cd(1)
     h2_sfErrorAbs.DrawCopy("colz TEXT45")
     c2D_Err.cd(2)
@@ -278,7 +283,7 @@ def diagnosticErrorPlot( effgr, ierror, nameout ):
 
 def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
     print " Opening file: %s (plot lumi: %3.1f)" % ( filein, lumi )
-    CMS_lumi.lumi_13TeV = "%+3.1f fb^{-1}" % lumi 
+    CMS_lumi.lumi_13TeV = "%3.1f fb^{-1}" % lumi 
 
     nameOutBase = filein 
     if not os.path.exists( filein ) :
