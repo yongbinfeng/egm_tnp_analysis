@@ -1,3 +1,8 @@
+## steps similar to TnP, but the histogram making is multiplied by nResamples (i.e. 500), so this step has to be submitted in batch.
+# python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID --checkBins
+# python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID --createBins
+# python etc/scripts/submitBootstrapHists.py -n 500 -r 8 --outdir condor_out # (this runs the --createHists step)
+# rest is still not implemented......... 
 
 ### python specific import
 import argparse
