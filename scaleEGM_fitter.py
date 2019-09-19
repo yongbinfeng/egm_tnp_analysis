@@ -21,6 +21,7 @@ parser.add_argument('--sumUp'      , action='store_true'  , help = 'sum up effic
 parser.add_argument('--iBin'       , dest = 'binNumber'   , type = int,  default=-1, help='bin number (to refit individual bin)')
 parser.add_argument('--flag'       , default = None       , help ='WP to test')
 parser.add_argument('settings'     , default = None       , help = 'setting file [mandatory]')
+parser.add_argument('--iResample'  , dest = 'statResample' , type = int,  default=0, help='resample number for bootstrapping')
 
 
 args = parser.parse_args()
@@ -98,7 +99,7 @@ if args.createHists:
             var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
             if sample.mcTruth:
                 var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
-            tnpRoot.makeBootstrapHistograms( sample, tnpConf.flags[args.flag], tnpBins, var, nResamples=3 )
+            tnpRoot.makeBootstrapHistograms( sample, tnpConf.flags[args.flag], tnpBins, var, args.statResample )
 
     sys.exit(0)
 
