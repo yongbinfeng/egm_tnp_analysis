@@ -1,5 +1,6 @@
 import ROOT as rt
 import math
+import numpy as np
 from fitUtils import *
 #from fitSimultaneousUtils import *
     
@@ -78,6 +79,77 @@ def makePassFailHistograms( sample, flag, bindef, var ):
         print '    ==> pass: %.1f +/- %.1f ; fail : %.1f +/- %.1f : eff: %1.3f +/- %1.3f' % (passI,epass,failI,efail,eff,e_eff)
     outfile.Close()
 
+
+def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
+    ## open rootfile
+    tree = rt.TChain(sample.tree)
+    for p in sample.path:
+        print ' adding rootfile: ', p
+        tree.Add(p)
+    
+    if not sample.puTree is None:
+        print ' - Adding weight tree: %s from file %s ' % (sample.weight.split('.')[0], sample.puTree)
+        tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
+
+    ## open outputFile
+    histFile = sample.histFile.replace('.root','_stat{istat}.root'.format(istat=resample))
+    outfile = rt.TFile(histFile,'recreate')
+
+    seed = 123456789+resample
+    np.random.seed(seed)
+    for ib in range(len(bindef['bins'])):
+
+        ## select the events passing cuts
+        cuts = bindef['bins'][ib]['cut']
+        if sample.mcTruth :
+            cuts = '%s && mcTrue==1' % cuts
+        if not sample.cut is None :
+            cuts = '%s && %s' % (cuts,sample.cut)
+        
+        notflag = '!(%s)' % flag
+        
+        if sample.isMC and not sample.weight is None:
+            cutPass = '( %s && %s ) * %s ' % (cuts,    flag, sample.weight)
+            if sample.maxWeight < 999:
+                cutPass = '( %s && %s ) * (%s < %f ? %s : 1.0 )' % (cuts,    flag, sample.weight,sample.maxWeight,sample.weight)
+        else:
+            cutPass = '( %s && %s )' % (cuts,    flag)
+     
+        tree.Draw('>>elist',cutPass)
+        elist = rt.gDirectory.Get('elist')
+
+        print "Tot events = ",tree.GetEntries()," selected by the cut ",cutPass," = ",elist.GetN()
+
+        print "Resampling # ",resample
+        ## get the list of resampled events
+        entriesList = range(elist.GetN())
+        resamples = np.random.choice(entriesList, size=len(entriesList))
+        
+        hPass = rt.TH1D('{name}_Stat{i}'.format(name=bindef['bins'][ib]['name'],i=resample),bindef['bins'][ib]['title'],var['nbins'],var['min'],var['max'])
+        hPass.Sumw2()
+    
+        ## fill the histograms
+        print "Now looping on the resampled dataset to fill ",hPass.GetName()
+        tree.SetBranchStatus("*",0)
+        tree.SetBranchStatus(var['name'],1)
+        for ie,entry in enumerate(resamples):
+            if ie%1000==0: print "Processing selected event ",ie," / ",len(resamples)
+            tev = elist.GetEntry(entry)
+            tree.GetEntry(tev)
+            hPass.Fill(getattr(tree,var['name']))
+        tree.SetBranchStatus("*",1)
+
+        removeNegativeBins(hPass)
+     
+        hPass.Write(hPass.GetName())
+     
+        bin1 = 1
+        bin2 = hPass.GetXaxis().GetNbins()
+        epass = rt.Double(-1.0)
+        passI = hPass.IntegralAndError(bin1,bin2,epass)
+        print cuts
+        print '    ==> Resample ',resample,' pass: %.1f +/- %.1f ' % (passI,epass)
+    outfile.Close()
 
 
 
