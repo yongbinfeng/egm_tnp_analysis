@@ -134,7 +134,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
 #############################################################
 ########## nominal scale fitter
 #############################################################
-def histScaleFitterNominal( sample, tnpBin, tnpWorkspaceParam, resample ):
+def histScaleFitterNominal( sample, tnpBin, tnpWorkspaceParam, resample, batch=False ):
         
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
@@ -156,7 +156,8 @@ def histScaleFitterNominal( sample, tnpBin, tnpWorkspaceParam, resample ):
 
     ## setup
     fitter.useMinos()
-    rootfile = rt.TFile(sample.nominalFit,'update')
+    rootfilename = sample.nominalFit if not batch else sample.nominalFit.replace('.root','_Stat%d.root' % resample)
+    rootfile = rt.TFile(rootfilename,'update')
     fitter.setOutputFile( rootfile )
     
     ## generated Z LineShape

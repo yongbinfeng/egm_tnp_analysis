@@ -156,7 +156,7 @@ if  args.doFit:
                 for ir in range(tnpConf.nResamples):
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
                         print "FITTING replica ",ir
-                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir )
+                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=True )
                         goodReplicas.append(ir)
                     else: 
                         print "Replica ", ir, " skipped because it is missing either the data or MC replica"

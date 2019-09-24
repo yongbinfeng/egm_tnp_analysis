@@ -92,8 +92,9 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
         tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
 
     ## open outputFile
-    histFile = sample.histFile.replace('.root','_stat{istat}.root'.format(istat=resample))
-    outfile = rt.TFile(histFile,'recreate')
+    outfilename = getattr(sample,'histFile{ir}'.format(ir=resample))
+    print "histograms output file = ",outfilename
+    outfile = rt.TFile(outfilename,'recreate')
 
     seed = 123456789+resample
     np.random.seed(seed)
@@ -353,7 +354,6 @@ def getAllScales( info, bindef, goodReplicas ):
 
         scales['dataAltBkg'] = [v,e]
     else:
-        print "cazzu cazzu"
         scales['dataAltBkg'] = [-999,-999]
     print scales
     return scales

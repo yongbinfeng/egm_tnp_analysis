@@ -1,4 +1,5 @@
 #!/bin/env python
+## USAGE (for fits): python etc/scripts/submitBootstrapHists.py -n 500 -r 4 -s doFit --outdir condor_out
 
 jobstring = '''#!/bin/sh
 ulimit -c 0 -S
@@ -48,11 +49,14 @@ if __name__ == "__main__":
     
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [options] ')
-    parser.add_option('-n'  , '--nreplicas'  , dest='nReplicas'        , type=int           , default=1 , help='make 1 data and MC replica for each job')
-    parser.add_option('-t'  , '--threads'       , dest='nThreads'      , type=int           , default=None , help='use nThreads in the fit (suggested 2 for single charge, 1 for combination)')
-    parser.add_option('-r'  , '--runtime'       , default=8            , type=int                          , help='New runtime for condor resubmission in hours. default None: will take the original one.');
-    parser.add_option('--outdir', dest='outdir', type="string", default=None, help='outdirectory');
+    parser.add_option('-n'  , '--nreplicas'  , dest='nReplicas'     , type=int           , default=1      , help='make 1 data and MC replica for each job')
+    parser.add_option('-t'  , '--threads'    , dest='nThreads'      , type=int           , default=None   , help='use nThreads in the fit (suggested 2 for single charge, 1 for combination)')
+    parser.add_option('-r'  , '--runtime'    , default=8            , type=int                            , help='New runtime for condor resubmission in hours. default None: will take the original one.');
+    parser.add_option('-s'  , '--step'       , dest='step'          , type="string", default='createHists', help='step for the tnp tool');
+    parser.add_option(        '--outdir'     , dest='outdir'        , type="string", default=None,          help='outdirectory');
     (options, args) = parser.parse_args()
+
+    toolStep = '--'+options.step
 
     absopath  = os.path.abspath(options.outdir)
     if not options.outdir:
@@ -83,7 +87,7 @@ if __name__ == "__main__":
         tmp_file = open(job_file_name, 'w')
 
         tmp_filecont = jobstring
-        cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID --createHists --iResample {res}'.format(cmssw=os.environ['CMSSW_BASE'],res=j)
+        cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID {toolstep} --iResample {res}'.format(cmssw=os.environ['CMSSW_BASE'],toolstep=toolStep,res=j)
         tmp_filecont = tmp_filecont.replace('TNPSTRING', cmd)
         tmp_filecont = tmp_filecont.replace('CMSSWBASE', os.environ['CMSSW_BASE']+'/src/')
         tmp_filecont = tmp_filecont.replace('WORKDIR', os.environ['CMSSW_BASE']+'/src/egm_tnp_analysis/')
