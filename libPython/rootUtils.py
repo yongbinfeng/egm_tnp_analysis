@@ -153,14 +153,21 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
 
 
 
-def histPlotter( filename, tnpBin, plotDir ):
+def histPlotter( filename, tnpBin, plotDir, replica=-1 ):
     print 'opening ', filename
-    print '  get canvas: ' , '%s_Canv' % tnpBin['name']
     rootfile = rt.TFile(filename,"read")
 
-    c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
-    c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
-    c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
+    if replica<0:
+        print '  get canvas: ' , '%s_Canv' % tnpBin['name']
+        c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
+        c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
+        c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
+    else:
+        print '  get canvas: ' , '%s_Canv_Stat%d' % (tnpBin['name'],replica)
+        c = rootfile.Get( '%s_Canv_Stat%d' % (tnpBin['name'],replica) )
+        c.Print( '%s/%s_Stat%d.png' % (plotDir,tnpBin['name'],replica))
+        c.Print( '%s/%s_Stat%d.pdf' % (plotDir,tnpBin['name'],replica))
+        
 
 
 def computeEffi( n1,n2,e1,e2):
@@ -301,3 +308,52 @@ def getAllEffi( info, bindef ):
     else:
         effis['dataAltBkg'] = [-1,-1]
     return effis
+
+
+
+def getAllScales( info, bindef, goodReplicas ):
+    scales = {}
+
+    if not info['dataNominal'] is None and os.path.isfile(info['dataNominal']) :
+        rootfile = rt.TFile( info['dataNominal'], 'read' )
+        from ROOT import RooFit,RooFitResult
+        for ir in goodReplicas:
+            fitresP = rootfile.Get( '%s_resP_Stat%d' % (bindef['name'],ir)  )
+
+            fitMean = fitresP.floatParsFinal().find('meanP')
+            v = fitMean.getVal()
+            e = fitMean.getError()
+            rootfile.Close()
+
+            scales['dataNominalStat%d' % ir] = [v,e]
+    else:
+        scales['dataNominal'] = [-999,-999]
+    if not info['dataAltSig'] is None and os.path.isfile(info['dataAltSig']) :
+        rootfile = rt.TFile( info['dataAltSig'], 'read' )
+        from ROOT import RooFit,RooFitResult
+        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+
+        fitMean = fitresP.floatParsFinal().find('meanP')
+        v = fitMean.getVal()
+        e = fitMean.getError()
+        rootfile.Close()
+
+        scales['dataAltSig'] = [v,e]
+    else:
+        scales['dataAltSig'] = [-999,-999]
+
+    if not info['dataAltBkg'] is None and os.path.isfile(info['dataAltBkg']):
+        rootfile = rt.TFile( info['dataAltBkg'], 'read' )
+        from ROOT import RooFit,RooFitResult
+        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitMean = fitresP.floatParsFinal().find('meanP')
+        v = fitMean.getVal()
+        e = fitMean.getError()
+        rootfile.Close()
+
+        scales['dataAltBkg'] = [v,e]
+    else:
+        print "cazzu cazzu"
+        scales['dataAltBkg'] = [-999,-999]
+    print scales
+    return scales

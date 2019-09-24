@@ -1,10 +1,11 @@
 import ROOT as rt
 rt.gROOT.LoadMacro('./libCpp/histFitter.C+')
+rt.gROOT.LoadMacro('./libCpp/histScaleFitter.C+')
 rt.gROOT.LoadMacro('./libCpp/RooCBExGaussShape.cc+')
 rt.gROOT.LoadMacro('./libCpp/RooCMSShape.cc+')
 rt.gROOT.SetBatch(1)
 
-from ROOT import tnpFitter
+from ROOT import tnpFitter,scaleFitter
 
 import re
 import math
@@ -130,6 +131,52 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
     fitter.fits(sample.mcTruth,title)
     rootfile.Close()
 
+#############################################################
+########## nominal scale fitter
+#############################################################
+def histScaleFitterNominal( sample, tnpBin, tnpWorkspaceParam, resample ):
+        
+    tnpWorkspaceFunc = [
+        "Gaussian::sigResPass(x,meanP,sigmaP)",
+        "Gaussian::sigResFail(x,meanF,sigmaF)",
+        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        ]
+
+    tnpWorkspace = []
+    tnpWorkspace.extend(tnpWorkspaceParam)
+    tnpWorkspace.extend(tnpWorkspaceFunc)
+    
+    ## init fitter
+    print "root file = ",getattr(sample, 'histFile%d' % resample)
+    infile = rt.TFile( getattr(sample, 'histFile%d' % resample), "read")
+    hP = infile.Get('%s_Stat%d' % (tnpBin['name'], resample) )
+    fitter = scaleFitter( hP, tnpBin['name'], resample )
+    infile.Close()
+
+    ## setup
+    fitter.useMinos()
+    rootfile = rt.TFile(sample.nominalFit,'update')
+    fitter.setOutputFile( rootfile )
+    
+    ## generated Z LineShape
+    fileTruth  = rt.TFile(getattr(sample.mcRef,'histFile%d' % resample),'read')
+    histZLineShapeP = fileTruth.Get('%s_Stat%d' % (tnpBin['name'],resample))
+    fitter.setZLineShape(histZLineShapeP)
+
+    fileTruth.Close()
+
+    ### set workspace
+    workspace = rt.vector("string")()
+    for iw in tnpWorkspace:
+        workspace.push_back(iw)
+    fitter.setWorkspace( workspace )
+
+    title = tnpBin['title'].replace(';',' - ')
+    title = title.replace('probe_sc_eta','#eta_{SC}')
+    title = title.replace('probe_Ele_pt','p_{T}')
+    fitter.fits(sample.mcTruth,title)
+    rootfile.Close()
 
 
 #############################################################

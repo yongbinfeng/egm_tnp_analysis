@@ -10,7 +10,7 @@ import os
 import sys
 import pickle
 import shutil
-
+import json
 
 parser = argparse.ArgumentParser(description='tnp EGM fitter')
 parser.add_argument('--checkBins'  , action='store_true'  , help = 'check  bining definition')
@@ -91,7 +91,12 @@ for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
     if sample is None: continue
     setattr( sample, 'tree'     ,'%s/fitter_tree' % tnpConf.tnpTreeDir )
-    setattr( sample, 'histFile' , '%s/%s_%s.root' % ( outputDirectory , sample.name, args.flag ) )
+    for ir in xrange(tnpConf.nResamples):
+        fname = '%s/%s_%s_stat%d.root' % ( outputDirectory , sample.name, args.flag, ir )
+        if not os.path.exists(fname):
+            print "WARNING! ",fname, " does not exist. Skipping this resample."
+        else:
+            setattr( sample, 'histFile%d' % ir , fname )
 
 
 if args.createHists:
@@ -130,12 +135,15 @@ for s in tnpConf.samplesDef.keys():
     setattr( sample, 'altSigFit' , '%s/%s_%s.altSigFit.root'  % ( outputDirectory , sample.name, args.flag ) )
     setattr( sample, 'altBkgFit' , '%s/%s_%s.altBkgFit.root'  % ( outputDirectory , sample.name, args.flag ) )
 
-
+    print "sample = ",sample, "mcRewf = ",sample.mcRef
 
 ### change the sample to fit is mc fit
 if args.mcSig :
     sampleToFit = tnpConf.samplesDef['mcNom']
 
+# put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
+goodReplicas = []
+fileWithGoodReplicas = 'goodReplicas.txt'
 if  args.doFit:
     sampleToFit.dump()
     for ib in range(len(tnpBins['bins'])):
@@ -145,10 +153,27 @@ if  args.doFit:
             elif args.altBkg:
                 tnpRoot.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit )
             else:
-                tnpRoot.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit )
+                for ir in range(tnpConf.nResamples):
+                    if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
+                        print "FITTING replica ",ir
+                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir )
+                        goodReplicas.append(ir)
+                    else: 
+                        print "Replica ", ir, " skipped because it is missing either the data or MC replica"
 
     args.doPlot = True
      
+    ## now dump the list of good replicas into the file
+    print "Good replicas = ", goodReplicas
+    print "Writing good replicas into ",fileWithGoodReplicas
+    fileReplicas = open(fileWithGoodReplicas,'w')
+    fileReplicas.write(json.dumps(goodReplicas))
+    fileReplicas.close()
+
+fileReplicas = open(fileWithGoodReplicas,'read')
+goodReplicas = eval(fileReplicas.read())
+print "good replicas to use = ",goodReplicas
+
 ####################################################################
 ##### dumping plots
 ####################################################################
@@ -161,7 +186,7 @@ if  args.doPlot:
     if args.altBkg : 
         fileName = sampleToFit.altBkgFit
         fitType  = 'altBkgFit'
-        
+
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.name,fitType)
     if not os.path.exists( plottingDir ):
         os.makedirs( plottingDir )
@@ -169,10 +194,12 @@ if  args.doPlot:
 
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
-            tnpRoot.histPlotter( fileName, tnpBins['bins'][ib], plottingDir )
+            for ir in goodReplicas:
+                print "plooting replica = ", ir
+                tnpRoot.histPlotter( fileName, tnpBins['bins'][ib], plottingDir, ir )
 
     print ' ===> Plots saved in <======='
-#    print 'localhost/%s/' % plottingDir
+    print 'localhost/%s/' % plottingDir
 
 
 ####################################################################
@@ -181,11 +208,9 @@ if  args.doPlot:
 if args.sumUp:
     sampleToFit.dump()
     info = {
-        'data'        : sampleToFit.histFile,
         'dataNominal' : sampleToFit.nominalFit,
         'dataAltSig'  : sampleToFit.altSigFit ,
         'dataAltBkg'  : sampleToFit.altBkgFit ,
-        'mcNominal'   : sampleToFit.mcRef.histFile,
         'mcAlt'       : None,
         'tagSel'      : None
         }
@@ -195,12 +220,12 @@ if args.sumUp:
     if not tnpConf.samplesDef['tagSel'] is None:
         info['tagSel'   ] = tnpConf.samplesDef['tagSel'].histFile
 
-    effis = None
-    effFileName ='%s/egammaEffi.txt' % outputDirectory 
-    fOut = open( effFileName,'w')
+    scales = None
+    scaleFileName ='%s/egammaScale.txt' % outputDirectory 
+    fOut = open( scaleFileName,'w')
     
     for ib in range(len(tnpBins['bins'])):
-        effis = tnpRoot.getAllEffi( info, tnpBins['bins'][ib] )
+        scales = tnpRoot.getAllScales( info, tnpBins['bins'][ib], goodReplicas )
 
         ### formatting assuming 2D bining -- to be fixed        
         v1Range = tnpBins['bins'][ib]['title'].split(';')[1].split('<')
@@ -213,20 +238,17 @@ if args.sumUp:
             print astr
             fOut.write( astr + '\n' )
             
-        astr =  '%+8.3f\t%+8.3f\t%+8.3f\t%+8.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f' % (
+        astr =  '%+8.3f\t%+8.3f\t%+8.3f\t%+8.3f\t%5.3f\t%5.3f' % (
             float(v1Range[0]), float(v1Range[2]),
             float(v2Range[0]), float(v2Range[2]),
-            effis['dataNominal'][0],effis['dataNominal'][1],
-            effis['mcNominal'  ][0],effis['mcNominal'  ][1],
-            effis['dataAltBkg' ][0],
-            effis['dataAltSig' ][0],
-            effis['mcAlt' ][0],
-            effis['tagSel'][0],
+            scales['dataAltBkg'][0],
+            scales['dataAltSig'][0],
             )
+        astr += '\t'+'\t'.join(['%+5.3f' % scales['dataNominalStat%d' % ir][0] for ir in goodReplicas])
         print astr
         fOut.write( astr + '\n' )
     fOut.close()
 
-    print 'Effis saved in file : ',  effFileName
-    import libPython.EGammaID_scaleFactors as egm_sf
-    egm_sf.doEGM_SFs(effFileName,sampleToFit.lumi)
+    print 'Effis saved in file : ',  scaleFileName
+    #import libPython.EGammaID_scaleFactors as egm_sf
+    #egm_sf.doEGM_SFs(scaleFileName,sampleToFit.lumi)
