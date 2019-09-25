@@ -49,6 +49,7 @@ if __name__ == "__main__":
     
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [options] ')
+    parser.add_option(        '--nBins'      , dest='nBins'         , type=int           , default=24     , help='make 1 job / TnP bin (data is extremely slow)')
     parser.add_option('-n'  , '--nreplicas'  , dest='nReplicas'     , type=int           , default=1      , help='make 1 data and MC replica for each job')
     parser.add_option('-t'  , '--threads'    , dest='nThreads'      , type=int           , default=None   , help='use nThreads in the fit (suggested 2 for single charge, 1 for combination)')
     parser.add_option('-r'  , '--runtime'    , default=8            , type=int                            , help='New runtime for condor resubmission in hours. default None: will take the original one.');
@@ -80,20 +81,23 @@ if __name__ == "__main__":
         os.system('mkdir {od}'.format(od=outdirCondor))
 
     srcfiles = []
+    ijob = 0
     for j in xrange(int(options.nReplicas)):
-        ## make new file for evert parameter and point
-        job_file_name = jobdir+'/job_{j}.sh'.format(j=j)
-        log_file_name = logdir+'/job_{j}.log'.format(j=j)
-        tmp_file = open(job_file_name, 'w')
-
-        tmp_filecont = jobstring
-        cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID {toolstep} --iResample {res}'.format(cmssw=os.environ['CMSSW_BASE'],toolstep=toolStep,res=j)
-        tmp_filecont = tmp_filecont.replace('TNPSTRING', cmd)
-        tmp_filecont = tmp_filecont.replace('CMSSWBASE', os.environ['CMSSW_BASE']+'/src/')
-        tmp_filecont = tmp_filecont.replace('WORKDIR', os.environ['CMSSW_BASE']+'/src/egm_tnp_analysis/')
-        tmp_file.write(tmp_filecont)
-        tmp_file.close()
-        srcfiles.append(job_file_name)
+        for b in range(int(options.nBins)):
+            ## make new file for evert parameter and point
+            job_file_name = jobdir+'/job_{ij}.sh'.format(ij=ijob)
+            log_file_name = logdir+'/job_{ij}.log'.format(ij=ijob)
+            tmp_file = open(job_file_name, 'w')
+            
+            tmp_filecont = jobstring
+            cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID {toolstep} --iResample {res} --iBin {bin} --batch '.format(cmssw=os.environ['CMSSW_BASE'],toolstep=toolStep,res=j,bin=b)
+            tmp_filecont = tmp_filecont.replace('TNPSTRING', cmd)
+            tmp_filecont = tmp_filecont.replace('CMSSWBASE', os.environ['CMSSW_BASE']+'/src/')
+            tmp_filecont = tmp_filecont.replace('WORKDIR', os.environ['CMSSW_BASE']+'/src/egm_tnp_analysis/')
+            tmp_file.write(tmp_filecont)
+            tmp_file.close()
+            srcfiles.append(job_file_name)
+            ijob += 1
     cf = makeCondorFile(jobdir,srcfiles,options, logdir, errdir, outdirCondor)
     subcmd = 'condor_submit {rf} '.format(rf = cf)
 
