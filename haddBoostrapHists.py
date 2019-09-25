@@ -19,13 +19,13 @@ if __name__ == "__main__":
     datasets = []
     for f in allfiles: 
         basename = f.split('_stat')[0]
-        if basename not in datasets: datasets.append(basename)
+        if basename not in datasets and '.root' not in basename: datasets.append(basename)
     print "==> Datasets are: ",datasets
     bins = [tnpBins['bins'][i]['name'] for i in xrange(len(tnpBins['bins']))]
     print "==> TnP bins = ", bins
 
     pwd = os.environ['PWD']
-    for istat in [64]: # range(args.resamples):
+    for istat in range(args.resamples):
         print "MERGING boostrap resample # ",istat
         haddtxt = 'haddfile.sh'
         haddfile = open(haddtxt,'w')

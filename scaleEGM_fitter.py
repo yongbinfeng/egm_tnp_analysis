@@ -26,7 +26,7 @@ parser.add_argument('--sumUp'      , action='store_true'  , help = 'sum up effic
 parser.add_argument('--iBin'       , dest = 'binNumber'   , type = int,  default=-1, help='bin number (to refit individual bin)')
 parser.add_argument('--flag'       , default = None       , help ='WP to test')
 parser.add_argument('settings'     , default = None       , help = 'setting file [mandatory]')
-parser.add_argument('--iResample'  , dest = 'statResample' , type = int,  default=0, help='resample number for bootstrapping')
+parser.add_argument('--iResample'  , dest = 'statResample' , type = int,  default=-1, help='resample number for bootstrapping')
 parser.add_argument('--batch'      , action='store_true'  , help = 'send in batch (it makes one root file/bin)')
 
 
@@ -90,7 +90,6 @@ tnpBins = pickle.load( open( '%s/bining.pkl'%(outputDirectory),'rb') )
 ####################################################################
 # put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
 goodReplicas = []
-fileWithGoodReplicas = 'goodReplicas.txt'
 for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
     if sample is None: continue
@@ -113,8 +112,7 @@ for s in tnpConf.samplesDef.keys():
     if sample is None: continue
     for ir in xrange(tnpConf.nResamples):
         if ir in goodReplicas and not hasattr(sample, 'histFile%d' % ir): goodReplicas.remove(ir)
-## now dump the list of good replicas into the file
-print "Good replicas = ", goodReplicas
+print "There are ", len(goodReplicas), " good replicas = ", goodReplicas
 print "Writing good replicas into ",fileWithGoodReplicas
 fileReplicas = open(fileWithGoodReplicas,'w')
 fileReplicas.write(json.dumps(goodReplicas))
@@ -165,7 +163,6 @@ for s in tnpConf.samplesDef.keys():
     setattr( sample, 'altSigFit' , '%s/%s_%s.altSigFit.root'  % ( outputDirectory , sample.name, args.flag ) )
     setattr( sample, 'altBkgFit' , '%s/%s_%s.altBkgFit.root'  % ( outputDirectory , sample.name, args.flag ) )
 
-    print "sample = ",sample, "mcRewf = ",sample.mcRef
 
 ### change the sample to fit is mc fit
 if args.mcSig :
@@ -180,6 +177,8 @@ if  args.doFit:
             elif args.altBkg:
                 tnpRoot.histScaleFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit, goodReplicas[0] )
             else:
+                if args.statResample>0:
+                    goodReplicas = [args.statResample] if args.statResample in goodReplicas else []
                 for ir in goodReplicas:
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
                         print "FITTING replica ",ir
@@ -190,9 +189,6 @@ if  args.doFit:
     args.doPlot = True
      
 
-fileReplicas = open(fileWithGoodReplicas,'read')
-goodReplicas = eval(fileReplicas.read())
-print "good replicas to use = ",goodReplicas
 
 ####################################################################
 ##### dumping plots
