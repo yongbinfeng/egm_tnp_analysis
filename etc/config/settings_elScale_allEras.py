@@ -1,6 +1,9 @@
 #############################################################
 ########## General settings
 #############################################################
+# number of stat resamples for bootstrapping
+nResamples = 500
+
 # selection to be Applied
 cutpassFullID = '( probe_eleTrgPt  > -1 && probe_lep_hltSafeId && probe_lep_customId )'
 
