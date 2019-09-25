@@ -27,6 +27,7 @@ parser.add_argument('--iBin'       , dest = 'binNumber'   , type = int,  default
 parser.add_argument('--flag'       , default = None       , help ='WP to test')
 parser.add_argument('settings'     , default = None       , help = 'setting file [mandatory]')
 parser.add_argument('--iResample'  , dest = 'statResample' , type = int,  default=0, help='resample number for bootstrapping')
+parser.add_argument('--batch'      , action='store_true'  , help = 'send in batch (it makes one root file/bin)')
 
 
 args = parser.parse_args()
@@ -93,13 +94,18 @@ for s in tnpConf.samplesDef.keys():
     setattr( sample, 'tree'     ,'%s/fitter_tree' % tnpConf.tnpTreeDir )
     for ir in xrange(tnpConf.nResamples):
         fname = '%s/%s_%s_stat%d.root' % ( outputDirectory , sample.name, args.flag, ir )
-        if not os.path.exists(fname):
-            print "WARNING! ",fname, " does not exist. Skipping this resample."
-        else:
+        checkHist = True
+        if not args.createHists:
+            if not os.path.exists(fname):
+                print "WARNING! ",fname, " does not exist. Skipping this resample."
+                checkHist = False
+        if checkHist:
             setattr( sample, 'histFile%d' % ir , fname )
 
-
 if args.createHists:
+    if (args.binNumber >= 0 and args.batch):
+        tnpBins['bins'] = [tnpBins['bins'][args.binNumber]]
+        print "Making histograms for the unique bin: ",tnpBins['bins']
     for sampleType in tnpConf.samplesDef.keys():
         sample =  tnpConf.samplesDef[sampleType]
         if sample is None : continue
@@ -109,7 +115,11 @@ if args.createHists:
             var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
             if sample.mcTruth:
                 var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
-            tnpRoot.makeBootstrapHistograms( sample, tnpConf.flags[args.flag], tnpBins, var, args.statResample )
+            if args.batch and args.binNumber >= 0: 
+                fname = getattr(sample,'histFile%d' % args.statResample)
+                fname = fname.replace('.root','_%s.root' % tnpBins['bins'][0]['name'])
+                setattr(sample,'histFile%d' % args.statResample, fname)
+            tnpRoot.makeBootstrapHistograms( sample, tnpConf.flags[args.flag], tnpBins, var, args.statResample)
 
     sys.exit(0)
 
@@ -143,15 +153,17 @@ if args.mcSig :
 
 # put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
 goodReplicas = []
+if args.altSig or args.altBkg:
+    goodReplicas = [64] # just a random replica
 fileWithGoodReplicas = 'goodReplicas.txt'
 if  args.doFit:
     sampleToFit.dump()
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             if args.altSig:                 
-                tnpRoot.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit )
+                tnpRoot.histScaleFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit, goodReplicas[0] )
             elif args.altBkg:
-                tnpRoot.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit )
+                tnpRoot.histScaleFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit, goodReplicas[0] )
             else:
                 for ir in range(tnpConf.nResamples):
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
@@ -199,7 +211,7 @@ if  args.doPlot:
                 tnpRoot.histPlotter( fileName, tnpBins['bins'][ib], plottingDir, ir )
 
     print ' ===> Plots saved in <======='
-    print 'localhost/%s/' % plottingDir
+    print '%s/' % plottingDir
 
 
 ####################################################################
