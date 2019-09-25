@@ -88,6 +88,9 @@ tnpBins = pickle.load( open( '%s/bining.pkl'%(outputDirectory),'rb') )
 ####################################################################
 ##### Create Histograms
 ####################################################################
+# put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
+goodReplicas = []
+fileWithGoodReplicas = 'goodReplicas.txt'
 for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
     if sample is None: continue
@@ -101,6 +104,21 @@ for s in tnpConf.samplesDef.keys():
                 checkHist = False
         if checkHist:
             setattr( sample, 'histFile%d' % ir , fname )
+
+# put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
+goodReplicas = range(tnpConf.nResamples)
+fileWithGoodReplicas = 'goodReplicas.txt'
+for s in tnpConf.samplesDef.keys():
+    sample =  tnpConf.samplesDef[s]
+    if sample is None: continue
+    for ir in xrange(tnpConf.nResamples):
+        if ir in goodReplicas and not hasattr(sample, 'histFile%d' % ir): goodReplicas.remove(ir)
+## now dump the list of good replicas into the file
+print "Good replicas = ", goodReplicas
+print "Writing good replicas into ",fileWithGoodReplicas
+fileReplicas = open(fileWithGoodReplicas,'w')
+fileReplicas.write(json.dumps(goodReplicas))
+fileReplicas.close()
 
 if args.createHists:
     if (args.binNumber >= 0 and args.batch):
@@ -134,6 +152,8 @@ if sampleToFit is None:
 
 sampleMC = tnpConf.samplesDef['mcNom']
 
+refReplica = goodReplicas[0]
+
 if sampleMC is None:
     print '[tnpEGM_fitter, prelim checks]: MC sample not available... check your settings'
     sys.exit(1)
@@ -151,11 +171,6 @@ for s in tnpConf.samplesDef.keys():
 if args.mcSig :
     sampleToFit = tnpConf.samplesDef['mcNom']
 
-# put here all the replicas which have histograms for MC and data (because of failed jobs, this could be < tnpConf.nResamples
-goodReplicas = []
-if args.altSig or args.altBkg:
-    goodReplicas = [64] # just a random replica
-fileWithGoodReplicas = 'goodReplicas.txt'
 if  args.doFit:
     sampleToFit.dump()
     for ib in range(len(tnpBins['bins'])):
@@ -165,22 +180,15 @@ if  args.doFit:
             elif args.altBkg:
                 tnpRoot.histScaleFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit, goodReplicas[0] )
             else:
-                for ir in range(tnpConf.nResamples):
+                for ir in goodReplicas:
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
                         print "FITTING replica ",ir
                         tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=True )
-                        goodReplicas.append(ir)
                     else: 
                         print "Replica ", ir, " skipped because it is missing either the data or MC replica"
 
     args.doPlot = True
      
-    ## now dump the list of good replicas into the file
-    print "Good replicas = ", goodReplicas
-    print "Writing good replicas into ",fileWithGoodReplicas
-    fileReplicas = open(fileWithGoodReplicas,'w')
-    fileReplicas.write(json.dumps(goodReplicas))
-    fileReplicas.close()
 
 fileReplicas = open(fileWithGoodReplicas,'read')
 goodReplicas = eval(fileReplicas.read())
@@ -207,8 +215,9 @@ if  args.doPlot:
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             for ir in goodReplicas:
-                print "plooting replica = ", ir
-                tnpRoot.histPlotter( fileName, tnpBins['bins'][ib], plottingDir, ir )
+                print "plotting replica = ", ir
+                irFileName = fileName.replace('.root', '_Stat%d.root' % ir)
+                tnpRoot.histPlotter( irFileName, tnpBins['bins'][ib], plottingDir, ir )
 
     print ' ===> Plots saved in <======='
     print '%s/' % plottingDir
@@ -218,6 +227,7 @@ if  args.doPlot:
 ##### dumping egamma txt file 
 ####################################################################
 if args.sumUp:
+    setattr( sampleToFit, 'nominalFit', '%s/%s_%s.nominalFit_Stat%d.root' % ( outputDirectory , sampleToFit.name, args.flag, refReplica ) )
     sampleToFit.dump()
     info = {
         'dataNominal' : sampleToFit.nominalFit,
@@ -237,7 +247,7 @@ if args.sumUp:
     fOut = open( scaleFileName,'w')
     
     for ib in range(len(tnpBins['bins'])):
-        scales = tnpRoot.getAllScales( info, tnpBins['bins'][ib], goodReplicas )
+        scales = tnpRoot.getAllScales( info, tnpBins['bins'][ib], goodReplicas, refReplica )
 
         ### formatting assuming 2D bining -- to be fixed        
         v1Range = tnpBins['bins'][ib]['title'].split(';')[1].split('<')
@@ -250,13 +260,14 @@ if args.sumUp:
             print astr
             fOut.write( astr + '\n' )
             
-        astr =  '%+8.3f\t%+8.3f\t%+8.3f\t%+8.3f\t%5.3f\t%5.3f' % (
+        astr =  '%+8.3f\t%+8.3f\t%+8.3f\t%+8.3f\t%5.3f\t%5.3f\t%5.3f' % (
             float(v1Range[0]), float(v1Range[2]),
             float(v2Range[0]), float(v2Range[2]),
-            scales['dataAltBkg'][0],
+            scales['dataNominal'][0],
             scales['dataAltSig'][0],
+            scales['dataAltBkg'][0],
             )
-        astr += '\t'+'\t'.join(['%+5.3f' % scales['dataNominalStat%d' % ir][0] for ir in goodReplicas])
+        #astr += '\t'+'\t'.join(['%+5.3f' % scales['dataNominalStat%d' % ir][0] for ir in goodReplicas])
         print astr
         fOut.write( astr + '\n' )
     fOut.close()

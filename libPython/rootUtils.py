@@ -312,7 +312,7 @@ def getAllEffi( info, bindef ):
 
 
 
-def getAllScales( info, bindef, goodReplicas ):
+def getAllScales( info, bindef, goodReplicas, referenceReplica ):
     scales = {}
 
     if not info['dataNominal'] is None and os.path.isfile(info['dataNominal']) :
@@ -332,7 +332,7 @@ def getAllScales( info, bindef, goodReplicas ):
     if not info['dataAltSig'] is None and os.path.isfile(info['dataAltSig']) :
         rootfile = rt.TFile( info['dataAltSig'], 'read' )
         from ROOT import RooFit,RooFitResult
-        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitresP = rootfile.Get( '%s_resP_Stat%d' % (bindef['name'],referenceReplica)  )
 
         fitMean = fitresP.floatParsFinal().find('meanP')
         v = fitMean.getVal()
@@ -346,7 +346,7 @@ def getAllScales( info, bindef, goodReplicas ):
     if not info['dataAltBkg'] is None and os.path.isfile(info['dataAltBkg']):
         rootfile = rt.TFile( info['dataAltBkg'], 'read' )
         from ROOT import RooFit,RooFitResult
-        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitresP = rootfile.Get( '%s_resP_Stat%d' % (bindef['name'],referenceReplica)  )
         fitMean = fitresP.floatParsFinal().find('meanP')
         v = fitMean.getVal()
         e = fitMean.getError()
@@ -355,5 +355,4 @@ def getAllScales( info, bindef, goodReplicas ):
         scales['dataAltBkg'] = [v,e]
     else:
         scales['dataAltBkg'] = [-999,-999]
-    print scales
     return scales
