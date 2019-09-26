@@ -150,7 +150,8 @@ if sampleToFit is None:
 
 sampleMC = tnpConf.samplesDef['mcNom']
 
-refReplica = goodReplicas[0]
+#refReplica = goodReplicas[0]
+refReplica = 64
 
 if sampleMC is None:
     print '[tnpEGM_fitter, prelim checks]: MC sample not available... check your settings'
@@ -233,6 +234,9 @@ if args.sumUp:
         'tagSel'      : None
         }
 
+    for ir in goodReplicas:
+        info['dataReplica%d' % ir] = '%s/%s_%s.nominalFit_Stat%d.root' % ( outputDirectory , sampleToFit.name, args.flag, ir )
+
     if not tnpConf.samplesDef['mcAlt' ] is None:
         info['mcAlt'    ] = tnpConf.samplesDef['mcAlt' ].histFile
     if not tnpConf.samplesDef['tagSel'] is None:
@@ -243,8 +247,8 @@ if args.sumUp:
     fOut = open( scaleFileName,'w')
     
     for ib in range(len(tnpBins['bins'])):
-        scales = tnpRoot.getAllScales( info, tnpBins['bins'][ib], goodReplicas, refReplica )
-
+        scales = tnpRoot.getAllScales( info, tnpBins['bins'][ib], refReplica )
+        
         ### formatting assuming 2D bining -- to be fixed        
         v1Range = tnpBins['bins'][ib]['title'].split(';')[1].split('<')
         v2Range = tnpBins['bins'][ib]['title'].split(';')[2].split('<')
@@ -260,14 +264,14 @@ if args.sumUp:
             float(v1Range[0]), float(v1Range[2]),
             float(v2Range[0]), float(v2Range[2]),
             scales['dataNominal'][0],
-            scales['dataAltSig'][0],
+            -1*scales['dataAltSig'][0], # the difinition of the bias is opposite
             scales['dataAltBkg'][0],
             )
-        #astr += '\t'+'\t'.join(['%+5.3f' % scales['dataNominalStat%d' % ir][0] for ir in goodReplicas])
+        astr += '\t'+'\t'.join(['%+5.3f' % scales['dataReplica%d' % ir][0] for ir in goodReplicas])
         print astr
         fOut.write( astr + '\n' )
     fOut.close()
 
     print 'Effis saved in file : ',  scaleFileName
-    #import libPython.EGammaID_scaleFactors as egm_sf
-    #egm_sf.doEGM_SFs(scaleFileName,sampleToFit.lumi)
+    import libPython.EGammaID_scaleSystematics as egm_scales
+    egm_scales.doEGM_Scales(scaleFileName,sampleToFit.lumi)
