@@ -273,5 +273,5 @@ if args.sumUp:
     fOut.close()
 
     print 'Effis saved in file : ',  scaleFileName
-    #import libPython.EGammaID_scaleFactors as egm_sf
-    #egm_sf.doEGM_SFs(scaleFileName,sampleToFit.lumi)
+    import libPython.EGammaID_scaleSystematics as egm_scales
+    egm_scales.doEGM_Scales(scaleFileName,sampleToFit.lumi)
