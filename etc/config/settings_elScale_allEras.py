@@ -58,7 +58,7 @@ weightName = '1.'
 ########## bining definition  [can be nD bining]
 #############################################################
 binning_eta = [-2.5,-2.0,-1.75,-1.479,-1.0,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.0,1.479,1.75,2.0,2.5]
-binning_pt  = [30, 33, 36, 39, 42, 45]
+binning_pt  = [30, 33, 36, 39, 42, 45, 48, 51, 55, 60]
 
 biningDef = [
    { 'var' : 'probe_lep_eta', 'type': 'float', 'bins': binning_eta },
