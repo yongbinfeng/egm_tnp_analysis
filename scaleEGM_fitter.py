@@ -175,7 +175,7 @@ if  args.doFit:
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             if args.altSig:                 
-                tnpRoot.histScaleFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit, goodReplicas[0], batch=True ) # this fit takes long, may split by iBin
+                tnpRoot.histScaleFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit, goodReplicas[0], batch=args.batch ) # this fit takes long, may split by iBin
             elif args.altBkg:
                 tnpRoot.histScaleFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit, goodReplicas[0] )
             else:
@@ -184,7 +184,7 @@ if  args.doFit:
                 for ir in goodReplicas:
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
                         print "FITTING replica ",ir
-                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=True )
+                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=args.batch )
                     else: 
                         print "Replica ", ir, " skipped because it is missing either the data or MC replica"
 
