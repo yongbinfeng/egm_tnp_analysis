@@ -2,16 +2,16 @@
 ########## General settings
 #############################################################
 # number of stat resamples for bootstrapping
-nResamples = 500
+nResamples = 100
 
 # selection to be Applied
 cutpassFullID = '( probe_eleTrgPt  > -1 && probe_lep_hltSafeId && probe_lep_customId )'
 
 # flag to be Tested
 flags = {
-    'ScaleFullID' : cutpassFullID
+    'ScaleV2' : cutpassFullID
     }
-baseOutDir = 'results/scaleSystematics/'
+baseOutDir = 'localresults/scaleSystematics/'
 
 #############################################################
 ########## samples definition  - preparing the samples
@@ -22,18 +22,18 @@ import etc.inputs.tnpSampleDef as tnpSamples
 tnpTreeDir = 'IDIsoToHLT'
 
 samplesDef = {
-    'data'   : tnpSamples.wmass_80X['el_Run2016B'].clone(),
+    'data'   : tnpSamples.wmass_80X['el_Run2016'].clone(),
     'mcNom'  : tnpSamples.wmass_80X['el_DY'].clone(),
     'mcAlt'  : None, #' #tnpSamples.ICHEP2016['mc_DY_amcatnlo_ele'].clone(),
     'tagSel' : None, #tnpSamples.ICHEP2016['mc_DY_madgraph_ele'].clone(),
 }
 ## can add data sample easily
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016C'] )
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016D'] )
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016E'] )
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016F'] )
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016G'] )
-samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016H'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016C'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016D'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016E'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016F'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016G'] )
+#samplesDef['data'].add_sample( tnpSamples.wmass_80X['el_Run2016H'] )
 
 ## some sample-based cuts... general cuts defined here after
 ## require mcTruth on MC DY samples and additional cuts
@@ -57,8 +57,8 @@ weightName = '1.'
 #############################################################
 ########## bining definition  [can be nD bining]
 #############################################################
-binning_eta = [-2.5,-2.0,-1.479,-1.0,0,1.0,1.479,2.0,2.5]
-binning_pt  = [30, 35, 40, 45]
+binning_eta = [-2.5,-2.0,-1.75,-1.479,-1.0,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.0,1.479,1.75,2.0,2.5]
+binning_pt  = [30, 33, 36, 39, 42, 45]
 
 biningDef = [
    { 'var' : 'probe_lep_eta', 'type': 'float', 'bins': binning_eta },

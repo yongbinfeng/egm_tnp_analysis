@@ -14,7 +14,7 @@ import efficiencyUtils as effUtil
 
 tdrstyle.setTDRStyle()
 
-def doEGM_Scales(filein, lumi, axis = ['pT (GeV)','eta'] ):
+def doEGM_Scales(filein, lumi, axis = ['p_{T} (GeV)','#eta'] ):
     print " Opening file: %s (plot lumi: %3.1f)" % ( filein, lumi )
     CMS_lumi.lumi_13TeV = "%3.1f fb^{-1}" % lumi 
 

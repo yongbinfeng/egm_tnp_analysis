@@ -50,7 +50,7 @@ if __name__ == "__main__":
     
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [options] ')
-    parser.add_option(        '--flag'       , dest='flag'          , type="flag"        , default='ScaleHighPt', help='Flag for the Scale');
+    parser.add_option(        '--flag'       , dest='flag'          , type="string"        , default='ScaleHighPt', help='Flag for the Scale');
     parser.add_option(        '--nBins'      , dest='nBins'         , type=int           , default=-1     , help='make 1 job / TnP bin (data is extremely slow)')
     parser.add_option('-n'  , '--nreplicas'  , dest='nReplicas'     , type=int           , default=500    , help='number of data/MC replicas (1 replica / job)')
     parser.add_option('-t'  , '--threads'    , dest='nThreads'      , type=int           , default=None   , help='use nThreads in the fit (suggested 2 for single charge, 1 for combination)')
