@@ -146,6 +146,8 @@ def setTDRStyle():
   # tdrStyle.SetTimeOffset(Double_t toffset)
   # tdrStyle.SetHistMinimumZero(kTRUE)
 
+  tdrStyle.SetNumberContours(200)
+
   tdrStyle.SetHatchesLineWidth(5)
   tdrStyle.SetHatchesSpacing(0.05)
 
