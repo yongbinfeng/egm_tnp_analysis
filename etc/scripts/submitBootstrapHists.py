@@ -50,6 +50,7 @@ if __name__ == "__main__":
     
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [options] ')
+    parser.add_option(        '--flag'       , dest='flag'          , type="string"        , default='ScaleHighPt', help='Flag for the Scale');
     parser.add_option(        '--nBins'      , dest='nBins'         , type=int           , default=-1     , help='make 1 job / TnP bin (data is extremely slow)')
     parser.add_option('-n'  , '--nreplicas'  , dest='nReplicas'     , type=int           , default=500    , help='number of data/MC replicas (1 replica / job)')
     parser.add_option('-t'  , '--threads'    , dest='nThreads'      , type=int           , default=None   , help='use nThreads in the fit (suggested 2 for single charge, 1 for combination)')
@@ -94,7 +95,7 @@ if __name__ == "__main__":
                     tmp_file = open(job_file_name, 'w')
                     
                     tmp_filecont = jobstring
-                    cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID {toolstep} --iResample {res} --iBin {bin} --batch '.format(cmssw=os.environ['CMSSW_BASE'],toolstep=toolStep,res=j,bin=b)
+                    cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag {flag} {toolstep} --iResample {res} --iBin {bin} --batch '.format(cmssw=os.environ['CMSSW_BASE'],flag=options.flag,toolstep=toolStep,res=j,bin=b)
                     tmp_filecont = tmp_filecont.replace('TNPSTRING', cmd)
                     tmp_filecont = tmp_filecont.replace('CMSSWBASE', os.environ['CMSSW_BASE']+'/src/')
                     tmp_filecont = tmp_filecont.replace('WORKDIR', os.environ['CMSSW_BASE']+'/src/egm_tnp_analysis/')
@@ -119,7 +120,7 @@ if __name__ == "__main__":
             tmp_file = open(job_file_name, 'w')
             
             tmp_filecont = jobstring
-            cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag ScaleFullID {toolstep} --iResample {res} --batch '.format(cmssw=os.environ['CMSSW_BASE'],toolstep=toolStep,res=res)
+            cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag {flag} {toolstep} --iResample {res} --batch '.format(cmssw=os.environ['CMSSW_BASE'],flag=options.flag,toolstep=toolStep,res=res)
             tmp_filecont = tmp_filecont.replace('TNPSTRING', cmd)
             tmp_filecont = tmp_filecont.replace('CMSSWBASE', os.environ['CMSSW_BASE']+'/src/')
             tmp_filecont = tmp_filecont.replace('WORKDIR', os.environ['CMSSW_BASE']+'/src/egm_tnp_analysis/')

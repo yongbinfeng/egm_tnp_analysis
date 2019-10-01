@@ -239,7 +239,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
 #############################################################
 ########## alternate signal scale fitter
 #############################################################
-def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample ):
+def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample, batch=False ):
 
     # here a random MC replica is used just as nominal
     tnpWorkspacePar = createWorkspaceForAltSig( sample,  tnpBin, tnpWorkspaceParam, tnpFit=False, refResample=resample )
@@ -262,6 +262,7 @@ def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample ):
     infile.Close()
 
     ## setup
+    if batch: sample.altSigFit = sample.altSigFit.replace('.root','_%s.root' % tnpBin['name'])
     rootfile = rt.TFile(sample.altSigFit,'update')
     fitter.setOutputFile( rootfile )
     

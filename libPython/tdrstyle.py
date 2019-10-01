@@ -87,7 +87,7 @@ def setTDRStyle():
 
 # For the Global title:
 
-  tdrStyle.SetOptTitle(0)
+  tdrStyle.SetOptTitle(1)
   tdrStyle.SetTitleFont(42)
   tdrStyle.SetTitleColor(1)
   tdrStyle.SetTitleTextColor(1)
@@ -145,6 +145,8 @@ def setTDRStyle():
   # tdrStyle.SetPalette(Int_t ncolors = 0, Int_t* colors = 0)
   # tdrStyle.SetTimeOffset(Double_t toffset)
   # tdrStyle.SetHistMinimumZero(kTRUE)
+
+  tdrStyle.SetNumberContours(200)
 
   tdrStyle.SetHatchesLineWidth(5)
   tdrStyle.SetHatchesSpacing(0.05)

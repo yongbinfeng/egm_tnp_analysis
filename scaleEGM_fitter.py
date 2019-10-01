@@ -93,9 +93,11 @@ goodReplicas = []
 for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
     if sample is None: continue
+    print '====> mkdir -p {odir}/{sample}'.format(odir=outputDirectory, sample=sample.name)
+    os.system('mkdir -p {odir}/{sample}'.format(odir=outputDirectory, sample=sample.name))
     setattr( sample, 'tree'     ,'%s/fitter_tree' % tnpConf.tnpTreeDir )
     for ir in xrange(tnpConf.nResamples):
-        fname = '%s/%s_%s_stat%d.root' % ( outputDirectory , sample.name, args.flag, ir )
+        fname = '%s/%s/%s_%s_stat%d.root' % ( outputDirectory, sample.name, sample.name, args.flag, ir )
         checkHist = True
         if not args.createHists:
             if not os.path.exists(fname):
@@ -150,8 +152,7 @@ if sampleToFit is None:
 
 sampleMC = tnpConf.samplesDef['mcNom']
 
-#refReplica = goodReplicas[0]
-refReplica = 64
+refReplica = goodReplicas[0]
 
 if sampleMC is None:
     print '[tnpEGM_fitter, prelim checks]: MC sample not available... check your settings'
@@ -174,16 +175,16 @@ if  args.doFit:
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             if args.altSig:                 
-                tnpRoot.histScaleFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit, goodReplicas[0] )
+                tnpRoot.histScaleFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit, goodReplicas[0], batch=args.batch ) # this fit takes long, may split by iBin
             elif args.altBkg:
                 tnpRoot.histScaleFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit, goodReplicas[0] )
             else:
-                if args.statResample>0:
+                if args.statResample>=0:
                     goodReplicas = [args.statResample] if args.statResample in goodReplicas else []
                 for ir in goodReplicas:
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
                         print "FITTING replica ",ir
-                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=True )
+                        tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=args.batch )
                     else: 
                         print "Replica ", ir, " skipped because it is missing either the data or MC replica"
 
