@@ -65,7 +65,7 @@ if args.checkBins:
     
 if args.createBins:
     if os.path.exists( outputDirectory ):
-            shutil.rmtree( outputDirectory )
+        shutil.rmtree( outputDirectory )
     os.makedirs( outputDirectory )
     tnpBins = tnpBiner.createBins(tnpConf.biningDef,tnpConf.cutBase)
     tnpBiner.tuneCuts( tnpBins, tnpConf.additionalCuts )
@@ -98,7 +98,7 @@ if args.createHists:
             var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
             if sample.mcTruth:
                 var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
-            tnpRoot.makePassFailHistograms( sample, tnpConf.flags[args.flag], tnpBins, var )
+            tnpRoot.makePassFailHistograms( sample, tnpConf.flags[args.flag], tnpBins['bins'], tnpConf.biningDef, tnpConf.cutBase, var)#tnpBins, var )
 
     sys.exit(0)
 
