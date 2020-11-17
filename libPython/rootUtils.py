@@ -52,8 +52,11 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 
     if not sample.weight is None:
         tmp_weight = sample.weight
+        print 'found sample weight of', sample.weight
     else:
         tmp_weight = 1.
+        print 'did not find sample weight, setting to 1.'
+
     if sample.maxWeight < 999:
         tmp_weight = '({w} < {mw} ? {w} : 1.0 )' .format(w=sample.weight,mw=sample.maxWeight)
 
@@ -76,9 +79,16 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     print '   passing flag', flag
 
     print 'now filling passing histogram for sample', sample.name
-    tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
+    drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
+    if drawret == -1:
+        print 'some error occured, please check!'
+        exit(0)
+
     print 'now filling failing histogram for sample', sample.name
-    tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_fail.GetName()), '({c})*({w})'.format(c=cutFail,w=tmp_weight))
+    drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_fail.GetName()), '({c})*({w})'.format(c=cutFail,w=tmp_weight))
+    if drawret == -1:
+        print 'some error occured, please check!'
+        exit(0)
 
     outfile = ROOT.TFile(sample.histFile,'recreate')
 

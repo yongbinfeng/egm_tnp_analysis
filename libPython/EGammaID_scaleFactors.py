@@ -36,7 +36,8 @@ def isFloat( myFloat ):
 graphColors = [rt.kBlack, rt.kGray+1, rt.kBlue-3, rt.kBlue-9, rt.kAzure-4, rt.kAzure+8, #rt.kCyan-3, rt.kCyan-7,rt.kTeal-5, rt.kTeal+8,
                rt.kGreen-3, rt.kSpring+10, 
                rt.kOrange-2, rt.kOrange+1, rt.kRed-3, rt.kRed-9, rt.kPink-2,
-               rt.kMagenta-3, rt.kViolet, rt.kCyan-7, rt.kTeal-5, rt.kYellow+1, rt.kYellow-4, rt.kOrange-8, rt.kPink-4, rt.kGray+3]
+               rt.kMagenta-3, rt.kViolet, rt.kCyan-7, rt.kTeal-5, rt.kYellow+1, rt.kYellow-4, rt.kOrange-8, rt.kPink-4, rt.kGray+3,
+               33, 36, 38, 40, 41, 42, 43, 45, 46, 48, 30, 32]
 
 
 
@@ -108,7 +109,8 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     p1.SetLeftMargin( c.GetLeftMargin() )
     p2.SetLeftMargin( c.GetLeftMargin() )
     firstGraph = True
-    leg = rt.TLegend(0.7,0.55,0.95 ,0.92) if xAxis=='pT' else rt.TLegend(0.7, 0.7, 0.95, 0.92)
+    leg = rt.TLegend(0.5,0.80,0.95 ,0.92) if xAxis=='pT' else rt.TLegend(0.5, 0.8, 0.95, 0.92)
+    leg.SetNColumns(2)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
 
@@ -123,7 +125,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         ## p1.SetLogx()
         ## p2.SetLogx()    
         xMin = 20
-        xMax = 60
+        xMax = 80
     elif 'vtx' in xAxis or 'Vtx' in xAxis or 'PV' in xAxis:
         xMin =  3
         xMax = 42
@@ -144,11 +146,17 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
 #    sfMax = 1.02
 
     for key in sorted(effDataList.keys()):
+        print 'this is key', key
+        desc = 'To'.join([str(i) for i in key])#str(key[0])+str(key[1])
+        desc = desc.replace(' ','').replace('.','p').replace('-','m')
         grBinsEffData = effUtil.makeTGraphFromList(effDataList[key], 'min', 'max')
         grBinsSF      = effUtil.makeTGraphFromList(sfList[key]     , 'min', 'max')
+        grBinsEffData.SetName(grBinsEffData.GetName()+'_effDATA_{x}_{y}_{d}'.format(x=xAxis,y=yAxis,d=desc))
+        grBinsSF.SetName(grBinsSF.GetName()+'_SF_{x}_{y}_{d}'.format(x=xAxis,y=yAxis,d=desc))
         grBinsEffMC = None
         if not effMCList is None:
             grBinsEffMC = effUtil.makeTGraphFromList(effMCList[key], 'min', 'max')
+            grBinsEffMC.SetName(grBinsEffMC.GetName()+'_effMC_{x}_{y}_{d}'.format(x=xAxis,y=yAxis,d=desc))
             grBinsEffMC.SetLineStyle( rt.kDashed )
             grBinsEffMC.SetLineColor( graphColors[igr] )
             grBinsEffMC.SetMarkerSize( 0 )
@@ -173,15 +181,15 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         if 'eta' in xAxis or 'Eta' in xAxis:
             grBinsSF.GetHistogram().GetXaxis().SetTitle("lepton #eta")
         elif 'pt' in xAxis or 'pT' in xAxis:
-            grBinsSF.GetHistogram().GetXaxis().SetTitle("p_{T}  [GeV]")  
+            grBinsSF.GetHistogram().GetXaxis().SetTitle("p_{T} (GeV)")  
         elif 'vtx' in xAxis or 'Vtx' in xAxis or 'PV' in xAxis:
-            grBinsSF.GetHistogram().GetXaxis().SetTitle("N_{vtx}")  
+            grBinsSF.GetHistogram().GetXaxis().SetTitle("n_{vtx}")  
             
-        grBinsSF.GetHistogram().GetYaxis().SetTitle("Data / MC " )
+        grBinsSF.GetHistogram().GetYaxis().SetTitle("data / MC " )
         grBinsSF.GetHistogram().GetYaxis().SetTitleOffset(1)
             
         grBinsEffData.GetHistogram().GetYaxis().SetTitleOffset(1)
-        grBinsEffData.GetHistogram().GetYaxis().SetTitle("Data efficiency" )
+        grBinsEffData.GetHistogram().GetYaxis().SetTitle("efficiency" )
         grBinsEffData.GetHistogram().GetYaxis().SetRangeUser( effiMin, effiMax )
 
             
@@ -216,6 +224,8 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         listOfTGraph1[use_igr].GetHistogram().SetMaximum(effiMax)
         p1.cd()
         listOfTGraph1[use_igr].Draw(option)
+        if listOfTGraph1[use_igr].GetTitle() == 'Graph':
+            listOfTGraph1[use_igr].SetTitle('')
         if not listOfMC[use_igr] is None:
             listOfMC[use_igr].Draw("ez")
 
@@ -224,6 +234,8 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         listOfTGraph2[use_igr].SetMarkerColor(graphColors[use_igr])
         listOfTGraph2[use_igr].GetHistogram().SetMinimum(sfMin)
         listOfTGraph2[use_igr].GetHistogram().SetMaximum(sfMax)
+        if listOfTGraph2[use_igr].GetTitle() == 'Graph':
+            listOfTGraph2[use_igr].SetTitle('')
         if 'pT' in xAxis or 'pt' in xAxis :
             listOfTGraph2[use_igr].GetHistogram().GetXaxis().SetMoreLogLabels()
         listOfTGraph2[use_igr].GetHistogram().GetXaxis().SetNoExponent()
@@ -246,7 +258,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
 
     c.Print(nameout)
 
-    return listOfTGraph2
+    return listOfTGraph1+listOfTGraph2+listOfMC
 
     #################################################    
 
@@ -312,37 +324,42 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
     fileWithEff.close()
 
 ### massage the numbers a bit
-    effGraph.symmetrizeSystVsEta()
-    effGraph.combineSyst()
+    #marc test effGraph.symmetrizeSystVsEta()
+    #marc test effGraph.combineSyst()
 
     print " ------------------------------- "
 
-    customEtaBining = []
-    customEtaBining.append( (0.000,0.800))
-    customEtaBining.append( (0.800,1.444))
-    customEtaBining.append( (1.444,1.566))
-    customEtaBining.append( (1.566,2.000))
-    customEtaBining.append( (2.000,2.500))
+    ## marc customEtaBining = []
+    ## marc customEtaBining.append( (0.000,0.800))
+    ## marc customEtaBining.append( (0.800,1.444))
+    ## marc customEtaBining.append( (1.444,1.566))
+    ## marc customEtaBining.append( (1.566,2.000))
+    ## marc customEtaBining.append( (2.000,2.500))
 
 
     pdfout = nameOutBase + '_egammaPlots.pdf'
     cDummy = rt.TCanvas()
     cDummy.Print( pdfout + "[" )
 
+    #print 'this is effgraph', effGraph
+    #print 'this is effGraph.pt_1DGraph_list)', effGraph.pt_1DGraph_list
 
-    EffiGraph1D( effGraph.pt_1DGraph_list( False ) , #eff Data
-                 None, 
+    listOfSF1D = EffiGraph1D( effGraph.pt_1DGraph_list( False ) , #eff Data
+                 #None, 
+                 effGraph.pt_1DGraph_list( False, typeGR = -1 ),
                  effGraph.pt_1DGraph_list( True ) , #SF
                  pdfout,
                  xAxis = axis[0], yAxis = axis[1] )
+
+    #print 'this is length of listOfSF1D', len(listOfSF1D)
 #EffiGraph1D( effGraph.pt_1DGraph_list_customEtaBining(customEtaBining,False) , 
 #             effGraph.pt_1DGraph_list_customEtaBining(customEtaBining,True)   , False, pdfout )
 #    EffiGraph1D( effGraph.eta_1DGraph_list(False), effGraph.eta_1DGraph_list(True), True , pdfout )
-    listOfSF1D = EffiGraph1D( effGraph.eta_1DGraph_list( typeGR =  0 ) , # eff Data
+    listOfSF1D .extend( EffiGraph1D( effGraph.eta_1DGraph_list( typeGR =  0 ) , # eff Data
                               effGraph.eta_1DGraph_list( typeGR = -1 ) , # eff MC
                               effGraph.eta_1DGraph_list( typeGR = +1 ) , # SF
                               pdfout, 
-                              xAxis = axis[1], yAxis = axis[0] )
+                              xAxis = axis[1], yAxis = axis[0] ) )
 
     h2EffData = effGraph.ptEtaScaleFactor_2DHisto(-3)
     h2EffMC   = effGraph.ptEtaScaleFactor_2DHisto(-2)
@@ -380,14 +397,15 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
 
     c2D.Print( pdfout )
 
+    #print 'this is listOfSF1D', listOfSF1D
 
     rootout = rt.TFile(nameOutBase + '_EGM2D.root','recreate')
     rootout.cd()
     h2SF.Write('EGamma_SF2D',rt.TObject.kOverwrite)
     h2EffData.Write('EGamma_EffData2D',rt.TObject.kOverwrite)
     h2EffMC  .Write('EGamma_EffMC2D'  ,rt.TObject.kOverwrite)
-    for igr in range(len(listOfSF1D)):
-        listOfSF1D[igr].Write( 'grSF1D_%d' % igr, rt.TObject.kOverwrite)
+    for igr in listOfSF1D:
+        igr.Write( igr.GetName(), rt.TObject.kOverwrite) #'grSF1D_{ib}'.format(ib=igr), rt.TObject.kOverwrite)
     rootout.Close()
 
     for isyst in range(len(efficiency.getSystematicNames())):
