@@ -309,6 +309,7 @@ if  options.doPlot:
         fitType  = 'altBkgFit'
 
     os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*')) #fileName.replace('.root', '*.root')))
+    os.system('sleep 3')
     os.system('rm '+fileName+'_bin_bin*')
         
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.name,fitType)

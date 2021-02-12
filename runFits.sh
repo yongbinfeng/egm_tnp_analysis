@@ -20,11 +20,11 @@ echo "era: $era";
 
 python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --createBins
 python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --createHists
-python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --doFit --iBin 1
+python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --doFit
 python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --doFit --mcSig --altSig
 python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --doFit         --altSig
-#
-### sum up everything
+
+## sum up everything
 python3 tnpEGM_fitter.py --era ${era} --flag mu_${tnptype}_${charge} --sumUp
 
 
