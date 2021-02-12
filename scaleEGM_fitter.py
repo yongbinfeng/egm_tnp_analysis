@@ -32,9 +32,9 @@ parser.add_argument('--batch'      , action='store_true'  , help = 'send in batc
 
 args = parser.parse_args()
 
-print '===> settings %s <===' % args.settings
+print('===> settings {s} <==='.format(s=args.settings))
 importSetting = 'import %s as tnpConf' % args.settings.replace('/','.').split('.py')[0]
-print importSetting
+print(importSetting)
 exec(importSetting)
 
 ### tnp library
@@ -43,20 +43,20 @@ import libPython.rootUtils as tnpRoot
 
 
 if args.flag is None:
-    print '[tnpEGM_fitter] flag is MANDATORY, this is the working point as defined in the settings.py'
+    print('[tnpEGM_fitter] flag is MANDATORY, this is the working point as defined in the settings.py')
     sys.exit(0)
     
 if not args.flag in tnpConf.flags.keys() :
-    print '[tnpEGM_fitter] flag %s not found in flags definitions' % args.flag
-    print '  --> define in settings first'
-    print '  In settings I found flags: '
-    print tnpConf.flags.keys()
+    print('[tnpEGM_fitter] flag {f} not found in flags definitions'.format(f=args.flag))
+    print('  --> define in settings first')
+    print('  In settings I found flags: ')
+    print(tnpConf.flags.keys())
     sys.exit(1)
 
 outputDirectory = '%s/%s/' % (tnpConf.baseOutDir,args.flag)
 
-print '===>  Output directory: '
-print outputDirectory
+print('===>  Output directory: ')
+print(outputDirectory)
 
 
 ####################################################################
@@ -66,8 +66,8 @@ if args.checkBins:
     tnpBins = tnpBiner.createBins(tnpConf.biningDef,tnpConf.cutBase)
     tnpBiner.tuneCuts( tnpBins, tnpConf.additionalCuts )
     for ib in range(len(tnpBins['bins'])):
-        print tnpBins['bins'][ib]['name']
-        print '  - cut: ',tnpBins['bins'][ib]['cut']
+        print(tnpBins['bins'][ib]['name'])
+        print('  - cut: ',tnpBins['bins'][ib]['cut'])
     sys.exit(0)
     
 if args.createBins:
@@ -77,9 +77,9 @@ if args.createBins:
     tnpBins = tnpBiner.createBins(tnpConf.biningDef,tnpConf.cutBase)
     tnpBiner.tuneCuts( tnpBins, tnpConf.additionalCuts )
     pickle.dump( tnpBins, open( '%s/bining.pkl'%(outputDirectory),'wb') )
-    print 'created dir: %s ' % outputDirectory
-    print 'bining created successfully... '
-    print 'Note than any additional call to createBins will overwrite directory %s' % outputDirectory
+    print('created dir: %s ' % outputDirectory)
+    print('bining created successfully... ')
+    print('Note than any additional call to createBins will overwrite directory %s' % outputDirectory)
     sys.exit(0)
 
 tnpBins = pickle.load( open( '%s/bining.pkl'%(outputDirectory),'rb') )
@@ -93,7 +93,7 @@ goodReplicas = []
 for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
     if sample is None: continue
-    print '====> mkdir -p {odir}/{sample}'.format(odir=outputDirectory, sample=sample.name)
+    print('====> mkdir -p {odir}/{sample}'.format(odir=outputDirectory, sample=sample.name))
     os.system('mkdir -p {odir}/{sample}'.format(odir=outputDirectory, sample=sample.name))
     setattr( sample, 'tree'     ,'%s/fitter_tree' % tnpConf.tnpTreeDir )
     for ir in xrange(tnpConf.nResamples):
@@ -101,7 +101,7 @@ for s in tnpConf.samplesDef.keys():
         checkHist = True
         if not args.createHists:
             if not os.path.exists(fname):
-                print "WARNING! ",fname, " does not exist. Skipping this resample."
+                print("WARNING! ",fname, " does not exist. Skipping this resample.")
                 checkHist = False
         if checkHist:
             setattr( sample, 'histFile%d' % ir , fname )
@@ -114,8 +114,8 @@ for s in tnpConf.samplesDef.keys():
     if sample is None: continue
     for ir in xrange(tnpConf.nResamples):
         if ir in goodReplicas and not hasattr(sample, 'histFile%d' % ir): goodReplicas.remove(ir)
-print "There are ", len(goodReplicas), " good replicas = ", goodReplicas
-print "Writing good replicas into ",fileWithGoodReplicas
+print("There are ", len(goodReplicas), " good replicas = ", goodReplicas)
+print("Writing good replicas into ",fileWithGoodReplicas)
 fileReplicas = open(fileWithGoodReplicas,'w')
 fileReplicas.write(json.dumps(goodReplicas))
 fileReplicas.close()
@@ -123,16 +123,16 @@ fileReplicas.close()
 if args.createHists:
     if (args.binNumber >= 0 and args.batch):
         tnpBins['bins'] = [tnpBins['bins'][args.binNumber]]
-        print "Making histograms for the unique bin: ",tnpBins['bins']
+        print("Making histograms for the unique bin: ",tnpBins['bins'])
     for sampleType in tnpConf.samplesDef.keys():
         sample =  tnpConf.samplesDef[sampleType]
         if sample is None : continue
         if sampleType == args.sample or args.sample == 'all' :
-            print 'creating histogram for sample '
+            print('creating histogram for sample ')
             sample.dump()
-            var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
+            var = { 'name' : 'pair_mass', 'nbins' : 60, 'min' : 60, 'max': 120 }
             if sample.mcTruth:
-                var = { 'name' : 'pair_mass', 'nbins' : 80, 'min' : 50, 'max': 130 }
+                var = { 'name' : 'pair_mass', 'nbins' : 60, 'min' : 60, 'max': 120 }
             if args.batch and args.binNumber >= 0: 
                 fname = getattr(sample,'histFile%d' % args.statResample)
                 fname = fname.replace('.root','_%s.root' % tnpBins['bins'][0]['name'])
@@ -147,7 +147,7 @@ if args.createHists:
 ####################################################################
 sampleToFit = tnpConf.samplesDef['data']
 if sampleToFit is None:
-    print '[tnpEGM_fitter, prelim checks]: sample (data or MC) not available... check your settings'
+    print('[tnpEGM_fitter, prelim checks]: sample (data or MC) not available... check your settings')
     sys.exit(1)
 
 sampleMC = tnpConf.samplesDef['mcNom']
@@ -155,7 +155,7 @@ sampleMC = tnpConf.samplesDef['mcNom']
 refReplica = goodReplicas[0]
 
 if sampleMC is None:
-    print '[tnpEGM_fitter, prelim checks]: MC sample not available... check your settings'
+    print('[tnpEGM_fitter, prelim checks]: MC sample not available... check your settings')
     sys.exit(1)
 for s in tnpConf.samplesDef.keys():
     sample =  tnpConf.samplesDef[s]
@@ -183,10 +183,10 @@ if  args.doFit:
                     goodReplicas = [args.statResample] if args.statResample in goodReplicas else []
                 for ir in goodReplicas:
                     if hasattr(sampleToFit,'histFile%d' % ir) and hasattr(sampleToFit.mcRef,'histFile%d' % ir):
-                        print "FITTING replica ",ir
+                        print("FITTING replica ",ir)
                         tnpRoot.histScaleFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParNomFit, ir, batch=args.batch )
                     else: 
-                        print "Replica ", ir, " skipped because it is missing either the data or MC replica"
+                        print("Replica ", ir, " skipped because it is missing either the data or MC replica")
 
     args.doPlot = True
      
@@ -213,12 +213,12 @@ if  args.doPlot:
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             for ir in goodReplicas:
-                print "plotting replica = ", ir
+                print("plotting replica = ", ir)
                 irFileName = fileName.replace('.root', '_Stat%d.root' % ir)
                 tnpRoot.histPlotter( irFileName, tnpBins['bins'][ib], plottingDir, ir )
 
-    print ' ===> Plots saved in <======='
-    print '%s/' % plottingDir
+    print(' ===> Plots saved in <=======')
+    print('%s/' % plottingDir)
 
 
 ####################################################################
@@ -255,10 +255,10 @@ if args.sumUp:
         v2Range = tnpBins['bins'][ib]['title'].split(';')[2].split('<')
         if ib == 0 :
             astr = '### var1 : %s' % v1Range[1]
-            print astr
+            print(astr)
             fOut.write( astr + '\n' )
             astr = '### var2 : %s' % v2Range[1]
-            print astr
+            print(astr)
             fOut.write( astr + '\n' )
             
         astr =  '%+8.3f\t%+8.3f\t%+8.3f\t%+8.3f\t%5.3f\t%5.3f\t%5.3f' % (
@@ -269,10 +269,10 @@ if args.sumUp:
             scales['dataAltBkg'][0],
             )
         astr += '\t'+'\t'.join(['%+5.3f' % scales['dataReplica%d' % ir][0] for ir in goodReplicas])
-        print astr
+        print(astr)
         fOut.write( astr + '\n' )
     fOut.close()
 
-    print 'Effis saved in file : ',  scaleFileName
+    print('Effis saved in file : ',  scaleFileName))
     import libPython.EGammaID_scaleSystematics as egm_scales
     egm_scales.doEGM_Scales(scaleFileName,sampleToFit.lumi)

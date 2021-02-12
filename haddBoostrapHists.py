@@ -22,14 +22,14 @@ if __name__ == "__main__":
     tnpBins = pickle.load( open( '{indir}/bining.pkl'.format(indir=indir),'rb') )
     
     datasets = list(filter(lambda x: x!='plots' and not x.endswith('.pkl') and not x.endswith('.root'), os.listdir(indir)))
-    print "==> Datasets are: ",datasets
+    print("==> Datasets are: ",datasets)
     bins = [tnpBins['bins'][i]['name'] for i in xrange(len(tnpBins['bins']))]
-    #print "==> TnP bins = ", bins
+    #print("==> TnP bins = ", bins)
 
     if args.runCheck:
         cmds = []
         for istat in range(args.resamples):
-            print "CHECKING boostrap resample # ",istat
+            print("CHECKING boostrap resample # ",istat)
             for ds in datasets:
                 for name in bins:
                     ib = name.split('_')[0].split('bin')[-1]
@@ -37,11 +37,11 @@ if __name__ == "__main__":
                     if not os.path.exists(filename):
                         cmd = 'python scaleEGM_fitter.py etc/config/settings_elScale_allEras.py --flag {flag} --createHists --iResample {ist} --iBin {ib} --batch'.format(ist=istat,flag=args.flag,ib=ib)
                         if cmd not in cmds: cmds.append(cmd)
-        print "There are ",len(cmds)," hists to be redone."
+        print("There are ",len(cmds)," hists to be redone.")
 
         absopath  = os.path.abspath('condor_hist_recover')        
         if not os.path.isdir(absopath):
-            print 'making a directory and running in it'
+            print('making a directory and running in it')
             os.system('mkdir -p {od}'.format(od=absopath))
 
         jobdir = absopath+'/jobs/'
@@ -73,15 +73,15 @@ if __name__ == "__main__":
 
         cf = makeCondorFile(jobdir,srcfiles,args, logdir, errdir, outdirCondor)
         subcmd = 'condor_submit {rf} '.format(rf = cf)
-        print subcmd
+        print(subcmd)
         if len(srcfiles)==0:
             os.system('rm -r {od}'.format(od=jobdir))
-            print "ALL FILES ARE GOOD."
+            print("ALL FILES ARE GOOD.")
         exit(0)
         
     pwd = os.environ['PWD']
     for istat in range(args.resamples):
-        print "MERGING boostrap resample # ",istat
+        print("MERGING boostrap resample # ",istat)
         haddtxt = 'haddfile.sh'
         haddfile = open(haddtxt,'w')
         for ds in datasets:

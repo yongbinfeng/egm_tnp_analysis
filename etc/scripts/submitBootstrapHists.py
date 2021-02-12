@@ -67,7 +67,7 @@ if __name__ == "__main__":
         raise RuntimeError, 'ERROR: give at least an output directory. there will be a HUGE number of jobs!'
     else:
         if not os.path.isdir(absopath):
-            print 'making a directory and running in it'
+            print('making a directory and running in it')
             os.system('mkdir -p {od}'.format(od=absopath))
 
     jobdir = absopath+'/jobs/'
@@ -110,8 +110,8 @@ if __name__ == "__main__":
         if os.path.exists(goodRep_fname):
             fileReplicas = open(goodRep_fname,'read')
             goodReplicas = eval(fileReplicas.read())
-            print "Found a good replicas file in ",goodRep_fname
-            print "Will fit these ",len(goodReplicas)," replicas: ",goodReplicas
+            print("Found a good replicas file in ",goodRep_fname)
+            print("Will fit these ",len(goodReplicas)," replicas: ",goodReplicas)
         else:
             goodReplicas = range(options.nReplicas)
         for j,res in enumerate(goodReplicas):
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     cf = makeCondorFile(jobdir,srcfiles,options, logdir, errdir, outdirCondor)
     subcmd = 'condor_submit {rf} '.format(rf = cf)
 
-    print subcmd
+    print(subcmd)
 
     sys.exit()
 

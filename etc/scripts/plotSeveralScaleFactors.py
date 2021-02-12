@@ -34,7 +34,7 @@ for igr in range(len(grNames)):
     legend.SetBorderSize(0)
 
     for ifile in range(len(listOfFile)):
-        print 'Opening TFile: ', listOfFile[ifile]['path']
+        print('Opening TFile: ', listOfFile[ifile]['path'])
         rfile = rt.TFile.Open(listOfFile[ifile]['path'],'read')    
         rfile.Print()
         rgr   = rfile.Get(grNames[igr])

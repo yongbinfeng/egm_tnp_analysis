@@ -15,7 +15,7 @@ if __name__ == "__main__":
         raise RuntimeError, 'ERROR: give at least an output directory. there will be a HUGE number of jobs!'
     else:
         if not os.path.isdir(absopath):
-            print 'making a directory and running in it'
+            print('making a directory and running in it')
             os.system('mkdir -p {od}'.format(od=absopath))
 
     jobdir = absopath+'/jobs/'
@@ -49,4 +49,4 @@ if __name__ == "__main__":
     cf = makeCondorFile(jobdir,srcfiles,options, logdir, errdir, outdirCondor)
     subcmd = 'condor_submit {rf} '.format(rf = cf)
 
-    print subcmd
+    print(subcmd)

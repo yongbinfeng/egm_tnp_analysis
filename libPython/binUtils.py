@@ -6,17 +6,19 @@ def createBins( bining, cut ):
     nbin = 0
 
     nbin = 1
-    index = range(len(bining))
-    for ix in range(len(index)):
-        index[ix] = -1
+    #index = range(len(bining))
+    #for ix in range(len(index)):
+    #    index[ix] = -1
+    index = [-1 for i in bining]
     listOfIndex = []    
     listOfIndex.append( index )
 
     ### first map nD bins in a single list
     for iv in range(len(bining)):
         var = bining[iv]['var']
-        if not bining[iv].has_key('type') or not bining[iv].has_key('bins'):
-            print 'bining is not complete for var %s' % var
+        #python3if not bining[iv].has_key('type') or not bining[iv].has_key('bins'):
+        if not 'type' in bining[iv] or not 'bins' in bining[iv]:
+            print('bining is not complete for var {v}'.format(v=var))
             return listOfIndex
         nb1D = 1
         if   bining[iv]['type'] == 'float' :

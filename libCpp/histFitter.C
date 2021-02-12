@@ -30,8 +30,10 @@ public:
   ~tnpFitter(void) {if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
   void setWorkspace(std::vector<std::string>);
-  void setOutputFile(TFile *fOut ) {_fOut = fOut;}
-  void fits(bool mcTruth,std::string title = "");
+  //python3void setOutputFile( TFile *fOut ) {_fOut = fOut;}
+  //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
+  void setOutputFile(TString fname ) {_fOut = new TFile(fname, "recreate"); } 
+  int fits(bool mcTruth,std::string title = "");
   void useMinos(bool minos = true) {_useMinos = minos;}
   void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p);
   
@@ -127,9 +129,9 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace) {
   _work->Print();			         
 }
 
-void tnpFitter::fits(bool mcTruth,string title) {
+int tnpFitter::fits(bool mcTruth,string title) {
 
-  cout << " title : " << title << endl;
+  cout << " this is the title : " << title << endl;
 
   
   RooAbsPdf *pdfPass = _work->pdf("pdfPass");
@@ -171,7 +173,7 @@ void tnpFitter::fits(bool mcTruth,string title) {
   RooPlot *pFail = _work->var("x")->frame(60,120);
   pPass->SetTitle("passing probe");
   pFail->SetTitle("failing probe");
-  
+
   _work->data("hPass") ->plotOn( pPass );
   _work->pdf("pdfPass")->plotOn( pPass, LineColor(kRed) );
   _work->pdf("pdfPass")->plotOn( pPass, Components("bkgPass"),LineColor(kBlue),LineStyle(kDashed));
@@ -182,19 +184,20 @@ void tnpFitter::fits(bool mcTruth,string title) {
   _work->pdf("pdfFail")->plotOn( pFail, Components("bkgFail"),LineColor(kBlue),LineStyle(kDashed));
   _work->data("hFail") ->plotOn( pFail );
 
-  TCanvas c("c","c",1100,450);
-  c.Divide(3,1);
-  TPad *padText = (TPad*)c.GetPad(1);
+  TCanvas * c = new TCanvas(TString::Format("%s_Canv",_histname_base.c_str()) ,TString::Format("%s_Canv",_histname_base.c_str()) ,1100,450);
+  c->Divide(3,1);
+  TPad *padText = (TPad*)c->GetPad(1);
   textParForCanvas( resPass,resFail, padText );
-  c.cd(2); pPass->Draw();
-  c.cd(3); pFail->Draw();
+  c->cd(2); pPass->Draw();
+  c->cd(3); pFail->Draw();
 
   _fOut->cd();
-  c.Write(TString::Format("%s_Canv",_histname_base.c_str()),TObject::kOverwrite);
+  c->Write(TString::Format("%s_Canv",_histname_base.c_str()),TObject::kOverwrite);
   resPass->Write(TString::Format("%s_resP",_histname_base.c_str()),TObject::kOverwrite);
   resFail->Write(TString::Format("%s_resF",_histname_base.c_str()),TObject::kOverwrite);
-
+  _fOut->Close();
   
+return 1;
 }
 
 

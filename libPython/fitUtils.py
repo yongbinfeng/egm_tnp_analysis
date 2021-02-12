@@ -1,4 +1,12 @@
 import ROOT as rt
+
+#for so in ['histFitter_C.so', 'histScaleFitter_C.so', 'RooCBExGaussShape_cc.so', 'RooCMSShape_cc.so']:
+#
+#    if so not in rt.gSystem.GetLibraries():
+#        print('need to build', so)
+#        rt.gROOT.ProcessLine('.L ./libCpp/{soC}+'.format(soC=so.replace('_C.so','.C').replace('_cc.so','.cc')))
+
+#rt.gROOT.ProcessLine('.L ./libCpp/histFitter.C+')
 rt.gROOT.LoadMacro('./libCpp/histFitter.C+')
 rt.gROOT.LoadMacro('./libCpp/histScaleFitter.C+')
 rt.gROOT.LoadMacro('./libCpp/RooCBExGaussShape.cc+')
@@ -32,7 +40,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, tnpFit=True, re
                 x=re.compile('%s.*?' % par)
                 listToRM = filter(x.match, tnpWorkspaceParam)
                 for ir in listToRM :
-                    print '**** remove', ir
+                    print('**** remove', ir)
                     tnpWorkspaceParam.remove(ir)                    
             tnpWorkspaceParam.append( 'tailLeft[-1]' )
 
@@ -56,7 +64,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, tnpFit=True, re
         fitPar = fitresF.floatParsFinal()
         for ipar in range(len(fitPar)):
             pName = fitPar[ipar].GetName()
-            print '%s[%2.3f]' % (pName,fitPar[ipar].getVal())
+            print('{n}[{f:.3f}]'.format(n=pName,f=fitPar[ipar].getVal()))
             for par in listOfParam:
                 if pName == par:
                     x=re.compile('%s.*?' % pName)
@@ -69,7 +77,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, tnpFit=True, re
     fitPar = fitresP.floatParsFinal()
     for ipar in range(len(fitPar)):
         pName = fitPar[ipar].GetName()
-        print '%s[%2.3f]' % (pName,fitPar[ipar].getVal())
+        print('{n}[{f:.3f}]'.format(n=pName,f=fitPar[ipar].getVal()))
         for par in listOfParam:
             if pName == par:
                 x=re.compile('%s.*?' % pName)
@@ -88,6 +96,9 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, tnpFit=True, re
 #############################################################
 def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
         
+    print('------- now nominal fitting bin:')
+    for i in tnpBin:
+        print(i, tnpBin[i])
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
@@ -108,8 +119,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
 
     ## setup
     fitter.useMinos()
-    rootfile = rt.TFile(sample.nominalFit,'update')
-    fitter.setOutputFile( rootfile )
+    # python3rootfile = rt.TFile(sample.nominalFit+'_bin_'+tnpBin['name'],'update')
+    fitter.setOutputFile( sample.nominalFit+'_bin_'+tnpBin['name'])
     
     ## generated Z LineShape
     ## for high pT change the failing spectra to any probe to get statistics
@@ -123,6 +134,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
 
     fileTruth.Close()
 
+    # python3rootfile.cd()
     ### set workspace
     workspace = rt.vector("string")()
     for iw in tnpWorkspace:
@@ -133,7 +145,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
     title = title.replace('probe_sc_eta','#eta_{SC}')
     title = title.replace('probe_Ele_pt','p_{T}')
     fitter.fits(sample.mcTruth,title)
-    rootfile.Close()
+    # python3rootfile.Close()
 
 #############################################################
 ########## nominal scale fitter
@@ -213,8 +225,10 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
     infile.Close()
 
     ## setup
-    rootfile = rt.TFile(sample.altSigFit,'update')
-    fitter.setOutputFile( rootfile )
+    ## parallel rootfile = rt.TFile(sample.altSigFit,'update')
+    #python3rootfile = rt.TFile(sample.altSigFit+'_bin_'+tnpBin['name'],'update')
+    #python3fitter.setOutputFile( rootfile )
+    fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
     
     ## generated Z LineShape
     fileTruth = rt.TFile('etc/inputs/ZeeGenLevel.root','read')
@@ -233,7 +247,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
     title = title.replace('probe_Ele_pt','p_{T}')
     fitter.fits(sample.mcTruth,title)
 
-    rootfile.Close()
+    #rootfile.Close()
 
 
 #############################################################
@@ -256,15 +270,15 @@ def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample, batch=Fa
         
     ## init fitter
     infile = rt.TFile( getattr(sample, 'histFile%d' % resample), "read")
-    print "Getting the histograms to fit the Z lineshape from: ",infile
+    print("Getting the histograms to fit the Z lineshape from: ",infile)
     hP = infile.Get('%s_Stat%d' % (tnpBin['name'],resample))
     fitter = scaleFitter( hP, tnpBin['name'], resample )
     infile.Close()
 
     ## setup
     if batch: sample.altSigFit = sample.altSigFit.replace('.root','_%s.root' % tnpBin['name'])
-    rootfile = rt.TFile(sample.altSigFit,'update')
-    fitter.setOutputFile( rootfile )
+    #python3rootfile = rt.TFile(sample.altSigFit,'update')
+    fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
     
     ## generated Z LineShape
     fileTruth = rt.TFile('etc/inputs/ZeeGenLevel.root','read')
@@ -283,7 +297,7 @@ def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample, batch=Fa
     title = title.replace('probe_Ele_pt','p_{T}')
     fitter.fits(sample.mcTruth,title)
 
-    rootfile.Close()
+    #python3rootfile.Close()
 
 
 
@@ -311,7 +325,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
     infile.Close()
 
     ## setup
-    rootfile = rt.TFile(sample.altBkgFit,'update')
+    ## parallel rootfile = rt.TFile(sample.altBkgFit,'update')
+    rootfile = rt.TFile(sample.altBkgFit+'_bin_'+tnpBin['name'],'update')
     fitter.setOutputFile( rootfile )
 #    fitter.setFitRange(65,115)
 

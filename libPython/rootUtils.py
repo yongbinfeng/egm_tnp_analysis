@@ -1,26 +1,34 @@
-import ROOT, math, array
+import ROOT, math, array, ctypes
 import numpy as np
-from fitUtils import *
+from . import fitUtils
+# import *
 import functools
 #from fitSimultaneousUtils import *
 
+ROOT.ROOT.EnableImplicitMT()
+#ROOT.ROOT.TTreeProcessorMT.SetMaxTasksPerFilePerWorker(1)
+
 def removeNegativeBins(h):
-    for i in xrange(h.GetNbinsX()):
-	if (h.GetBinContent(i) < 0):
+    for i in range(1,h.GetNbinsX()+1):
+        if (h.GetBinContent(i) < 0):
             h.SetBinContent(i, 0)
 
 
 def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     ## open rootfile
-    tree = rt.TChain(sample.tree)
+    tree = ROOT.TChain(sample.tree)
+    tmp_names = ROOT.std.vector('string')()
     for p in sample.path:
-        print ' adding rootfile: ', p
+        print(' adding rootfile: ', p)
         tree.Add(p)
+        tmp_names.push_back(p.replace('/eos/cms/','root://eoscms.cern.ch//'))
     
     if not sample.puTree is None:
-        print ' - Adding weight tree: %s from file %s ' % (sample.weight.split('.')[0], sample.puTree)
+        print(' - Adding weight tree: {w} from file {f} '.format(w=sample.weight.split('.')[0], f=sample.puTree))
         tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
 
+    #rdf = ROOT.RDataFrame(sample.tree, tmp_names)
+    rdf  = ROOT.RDataFrame(sample.tree, tmp_names)
 
     ## open outputFile
     hPass = []
@@ -52,10 +60,10 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 
     if not sample.weight is None:
         tmp_weight = sample.weight
-        print 'found sample weight of', sample.weight
+        print('found sample weight of', sample.weight)
     else:
         tmp_weight = 1.
-        print 'did not find sample weight, setting to 1.'
+        print('did not find sample weight, setting to 1.')
 
     if sample.maxWeight < 999:
         tmp_weight = '({w} < {mw} ? {w} : 1.0 )' .format(w=sample.weight,mw=sample.maxWeight)
@@ -73,22 +81,41 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     h_tmp_pass.Sumw2()
     h_tmp_fail.Sumw2()
 
-    print 'will fill 3d histogram with:' 
-    print '   cut:', cuts
-    print '   using weight', tmp_weight
-    print '   passing flag', flag
+    
+    rdf = rdf.Define('rdfweight', str(tmp_weight))
 
-    print 'now filling passing histogram for sample', sample.name
-    drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
-    if drawret == -1:
-        print 'some error occured, please check!'
-        exit(0)
+    tmp_pass_model = ROOT.RDF.TH3DModel(h_tmp_pass)
+    tmp_fail_model = ROOT.RDF.TH3DModel(h_tmp_fail)
 
-    print 'now filling failing histogram for sample', sample.name
-    drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_fail.GetName()), '({c})*({w})'.format(c=cutFail,w=tmp_weight))
-    if drawret == -1:
-        print 'some error occured, please check!'
-        exit(0)
+    rdfpass = rdf.Filter(cutPass)
+    rdffail = rdf.Filter(cutFail)
+    
+
+    print('will fill 3d histogram with:' )
+    print('   cut:', cuts)
+    print('   using weight', tmp_weight)
+    print('   passing flag', flag)
+
+    print('now filling the passing and failing histograms with rdf')
+    h_tmp_pass = rdfpass.Histo3D(tmp_pass_model, var['name'], probe_var_pt, probe_var_eta, 'rdfweight')
+    h_tmp_fail = rdffail.Histo3D(tmp_fail_model, var['name'], probe_var_pt, probe_var_eta, 'rdfweight')
+
+    ## print('now filling passing histogram for sample', sample.name)
+    ## drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
+    ## if drawret == -1:
+    ##     print('some error occured, please check!')
+    ##     exit(0)
+
+    ## print('now filling failing histogram for sample', sample.name)
+    ## drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_fail.GetName()), '({c})*({w})'.format(c=cutFail,w=tmp_weight))
+    ## if drawret == -1:
+    ##     print('some error occured, please check!')
+    ##     exit(0)
+
+    print('this is the integral of the passing', h_tmp_pass.Integral())
+    print('this is the integral of the failing', h_tmp_fail.Integral())
+    
+    print('done filling for sample', sample.name)
 
     outfile = ROOT.TFile(sample.histFile,'recreate')
 
@@ -101,8 +128,8 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 
         ibin_pt  = h_tmp_pass.GetYaxis().FindBin(tmp_valpt )
         ibin_eta = h_tmp_pass.GetZaxis().FindBin(tmp_valeta)
-        #print 'i am at ibin_pt  {ipt}  and pt  {pt:.1f} '.format(ipt = ibin_pt , pt = tmp_valpt )
-        #print 'i am at ibin_eta {ieta} and eta {eta:.1f}'.format(ieta= ibin_eta, eta= tmp_valeta)
+        #print('i am at ibin_pt  {ipt}  and pt  {pt:.1f} '.format(ipt = ibin_pt , pt = tmp_valpt ))
+        #print('i am at ibin_eta {ieta} and eta {eta:.1f}'.format(ieta= ibin_eta, eta= tmp_valeta))
 
         h_pass = h_tmp_pass.ProjectionX(h_name+'_Pass', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
         h_fail = h_tmp_fail.ProjectionX(h_name+'_Fail', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
@@ -116,19 +143,21 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
         h_fail   .Write(h_fail   .GetName())
 
         bin1 = 1
-        bin2 = h_pass.GetXaxis().GetNbins()
-        epass = ROOT.Double(-1.0)
-        efail = ROOT.Double(-1.0)
+        bin2 = h_pass.GetXaxis().GetNbins()+1
+        epass = ctypes.c_double(-1.0)
+        efail = ctypes.c_double(-1.0)
         passI = h_pass.IntegralAndError(bin1,bin2,epass)
         failI = h_fail.IntegralAndError(bin1,bin2,efail)
         eff   = 0
         e_eff = 0
+        epass = float(epass.value)
+        efail = float(efail.value)
         if passI > 0 :
             itot  = (passI+failI)
             eff   = passI / (passI+failI)
             e_eff = math.sqrt(passI*passI*efail*efail + failI*failI*epass*epass) / (itot*itot)
-        print ib['cut']
-        print '    ==> pass: %.1f +/- %.1f ; fail : %.1f +/- %.1f : eff: %1.3f +/- %1.3f' % (passI,epass,failI,efail,eff,e_eff)
+        print(ib['cut'])
+        print('    ==> pass: {p:.1f} +/- {pe:.1f} ; fail :{f:.1f} +/- {fe:.1f}: eff: {e:.3f} +/- {ee:.3f}'.format(p=passI,pe=epass,f=failI,fe=efail,e=eff,ee=e_eff))
 
     outfile.Close()
 
@@ -136,17 +165,22 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
     ## open rootfile
     tree = ROOT.TChain(sample.tree)
+    
+    tmp_names = ROOT.std.vector('string')()
+
     for p in sample.path:
-        print ' adding rootfile: ', p
+        print(' adding rootfile: ', p)
         tree.Add(p)
+        tmp_names.push_back(n.replace('/eos/cms/','root://eoscms.cern.ch//'))
     
     if not sample.puTree is None:
-        print ' - Adding weight tree: %s from file %s ' % (sample.weight.split('.')[0], sample.puTree)
+        print(' - Adding weight tree: {t} from file {f} '.format(t=sample.weight.split('.')[0], f=sample.puTree))
         tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
+
 
     ## open outputFile
     outfilename = getattr(sample,'histFile{ir}'.format(ir=resample))
-    print "histograms output file = ",outfilename
+    print('histograms output file = ',outfilename)
     outfile = ROOT.TFile(outfilename,'recreate')
 
     seed = 123456789+resample
@@ -172,9 +206,9 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
         tree.Draw('>>elist',cutPass)
         elist = ROOT.gDirectory.Get('elist')
 
-        print "Tot events = ",tree.GetEntries()," selected by the cut ",cutPass," = ",elist.GetN()
+        print('Tot events = ',tree.GetEntries(),' selected by the cut ',cutPass,' = ',elist.GetN())
 
-        print "Resampling # ",resample
+        print('Resampling # ',resample)
         ## get the list of resampled events
         entriesList = range(elist.GetN())
         resamples = np.random.choice(entriesList, size=len(entriesList))
@@ -183,11 +217,11 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
         hPass.Sumw2()
     
         ## fill the histograms
-        print "Now looping on the resampled dataset to fill ",hPass.GetName()
+        print("Now looping on the resampled dataset to fill ",hPass.GetName())
         tree.SetBranchStatus("*",0)
         tree.SetBranchStatus(var['name'],1)
         for ie,entry in enumerate(resamples):
-            if ie%1000==0: print "Processing selected event ",ie," / ",len(resamples)
+            if ie%1000==0: print("Processing selected event ",ie," / ",len(resamples))
             tev = elist.GetEntry(entry)
             tree.GetEntry(tev)
             hPass.Fill(getattr(tree,var['name']))
@@ -201,23 +235,23 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
         bin2 = hPass.GetXaxis().GetNbins()
         epass = ROOT.Double(-1.0)
         passI = hPass.IntegralAndError(bin1,bin2,epass)
-        print cuts
-        print '    ==> Resample ',resample,' pass: %.1f +/- %.1f ' % (passI,epass)
+        print(cuts)
+        print('    ==> Resample ',resample,' pass: {p:.1f} +/- {pe:.1f} '.format(p=passI,pe=epass))
     outfile.Close()
 
 
 
 def histPlotter( filename, tnpBin, plotDir, replica=-1 ):
-    print 'opening ', filename
+    print('opening ', filename)
     rootfile = ROOT.TFile(filename,"read")
 
     if replica<0:
-        print '  get canvas: ' , '%s_Canv' % tnpBin['name']
+        print('  get canvas: ' , '{c}_Canv'.format(c=tnpBin['name']))
         c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
         c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
         c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
     else:
-        print '  get canvas: ' , '%s_Canv_Stat%d' % (tnpBin['name'],replica)
+        print('  get canvas: ' , '{c}_Canv_Stat{r}'.format(c=tnpBin['name'],r=replica))
         c = rootfile.Get( '%s_Canv_Stat%d' % (tnpBin['name'],replica) )
         c.Print( '%s/%s_Stat%d.png' % (plotDir,tnpBin['name'],replica))
         c.Print( '%s/%s_Stat%d.pdf' % (plotDir,tnpBin['name'],replica))
@@ -248,12 +282,12 @@ def getAllEffi( info, bindef ):
         hF = rootfile.Get('%s_Fail'%bindef['name'])
         bin1 = 1
         bin2 = hP.GetXaxis().GetNbins()
-        eP = ROOT.Double(-1.0)
-        eF = ROOT.Double(-1.0)
+        eP = ctypes.c_double(-1.0)
+        eF = ctypes.c_double(-1.0)
         nP = hP.IntegralAndError(bin1,bin2,eP)
         nF = hF.IntegralAndError(bin1,bin2,eF)
 
-        effis['mcNominal'] = computeEffi(nP,nF,eP,eF)
+        effis['mcNominal'] = computeEffi(nP,nF,float(eP.value),float(eF.value))
         rootfile.Close()
     else: effis['mcNominal'] = [-1,-1]
 

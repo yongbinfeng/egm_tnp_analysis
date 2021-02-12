@@ -4,9 +4,9 @@ import sys
 import argparse
 import os
 
-print '** puReweighter requires root_numpy.'
-print '** To install on lxplus: '
-print 'pip install --user root_numpy'
+print('** puReweighter requires root_numpy.')
+print('** To install on lxplus: ')
+print('pip install --user root_numpy')
 from root_numpy import  tree2array, array2tree
 
 
@@ -65,12 +65,12 @@ rhoDataEpoch = {
 
 def reweight( sample, puType = 0  ):
     if sample.path is None:
-        print '[puReweighter]: Need to know the MC tree (option --mcTree or sample.path)'
+        print('[puReweighter]: Need to know the MC tree (option --mcTree or sample.path)')
         sys.exit(1)
     
 
 ### create a tree with only weights that will be used as friend tree for reweighting different lumi periods
-    print 'Opening mc file: ', sample.path[0]
+    print('Opening mc file: ', sample.path[0])
     fmc = rt.TFile(sample.path[0],'read')
     tmc = None
     if sample.tnpTree is None:
@@ -91,7 +91,7 @@ def reweight( sample, puType = 0  ):
         hmc.Scale(1/hmc.Integral())
         for ib in range(1,hmc.GetNbinsX()+1):
             puMCnVtx.append( hmc.GetBinContent(ib) )
-        print 'len nvtxMC = ',len(puMCnVtx)
+        print('len nvtxMC = ',len(puMCnVtx))
 
     elif puType == 2 :
         hmc   = rt.TH1F('hMC_rho'  ,'MC #rho'  , 75,-0.5,74.5)
@@ -99,7 +99,7 @@ def reweight( sample, puType = 0  ):
         hmc.Scale(1/hmc.Integral())
         for ib in range(1,hmc.GetNbinsX()+1):
             puMCrho.append( hmc.GetBinContent(ib) )
-        print 'len rhoMC = ',len(puMCrho)
+        print('len rhoMC = ',len(puMCrho))
     
 
     puDataDist = {}
@@ -121,7 +121,7 @@ def reweight( sample, puType = 0  ):
         for ipu in range(len(puMC[puMCscenario])):
             ibin_pu  = puDataDist[pu].GetXaxis().FindBin(ipu+0.00001)
             puDataArray[pu].append(puDataDist[pu].GetBinContent(ibin_pu))
-        print 'puData[%s] length = %d' % (pu,len(puDataArray[pu]))
+        print('puData[{p}] length = {l}'.format(p=pu,l=len(puDataArray[pu])))
         fpu.Close()
         weights[pu] = []
 
@@ -134,9 +134,9 @@ def reweight( sample, puType = 0  ):
     else            :  pumc = puMC[puMCscenario]
 
     puMax = len(pumc)
-    print '-> nEvtsTot ', len(mcEvts)
+    print('-> nEvtsTot ', len(mcEvts))
     for ievt in xrange(len(mcEvts)):
-        if ievt%1000000 == 0 :            print 'iEvt:',ievt
+        if ievt%1000000 == 0 :            print('iEvt:',ievt)
         evt = mcEvts[ievt]
         for pu in epochKeys:
             pum = -1

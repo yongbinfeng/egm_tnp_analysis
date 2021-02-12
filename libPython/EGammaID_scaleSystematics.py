@@ -15,12 +15,12 @@ import efficiencyUtils as effUtil
 tdrstyle.setTDRStyle()
 
 def doEGM_Scales(filein, lumi, axis = ['p_{T} (GeV)','#eta'] ):
-    print " Opening file: %s (plot lumi: %3.1f)" % ( filein, lumi )
+    print(" Opening file: {f} (plot lumi: {l:.1f})".format(f=filein,l=lumi ))
     CMS_lumi.lumi_13TeV = "%3.1f fb^{-1}" % lumi 
 
     nameOutBase = filein 
     if not os.path.exists( filein ) :
-        print 'file %s does not exist' % filein
+        print('file {f} does not exist'.format(f=filein))
         sys.exit(1)
 
 
@@ -49,8 +49,8 @@ def doEGM_Scales(filein, lumi, axis = ['p_{T} (GeV)','#eta'] ):
     fileWithScales.close()
     
     systHistos2D = []
-    print "etaEdges = ",etaEdges
-    print "ptEdges = ",ptEdges
+    print("etaEdges = ",etaEdges)
+    print("ptEdges = ",ptEdges)
     
     systHisto = rt.TH2F('systHisto','',len(etaEdges)-1,array('f',etaEdges),len(ptEdges)-1,array('f',ptEdges))
     systHisto.GetYaxis().SetTitle(axis[0])
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.txtFile is None:
-        print ' - Needs EGM txt file as input'
+        print(' - Needs EGM txt file as input')
         sys.exit(1)
     
 

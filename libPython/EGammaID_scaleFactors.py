@@ -3,11 +3,11 @@
 import sys,os
 from math import sqrt
 import ROOT as rt
-import CMS_lumi, tdrstyle
+from . import CMS_lumi, tdrstyle
 
-from efficiencyUtils import efficiency
-from efficiencyUtils import efficiencyList
-import efficiencyUtils as effUtil
+from .efficiencyUtils import efficiency
+from .efficiencyUtils import efficiencyList
+from . import efficiencyUtils as effUtil
 
 tdrstyle.setTDRStyle()
 
@@ -146,7 +146,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
 #    sfMax = 1.02
 
     for key in sorted(effDataList.keys()):
-        print 'this is key', key
+        #print('this is key', key)
         desc = 'To'.join([str(i) for i in key])#str(key[0])+str(key[1])
         desc = desc.replace(' ','').replace('.','p').replace('-','m')
         grBinsEffData = effUtil.makeTGraphFromList(effDataList[key], 'min', 'max')
@@ -294,12 +294,12 @@ def diagnosticErrorPlot( effgr, ierror, nameout ):
 
 
 def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
-    print " Opening file: %s (plot lumi: %3.1f)" % ( filein, lumi )
+    print(" Opening file: {f} (plot lumi: {l:.1f})".format(f=filein, l=lumi ))
     CMS_lumi.lumi_13TeV = "%3.1f fb^{-1}" % lumi 
 
     nameOutBase = filein 
     if not os.path.exists( filein ) :
-        print 'file %s does not exist' % filein
+        print('file {f} does not exist'.format(f=filein))
         sys.exit(1)
 
 
@@ -327,7 +327,7 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
     #marc test effGraph.symmetrizeSystVsEta()
     #marc test effGraph.combineSyst()
 
-    print " ------------------------------- "
+    print(" ------------------------------- ")
 
     ## marc customEtaBining = []
     ## marc customEtaBining.append( (0.000,0.800))
@@ -341,8 +341,8 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
     cDummy = rt.TCanvas()
     cDummy.Print( pdfout + "[" )
 
-    #print 'this is effgraph', effGraph
-    #print 'this is effGraph.pt_1DGraph_list)', effGraph.pt_1DGraph_list
+    #print('this is effgraph', effGraph)
+    #print('this is effGraph.pt_1DGraph_list)', effGraph.pt_1DGraph_list)
 
     listOfSF1D = EffiGraph1D( effGraph.pt_1DGraph_list( False ) , #eff Data
                  #None, 
@@ -351,7 +351,7 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
                  pdfout,
                  xAxis = axis[0], yAxis = axis[1] )
 
-    #print 'this is length of listOfSF1D', len(listOfSF1D)
+    #print('this is length of listOfSF1D', len(listOfSF1D))
 #EffiGraph1D( effGraph.pt_1DGraph_list_customEtaBining(customEtaBining,False) , 
 #             effGraph.pt_1DGraph_list_customEtaBining(customEtaBining,True)   , False, pdfout )
 #    EffiGraph1D( effGraph.eta_1DGraph_list(False), effGraph.eta_1DGraph_list(True), True , pdfout )
@@ -397,7 +397,7 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
 
     c2D.Print( pdfout )
 
-    #print 'this is listOfSF1D', listOfSF1D
+    #print('this is listOfSF1D', listOfSF1D)
 
     rootout = rt.TFile(nameOutBase + '_EGM2D.root','recreate')
     rootout.cd()
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.txtFile is None:
-        print ' - Needs EGM txt file as input'
+        print(' - Needs EGM txt file as input')
         sys.exit(1)
     
 
