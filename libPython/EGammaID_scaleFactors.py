@@ -37,7 +37,8 @@ graphColors = [rt.kBlack, rt.kGray+1, rt.kBlue-3, rt.kBlue-9, rt.kAzure-4, rt.kA
                rt.kGreen-3, rt.kSpring+10, 
                rt.kOrange-2, rt.kOrange+1, rt.kRed-3, rt.kRed-9, rt.kPink-2,
                rt.kMagenta-3, rt.kViolet, rt.kCyan-7, rt.kTeal-5, rt.kYellow+1, rt.kYellow-4, rt.kOrange-8, rt.kPink-4, rt.kGray+3,
-               33, 36, 38, 40, 41, 42, 43, 45, 46, 48, 30, 32]
+               rt.kMagenta+3, rt.kCyan+7, rt.kTeal+5, rt.kYellow+4, rt.kOrange+8, rt.kPink+4,
+               33, 36, 38, 40, 41, 42, 43, 45, 46, 48, 30, 32, 20, 25, 27, 28, 29, 9, 8, 7, 6, 2, 3, 4, ]
 
 
 
@@ -215,6 +216,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         if use_igr == len(listOfTGraph1):
             use_igr = 0
             
+        #print('use_igr and len(graphColors()', use_igr, len(graphColors))
         listOfTGraph1[use_igr].SetLineColor(graphColors[use_igr])
         listOfTGraph1[use_igr].SetMarkerColor(graphColors[use_igr])
         if not listOfMC[use_igr] is None:

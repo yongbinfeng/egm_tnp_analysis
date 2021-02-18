@@ -56,8 +56,10 @@ if options.flag is None:
 
 
 ## define the binning here, much easier...
-binning_eta = [-2.4+0.2*i for i in range(25) ]
-binning_pt  = [25., 30., 32., 35., 38., 41., 44., 47., 50., 55., 65]
+binning_eta = [-2.4+0.1*i for i in range(49) ]
+#binning_eta = [-2.4, -2.25, -2.10, -1.95, -1.8, -1.7, -1.:q
+
+binning_pt  = [25., 27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
 
 binningDef = [
    { 'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta },
