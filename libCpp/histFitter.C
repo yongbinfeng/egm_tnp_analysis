@@ -25,8 +25,8 @@ using namespace std;
 
 class tnpFitter {
 public:
-  tnpFitter( TFile *file, std::string histname  );
-  tnpFitter( TH1 *hPass, TH1 *hFail, std::string histname  );
+  tnpFitter( TFile *file, std::string histname, int massbins, float massmin, float massmax  );
+  tnpFitter( TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax  );
   ~tnpFitter(void) {if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
   void setWorkspace(std::vector<std::string>);
@@ -50,7 +50,7 @@ private:
   double _xFitMin,_xFitMax;
 };
 
-tnpFitter::tnpFitter(TFile *filein, std::string histname   ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
+tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   _histname_base = histname;  
 
@@ -61,23 +61,24 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname   ) : _useMinos(false),
   /// MC histos are done between 50-130 to do the convolution properly
   /// but when doing MC fit in 60-120, need to zero bins outside the range
   for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
-   if(  hPass->GetXaxis()->GetBinCenter(ib) <= 60 || hPass->GetXaxis()->GetBinCenter(ib) >= 120 ) {
+   if(  hPass->GetXaxis()->GetBinCenter(ib) <= massmin || hPass->GetXaxis()->GetBinCenter(ib) >= massmax ) {
      hPass->SetBinContent(ib,0);
      hFail->SetBinContent(ib,0);
    }
   
   _work = new RooWorkspace("w") ;
-  _work->factory("x[50,130]");
+  //_work->factory("x[50,130]");
+  _work->factory(TString::Format("x[%f,%f]",massmin, massmax));
 
   RooDataHist rooPass("hPass","hPass",*_work->var("x"),hPass);
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
   _work->import(rooPass) ;
   _work->import(rooFail) ;
-  _xFitMin = 60;
-  _xFitMax = 120;
+  _xFitMin = massmin;
+  _xFitMax = massmax;
 }
 
-tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname  ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
+tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   _histname_base = histname;
   
@@ -86,20 +87,21 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname  ) : _useMinos
   /// MC histos are done between 50-130 to do the convolution properly
   /// but when doing MC fit in 60-120, need to zero bins outside the range
   for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
-    if(  hPass->GetXaxis()->GetBinCenter(ib) <= 60 || hPass->GetXaxis()->GetBinCenter(ib) >= 120 ) {
+    if(  hPass->GetXaxis()->GetBinCenter(ib) <= massmin || hPass->GetXaxis()->GetBinCenter(ib) >= massmax ) {
       hPass->SetBinContent(ib,0);
       hFail->SetBinContent(ib,0);
     }
   
   _work = new RooWorkspace("w") ;
-  _work->factory("x[50,130]");
+  //_work->factory("x[50,130]");
+  _work->factory(TString::Format("x[%f,%f]",massmin, massmax));
   
   RooDataHist rooPass("hPass","hPass",*_work->var("x"),hPass);
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
   _work->import(rooPass) ;
   _work->import(rooFail) ;
-  _xFitMin = 60;
-  _xFitMax = 120;
+  _xFitMin = massmin;
+  _xFitMax = massmax;
   
 }
 
@@ -169,8 +171,8 @@ int tnpFitter::fits(bool mcTruth,string title) {
   //RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save());
 
 
-  RooPlot *pPass = _work->var("x")->frame(60,120);
-  RooPlot *pFail = _work->var("x")->frame(60,120);
+  RooPlot *pPass = _work->var("x")->frame(50,130); // always plot 50 - 130
+  RooPlot *pFail = _work->var("x")->frame(50,130);
   pPass->SetTitle("passing probe");
   pFail->SetTitle("failing probe");
 

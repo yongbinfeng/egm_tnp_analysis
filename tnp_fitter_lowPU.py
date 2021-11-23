@@ -59,28 +59,33 @@ if options.flag is None:
 massbins, massmin, massmax = 80, 50, 130
 
 ## define the binning here, much easier...
-binning_eta = [-2.4+0.1*i for i in range(49) ]
-#binning_eta = [-2.4+0.1*i for i in range(4) ]
-#binning_eta = [-2.4, -2.25, -2.10, -1.95, -1.8, -1.7, -1.:q
-#binning_eta = [0.+0.2*i for i in range(13) ]
+binning_eta = [-2.4,-2.1,-1.6,-1.2,-0.9,-0.3,0.,0.3,0.9,1.2,1.6,2.1,2.4]
+binning_pt  = [25, 26.5, 28, 29.5, 31, 32.5, 35, 40, 45, 50, 65]#, 80]#, 10000]
 
-#binning_pt  = [25., 35., 45., 55., 65.]#27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
-binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
+if options.flag.startswith('el'):
+    binning_eta = [-2.4,-2.0,-1.566,-1.4442,-1.0,-0.5,0,0.5,1.0,1.4442,1.566,2.0,2.4]
+    binning_pt  = [25, 26.5, 28, 29.5, 31, 32.5, 35, 40, 45, 50, 65]#, 80]#, 10000]
+if not 'trigger' in options.flag:
+    binning_pt  = [25, 35., 50., 65.]
 
-binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+## binning from yongbin
+## Muon Channel:
+## 12 eta bins: [-2.4,-2.1,-1.6,-1.2,-0.9,-0.3,0,0.3,0.9,1.2,1.6,2.1,2.4] 
+## 12 pt bins for HLT: [25, 26.5, 28, 29.5, 31, 32.5, 35, 40, 45, 50, 60, 80, 10000]
+## 3 pt bins for selections, etc: [25, 35, 50, 10000]
+## 
+## Electron Channel: 
+## 12 eta bins: [-2.4,-2.0,-1.566,-1.4442,-1.0,-0.5,0,0.5,1.0,1.4442,1.566,2.0,2.4]
+## Same pt bins as the muons for HLT and selections.
 
-typeflag = options.flag.split('_')[1]
 
-#binningDef = [
-#   { 'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta },
-#   { 'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt  },
-#]
+binningDef = {
+    'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
+    'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
+}
 
 ## now the flags and the cuts, pretty straight forward
 cutBase     = 'tag_pt > 25. && probe_pt > 25. && probe_isMuon > 0.5'
-
-if typeflag == 'tracking':
-    cutBase = 'tag_pt > 25. && probe_isMuon > 0.5'
 
 if options.mcTruth:
     cutBase += ' && tag_matchMC == 1 && probe_matchMC == 1'
@@ -88,149 +93,65 @@ if options.mcTruth:
 cutMinus       = 'probe_charge < 0'
 cutPlus        = 'probe_charge > 0'
 
-##cutTracking    = '(probe_standaloneMatchDR < 0.1)'
-## oldoldold cutTracking    = '(probe_isTracker > 0.5 || probe_isGlobal > 0.5) && probe_pt > 15.'
-cutTracking    = '(probe_isGlobal > 0.5) && probe_pt > 15.'
-cutTrackingAlt = 'probe_standaloneMatchDR < 0.1 && probe_pt > 15.'
-cutTrackingEff = '(probe_isStandalone > 0.5)'
-
-if typeflag == 'tracking':
-    binning_pt  = [25., 65.]
-    binning_pt  = [-15., -7.5, 7.5, 15.]  ## ALERT
-    binning_eta = [-2.4+0.1*i for i in range(49) ]
-    binningDef = {
-        #'eta' : {'var' : 'probe_standaloneEta', 'var_passing': 'probe_matchedTrackEta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_standalonePt' , 'var_passing': 'probe_matchedTrackPt' , 'type': 'float', 'bins': binning_pt }
-        'eta' : {'var' : 'probe_standaloneEta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_standalonePt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
-    }
-
-elif typeflag == 'alttrack':
-    binning_pt  = [25., 65.]
-    binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
-    binning_eta = [-2.4+0.1*i for i in range(49) ]
-    binningDef = {
-        'eta' : {'var' : 'probe_standaloneEta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_standalonePt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
-    }
-
-elif typeflag == 'reco':
-    binning_pt   = [25., 65.]
-    binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
-    binning_eta  = [-2.4+0.1*i for i in range(49) ]
-    binningDef = {
-        'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
-    }
-
-elif typeflag == 'altreco':
-    binning_pt   = [25., 65.]
-    binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
-    binning_eta  = [-2.4+0.1*i for i in range(49) ]
-    binningDef = {
-        'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
-    }
-
-else:
-    binningDef = {
-        'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
-    }
-
 
 cutTrigger     = 'probe_triggerMatch > 0.5'
-cutIdIp        = 'probe_mediumId > 0.5 && fabs(probe_dxy) < 0.05' 
-## && fabs(probe_dz) < 0.2'
+cutIdIp        = 'probe_mediumId > 0.5 && fabs(probe_dxy) < 0.05 && probe_isGlobal > 0.5'
 cutIso         = 'probe_iso < 0.15'
 
-## cutMuonProbeForReco  = 'probe_isMuon > 0.5 && (probe_isTracker || probe_isGlobal)'
-## cutMuonProbeForReco += '&& fabs(probe_dxy) < 0.2' ## && fabs(probe_dz) < 0.1'
-## cutMuonProbeForReco += '&& ((probe_chgiso03*probe_pt < 5. && probe_pt < 25.) || probe_chgiso03 < 0.2 ) '
-## cutBaseReco  = 'tag_pt > 25. && probe_pt > 25.'
-## cutBaseReco += '&& (probe_isMuon < 0.5 || '+'('+cutMuonProbeForReco+'))'
-cutMuonProbeForReco = 'probe_hasTrackerOrGlobalMatch > 0.5'
-cutBaseReco  = 'tag_pt > 25. && probe_pt > 25. && probe_isMuon < 0.5'
-if options.mcTruth:
-    cutBaseReco += ' && probe_matchMC > 0.5 && tag_matchMC > 0.5'
-
-cutAltReco= 'probe_standaloneMatchDR < 0.1'
-
+cutIdIso       = 'probe_mediumId >= 3'
 ## any additional cut to apply
 additionalCuts = None
 
 ## the first item in the flags is the flag to test, the second is the base cut to be applied to all events
 flags = {
-    'mu_reco_both'  : (cutMuonProbeForReco , joinCuts([cutBaseReco]) ),
+    'mu_idip_both'      : (cutIdIp     , joinCuts([cutBase          ]) ),
+    'mu_idip_minus'     : (cutIdIp     , joinCuts([cutBase, cutMinus]) ),
+    'mu_idip_plus'      : (cutIdIp     , joinCuts([cutBase, cutPlus ]) ),
 
-    'mu_altreco_both'  : (cutAltReco , joinCuts([cutBaseReco]) ),
+    'mu_iso_both'       : (cutIso      , joinCuts([cutBase          , cutIdIp]) ),
+    'mu_iso_minus'      : (cutIso      , joinCuts([cutBase, cutMinus, cutIdIp]) ),
+    'mu_iso_plus'       : (cutIso      , joinCuts([cutBase, cutPlus , cutIdIp]) ),
 
-    'mu_alttrack_both'  : (cutTrackingAlt , joinCuts([cutBase,           cutTrackingEff]) ),
+    'mu_trigger_both'   : (cutTrigger  , joinCuts([cutBase          , cutIdIp, cutIso]) ),
+    'mu_trigger_minus'  : (cutTrigger  , joinCuts([cutBase, cutMinus, cutIdIp, cutIso]) ),
+    'mu_trigger_plus'   : (cutTrigger  , joinCuts([cutBase, cutPlus , cutIdIp, cutIso]) ),
 
-    'mu_tracking_both'  : (cutTracking , joinCuts([cutBase,           cutTrackingEff]) ),
-    'mu_tracking_minus' : (cutTracking , joinCuts([cutBase, cutMinus, cutTrackingEff]) ),
-    'mu_tracking_plus'  : (cutTracking , joinCuts([cutBase, cutPlus , cutTrackingEff]) ),
+    'el_idiso_both'     : (cutIdIso     , joinCuts([cutBase          ]) ),
+    'el_idiso_minus'    : (cutIdIso     , joinCuts([cutBase, cutMinus]) ),
+    'el_idiso_plus'     : (cutIdIso     , joinCuts([cutBase, cutPlus ]) ),
 
-    'mu_idip_both'      : (cutIdIp     , joinCuts([cutBase,           cutTracking]) ),
-    'mu_idip_minus'     : (cutIdIp     , joinCuts([cutBase, cutMinus, cutTracking]) ),
-    'mu_idip_plus'      : (cutIdIp     , joinCuts([cutBase, cutPlus , cutTracking]) ),
+    'el_trigger_both'   : (cutTrigger  , joinCuts([cutBase          , cutIdIso]) ),
+    'el_trigger_minus'  : (cutTrigger  , joinCuts([cutBase, cutMinus, cutIdIso]) ),
+    'el_trigger_plus'   : (cutTrigger  , joinCuts([cutBase, cutPlus , cutIdIso]) )
 
-
-    'mu_trigger_both'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
-    'mu_trigger_minus'  : (cutTrigger  , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp]) ),
-    'mu_trigger_plus'   : (cutTrigger  , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) ),
-
-    'mu_iso_both'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
-    'mu_iso_minus'      : (cutIso      , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp, cutTrigger]) ),
-    'mu_iso_plus'       : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp, cutTrigger]) ),
-
-    'mu_isonotrig_both' : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
-    'mu_isonotrig_minus': (cutIso      , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp]) ),
-    'mu_isonotrig_plus' : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) )
 }
 
 
-import etc.inputs.tnpSampleDef as tnpSamples
+from libPython.tnpClassUtils import tnpSample
+inputDir = '/data/shared/tnp/lowPU/2021-10-19-firstGo/'
+wmass_selection = {
+    'mu_DY_lowPU'    : tnpSample('mu_DY_lowPU'    , inputDir +'/dy_mumu.root'    , isMC = True       , nEvts = -1 ) ,
+    'mu_data_lowPU'  : tnpSample('mu_data_lowPU'  , inputDir +'/data_mumu.root'  , lumi =  0.200 ) ,
+    'el_DY_lowPU'    : tnpSample('el_DY_lowPU'    , inputDir +'/dy_elel.root'    , isMC = True       , nEvts = -1 ) ,
+    'el_data_lowPU'  : tnpSample('el_data_lowPU'  , inputDir +'/data_elel.root'  , lumi =  0.200 ) ,
 
-samples_data_preVFP  = tnpSamples.wmass_selection['mu_RunBtoF'  ].clone()
-samples_data_postVFP = tnpSamples.wmass_selection['mu_RunGtoH'  ].clone()
-samples_data_all     = tnpSamples.wmass_selection['mu_RunBtoH'  ].clone()
+}
 
-samples_dy_preVFP  = tnpSamples.wmass_selection['mu_DY_preVFP' ].clone()
-samples_dy_postVFP = tnpSamples.wmass_selection['mu_DY_postVFP'].clone()
-samples_dy_all     = tnpSamples.wmass_selection['mu_DY_all'].clone()
+samples_data_mumu  = wmass_selection['mu_data_lowPU'  ].clone()
+samples_dy_mumu    = wmass_selection['mu_DY_lowPU' ].clone()
+samples_data_elel  = wmass_selection['el_data_lowPU'  ].clone()
+samples_dy_elel    = wmass_selection['el_DY_lowPU' ].clone()
+
+samples_dy   = samples_dy_mumu
+samples_data = samples_data_mumu
+if options.flag.startswith('el'):
+    samples_dy   = samples_dy_elel
+    samples_data = samples_data_elel
+
+weightName   = 'std::copysign(1.0f,genWeight)'
 
 #weightName = 'totWeight/std::abs(totWeight)*std::max(4.f,std::abs(totWeight))'
 
-if options.era == 'BtoF':
-    samples_data = samples_data_preVFP
-    samples_dy   = samples_dy_preVFP
-    weightName = 'puw_bf*std::copysign(1.0f,genWeight)'
-elif options.era == 'GtoH':
-    samples_data = samples_data_postVFP
-    samples_dy   = samples_dy_postVFP
-    weightName = 'puw_gh*std::copysign(1.0f,genWeight)'
-elif options.era == 'BtoH':
-    samples_data = samples_data_all
-    samples_dy   = samples_dy_all
-    weightName = 'puw_inc*std::copysign(1.0f,genWeight)'
-elif len(options.era) == 1 or options.era == 'F_preVFP' or options.era == 'F_postVFP':
-    samples_data = tnpSamples.wmass_selection['mu_Run'+options.era  ].clone()
-    preVFP = False
-    if options.era in ['B', 'C', 'D', 'E', 'F_preVFP', 'F_postVFP', 'G', 'H']:
-        preVFP = True
-        if options.era in ['G', 'H']: preVFP = False
-    samples_dy   = samples_dy_preVFP if preVFP else samples_dy_postVFP
-    weightName = 'puw_2016UL_era(nTrueInt,{er})*std::copysign(1.0f,genWeight)'.format(er=options.era)
-
-else:
-    print('you gave a wrong era name. options are \'BtoF\', \'GtoH\', and \'BtoH\' or the single eras')
-    sys.exit(1)
 
 samplesDef = {
     'data'   : samples_data,
@@ -272,10 +193,8 @@ tnpParAltBkgFit = [
     ]
 
 today = datetime.date.isoformat(datetime.date.today())
-#today='2021-10-05'
 
-baseOutDir = 'results_nodz_dxybs{mc}_{d}_binnedInZ/efficiencies_{era}/'.format(d=today,era=options.era,mc='_mcTruth' if options.mcTruth else '')
-#baseOutDir = 'results_newStyle{mc}/efficiencies_{era}/'.format(era=options.era,mc='_mcTruth' if options.mcTruth else '')
+baseOutDir = 'resultsLowPU_nodz_dxybs{mc}_{d}/efficiencies_{era}/'.format(d=today,era=options.era,mc='_mcTruth' if options.mcTruth else '')
 
 ## done making it more configurable
 ## ===========================================================================================
@@ -331,32 +250,22 @@ for s in samplesDef.keys():
 
 
 if options.createHists:
-## parallel    for sampleType in samplesDef.keys():
-## parallel        sample =  samplesDef[sampleType]
-## parallel        if sample is None : continue
-## parallel        if sampleType == options.sample or options.sample == 'all' :
-## parallel            print('creating histogram for sample ')
-## parallel            sample.dump()
-## parallel            var = { 'name' : 'pair_mass', 'nbins' : 60, 'min' : 60, 'max': 120 }
-## parallel            if sample.mcTruth:
-## parallel                var = { 'name' : 'pair_mass', 'nbins' : 60, 'min' : 60, 'max': 120 }
-## parallel            tnpRoot.makePassFailHistograms( sample, flags[options.flag][0], tnpBins['bins'], binningDef, flags[options.flag][1], var)#tnpBins, var )
     def parallel_hists(sampleType):
         # if not sampleType == 'mcNom': return
         sample = samplesDef[sampleType]
         if sample is not None and (sampleType == options.sample or options.sample == 'all'):
             print('creating histogram for sample ')
             sample.dump()
-            if typeflag == 'tracking':
+            if 'tracking' in options.flag:
                 var = { 'namePassing' : 'pair_mass','nameFailing' : 'pair_massStandalone', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
-            elif typeflag == 'alttrack':
+            elif 'alttrack' in options.flag:
                 var = { 'namePassing' : 'pair_massMatchedTrack','nameFailing' : 'pair_massStandalone', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
             else:
                 var = { 'name' : 'pair_mass', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
             if sample.mcTruth:
-                if typeflag == 'tracking':
+                if 'tracking' in options.flag:
                     var = { 'namePassing' : 'pair_mass','nameFailing' : 'pair_massStandalone', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
-                elif typeflag == 'alttrack':
+                elif 'alttrack' in options.flag:
                     var = { 'namePassing' : 'pair_massMatchedTrack','nameFailing' : 'pair_massStandalone', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
                 else:
                     var = { 'name' : 'pair_mass', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
@@ -476,35 +385,15 @@ if options.sumUp:
     print(info)
 
     effis = None
-    effFileName = outputDirectory+'/allEfficiencies.txt'
+    effFileName ='%s/allEfficiencies.txt' % outputDirectory 
     fOut = open( effFileName,'w')
-
-    ## foob def parallel_fit(ib): ## parallel
-    ## foob     if (options.binNumber >= 0 and ib == options.binNumber) or options.binNumber < 0:
-    ## foob         if options.altSig:                 
-    ## foob             fitUtils.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax )
-    ## foob         elif options.altBkg:
-    ## foob             fitUtils.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax )
-    ## foob         else:
-    ## foob             fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, usePassingTemplateForNominalFit )
-
-    ## foob pool = Pool() ## parallel
-    ## foob pool.map(parallel_fit, range(len(tnpBins['bins']))) ## parallel
-
-
     
-    def parallel_sumUp(_bin):
+    for ib,_bin in enumerate(tnpBins['bins']):
         effis = tnpRoot.getAllEffi( info, _bin )
-        ##print('this is _bin', _bin)
 
         ### formatting assuming 2D bining -- to be fixed        
         v1Range = _bin['title'].split(';')[1].split('<')
         v2Range = _bin['title'].split(';')[2].split('<')
-
-        ib = int(_bin['name'].split('_')[0].replace('bin',''))
-
-        fOut = open(effFileName+'_tmpTMP_'+str(ib), 'w')
-
         
         if not ib:
             astr = '### var1 : %s\n' % v1Range[1]
@@ -532,8 +421,6 @@ if options.sumUp:
             )
         print(astr)
         fOut.write( astr + '\n' )
-
-        fOut.close()
 
         canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
         canv_all.Divide(3,3)
@@ -603,127 +490,10 @@ if options.sumUp:
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
         ROOT.gErrorIgnoreLevel = odllevel
-    ## this works, si jamais for ib,_bin in enumerate(tnpBins['bins']):
-    ## this works, si jamais     effis = tnpRoot.getAllEffi( info, _bin )
-
-    ## this works, si jamais     ### formatting assuming 2D bining -- to be fixed        
-    ## this works, si jamais     v1Range = _bin['title'].split(';')[1].split('<')
-    ## this works, si jamais     v2Range = _bin['title'].split(';')[2].split('<')
-    ## this works, si jamais     
-    ## this works, si jamais     if not ib:
-    ## this works, si jamais         astr = '### var1 : %s\n' % v1Range[1]
-    ## this works, si jamais         fOut.write( astr )
-    ## this works, si jamais         astr = '### var2 : %s\n' % v2Range[1]
-    ## this works, si jamais         fOut.write( astr )
-    ## this works, si jamais         exp = '{v0:8s}\t{v1:8s}\t{v2:8s}\t{v3:8s}\t{edv:10s}\t{ede:10s}\t{emcv:10s}\t{emce:10s}\t{edalts:15s}\t{edaltse:15s}\t{emcalt:15s}\t{emcalte:15s}\t{edaltb:15s}\t{etagsel:10s}\n'.format(
-    ## this works, si jamais             v0='var1min', v1='var1max', v2='var2min', v3='var2max', 
-    ## this works, si jamais             edv='eff data', ede='err data', 
-    ## this works, si jamais             emcv='eff mc', emce='err mc', 
-    ## this works, si jamais             edalts='eff data altS', edaltse='err data altS',
-    ## this works, si jamais             emcalt='eff mc alt', emcalte='err mc alt', edaltb='eff data altB', etagsel='eff tag sel')
-    ## this works, si jamais         print(exp)
-    ## this works, si jamais         fOut.write(exp)
-    ## this works, si jamais         
-    ## this works, si jamais     astr =  '%-+8.3f\t%-+8.3f\t%-+8.3f\t%-+8.3f\t%-10.5f\t%-10.5f\t%-10.5f\t%-10.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-10.5f' % (
-    ## this works, si jamais         float(v1Range[0]), float(v1Range[2]),
-    ## this works, si jamais         float(v2Range[0]), float(v2Range[2]),
-    ## this works, si jamais         effis['dataNominal'][0],effis['dataNominal'][1],
-    ## this works, si jamais         effis['mcNominal'  ][0],effis['mcNominal'  ][1],
-    ## this works, si jamais         effis['dataAltSig' ][0],effis['dataAltSig' ][1],
-    ## this works, si jamais         effis['mcAlt' ][0], effis['mcAlt' ][1],
-    ## this works, si jamais         effis['dataAltBkg' ][0],
-    ## this works, si jamais         effis['tagSel'][0],
-    ## this works, si jamais         )
-    ## this works, si jamais     print(astr)
-    ## this works, si jamais     fOut.write( astr + '\n' )
-
-    ## this works, si jamais     canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
-    ## this works, si jamais     canv_all.Divide(3,3)
-    ## this works, si jamais     canv_all.Draw()
-    ## this works, si jamais     ipad = 1
-    ## this works, si jamais     canv_all.cd(0)
-    ## this works, si jamais     txt = ROOT.TLatex(); txt.SetTextFont(42); txt.SetTextSize(0.03)
-    ## this works, si jamais     txt.SetNDC()
-    ## this works, si jamais     txt.DrawLatex(0.01, 0.97, '{n}'.format(n=_bin['name'].replace('_',' ').replace('To', '-').replace('probe ', '').replace('m','-').replace('pt','XX').replace('p','.').replace('XX','p_{T}')))
-    ## this works, si jamais     txt.SetTextSize(0.07)
-    ## this works, si jamais     for ip, p in enumerate(effis['canv_mcAlt'].GetListOfPrimitives()):
-    ## this works, si jamais         if not ip: continue
-    ## this works, si jamais         canv_all.cd(ipad)
-    ## this works, si jamais         p.SetPad(0.05, 0.00, 0.95, 0.90)
-    ## this works, si jamais         p.Draw()
-    ## this works, si jamais         ipad+=1
-    ## this works, si jamais     canv_all.cd(ipad)
-    ## this works, si jamais     txt.DrawLatex(0.01, 0.85, 'MC counting efficiency:')
-    ## this works, si jamais     tmp = effis['mcNominal']
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.65, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-    ## this works, si jamais     txt.SetTextFont(62)
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.55, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-    ## this works, si jamais     txt.SetTextFont(42)
-    ## this works, si jamais     tmp = effis['mcAlt']
-    ## this works, si jamais     txt.DrawLatex(0.01, 0.35, 'MC fitted signal:')
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.25, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.15, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-    ## this works, si jamais     txt.SetTextFont(62)
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.05, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-    ## this works, si jamais     txt.SetTextFont(42)
-    ## this works, si jamais     ipad+=1
-    ## this works, si jamais     for ip, p in enumerate(effis['canv_dataNominal'].GetListOfPrimitives()):
-    ## this works, si jamais         if not ip: continue
-    ## this works, si jamais         canv_all.cd(ipad)
-    ## this works, si jamais         p.SetPad(0.05, 0.00, 0.95, 0.90)
-    ## this works, si jamais         p.Draw()
-    ## this works, si jamais         ipad+=1
-    ## this works, si jamais     canv_all.cd(ipad)
-    ## this works, si jamais     tmp = effis['dataNominal']
-    ## this works, si jamais     txt.DrawLatex(0.01, 0.65, 'data nominal:')
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-    ## this works, si jamais     txt.SetTextFont(62)
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-    ## this works, si jamais     txt.SetTextFont(42)
-    ## this works, si jamais     ipad+=1
-    ## this works, si jamais     for ip, p in enumerate(effis['canv_dataAltSig'].GetListOfPrimitives()):
-    ## this works, si jamais         if not ip: continue
-    ## this works, si jamais         canv_all.cd(ipad)
-    ## this works, si jamais         p.SetPad(0.05, 0.00, 0.95, 0.90)
-    ## this works, si jamais         p.Draw()
-    ## this works, si jamais         ipad+=1
-    ## this works, si jamais     canv_all.cd(ipad)
-    ## this works, si jamais     tmp = effis['dataAltSig']
-    ## this works, si jamais     txt.DrawLatex(0.01, 0.65, 'data alternative:')
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-    ## this works, si jamais     txt.SetTextFont(62)
-    ## this works, si jamais     txt.DrawLatex(0.20, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-    ## this works, si jamais     txt.SetTextFont(42)
-
-    ## this works, si jamais     #effis['canv_dataAltSig'].Draw()
-
-    ## this works, si jamais     odllevel = ROOT.gErrorIgnoreLevel
-    ## this works, si jamais     ROOT.gErrorIgnoreLevel = ROOT.kWarning
-    ## this works, si jamais     canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
-    ## this works, si jamais     canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
-    ## this works, si jamais     ROOT.gErrorIgnoreLevel = odllevel
-    pool = Pool()
-    pool.map(parallel_sumUp, tnpBins['bins'])
-
-    lsfiles = []
-    alltmpfiles = os.listdir(outputDirectory)
-    for ifile in alltmpfiles:
-        if not 'tmpTMP' in ifile: continue
-        lsfiles.append(outputDirectory+'/'+ifile)
-    
-    lsfiles = sorted(lsfiles, key = lambda x: int(x.split('_')[-1]))
-    #print(lsfiles)
-
-    os.system('cat '+' '.join(lsfiles)+' > '+effFileName)
-    os.system('rm  '+' '.join(lsfiles))
-
     os.system('cp /afs/cern.ch/user/m/mdunser/public/index.php {d}/index.php'.format(d=outputDirectory+'/plots/'))
         
 
-    #fOut.close()
+    fOut.close()
 
     print('Efficiencies saved in file : ',  effFileName)
     import libPython.EGammaID_scaleFactors as makesf

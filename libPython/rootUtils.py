@@ -1,4 +1,4 @@
-import ROOT, math, array, ctypes
+import ROOT, math, array, ctypes, copy
 import numpy as np
 from . import fitUtils
 # import *
@@ -7,6 +7,8 @@ import functools
 
 ROOT.ROOT.EnableImplicitMT()
 #ROOT.ROOT.TTreeProcessorMT.SetMaxTasksPerFilePerWorker(1)
+
+ROOT.gROOT.LoadMacro('pileupWeights.C+')
 
 def removeNegativeBins(h):
     for i in range(1,h.GetNbinsX()+1):
@@ -39,13 +41,21 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 
     ## now slowly constructing the 3d histogram. some things here are hardcoded...
 
-    probe_binning_eta, probe_binning_pt = (bindef[0]['bins'], bindef[1]['bins']) if 'eta' in bindef[0]['var'] else (bindef[1]['bins'], bindef[0]['bins'])
-    probe_var_eta, probe_var_pt         = (bindef[0]['var'] , bindef[1]['var'] ) if 'eta' in bindef[0]['var'] else (bindef[1]['var'] , bindef[0]['var'] )
+    probe_binning_eta, probe_binning_pt = bindef['eta']['bins'], bindef['pt']['bins']
+    probe_var_eta, probe_var_pt         = bindef['eta']['var'] , bindef['pt']['var']
 
     probe_binning_pt  = array.array('d', probe_binning_pt)
     probe_binning_eta = array.array('d', probe_binning_eta)
 
+    probe_var_pass_pt, probe_var_pass_eta = probe_var_pt, probe_var_eta
+
+    if 'var_passing' in bindef['pt']:
+        probe_var_pass_pt = bindef['pt']['var_passing']
+    if 'var_passing' in bindef['eta']:
+        probe_var_pass_eta = bindef['eta']['var_passing']
+
     binning_mass = array.array('d', [var['min'] + i*(var['max']-var['min'])/var['nbins'] for i in range(var['nbins']+1)])
+    binning_runs = array.array('d', list(range(273158,284045)))
 
     ## now have the full 3d binning
 
@@ -78,6 +88,13 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     h_tmp_fail =  ROOT.TH3D('fail_'+sample.name, 'fail_'+sample.name, var['nbins']            , binning_mass, 
                                                                       len(probe_binning_pt) -1, probe_binning_pt ,
                                                                       len(probe_binning_eta)-1, probe_binning_eta)
+
+    h_tmp_run_pass =  ROOT.TH3D('run_pass_'+sample.name, 'run_pass_'+sample.name, len(binning_runs)-1, binning_runs, 
+                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
+                                                                      len(probe_binning_eta)-1, probe_binning_eta)
+    h_tmp_run_fail =  ROOT.TH3D('run_fail_'+sample.name, 'run_fail_'+sample.name, len(binning_runs)-1, binning_runs, 
+                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
+                                                                      len(probe_binning_eta)-1, probe_binning_eta)
     h_tmp_pass.Sumw2()
     h_tmp_fail.Sumw2()
 
@@ -86,6 +103,9 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
 
     tmp_pass_model = ROOT.RDF.TH3DModel(h_tmp_pass)
     tmp_fail_model = ROOT.RDF.TH3DModel(h_tmp_fail)
+
+    tmp_run_pass_model = ROOT.RDF.TH3DModel(h_tmp_run_pass)
+    tmp_run_fail_model = ROOT.RDF.TH3DModel(h_tmp_run_fail)
 
     rdfpass = rdf.Filter(cutPass)
     rdffail = rdf.Filter(cutFail)
@@ -97,8 +117,21 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     print('   passing flag', flag)
 
     print('now filling the passing and failing histograms with rdf')
-    h_tmp_pass = rdfpass.Histo3D(tmp_pass_model, var['name'], probe_var_pt, probe_var_eta, 'rdfweight')
-    h_tmp_fail = rdffail.Histo3D(tmp_fail_model, var['name'], probe_var_pt, probe_var_eta, 'rdfweight')
+    mass_passing = ''
+    mass_failing = ''
+    if not 'namePassing' in var:
+        mass_passing = var['name']
+    else:
+        mass_passing = var['namePassing']
+    if not 'nameFailing' in var:
+        mass_failing = var['name']
+    else:
+        mass_failing = var['nameFailing']
+    h_tmp_pass = rdfpass.Histo3D(tmp_pass_model, mass_passing, probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
+    h_tmp_fail = rdffail.Histo3D(tmp_fail_model, mass_failing, probe_var_pt, probe_var_eta, 'rdfweight')
+
+    h_tmp_run_pass = rdfpass.Histo3D(tmp_run_pass_model, 'run', probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
+    h_tmp_run_fail = rdffail.Histo3D(tmp_run_fail_model, 'run', probe_var_pt, probe_var_eta, 'rdfweight')
 
     ## print('now filling passing histogram for sample', sample.name)
     ## drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
@@ -118,6 +151,8 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     print('done filling for sample', sample.name)
 
     outfile = ROOT.TFile(sample.histFile,'recreate')
+    h_tmp_run_pass .Write()
+    h_tmp_run_fail .Write()
 
     for ii,ib in enumerate(bins):
         h_name = ib['name' ]
@@ -241,20 +276,21 @@ def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
 
 
 
-def histPlotter( filename, tnpBin, plotDir, replica=-1 ):
-    print('opening ', filename)
-    rootfile = ROOT.TFile(filename,"read")
+def histPlotter( filename, tnpBin, plotDir, replica=-1, verbosePlotting=True ):
 
-    if replica<0:
-        print('  get canvas: ' , '{c}_Canv'.format(c=tnpBin['name']))
-        c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
-        c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
-        c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
-    else:
-        print('  get canvas: ' , '{c}_Canv_Stat{r}'.format(c=tnpBin['name'],r=replica))
-        c = rootfile.Get( '%s_Canv_Stat%d' % (tnpBin['name'],replica) )
-        c.Print( '%s/%s_Stat%d.png' % (plotDir,tnpBin['name'],replica))
-        c.Print( '%s/%s_Stat%d.pdf' % (plotDir,tnpBin['name'],replica))
+    if verbosePlotting:
+        print('opening ', filename)
+        rootfile = ROOT.TFile(filename,"read")
+        if replica<0:
+            print('  get canvas: ' , '{c}_Canv'.format(c=tnpBin['name']))
+            c = rootfile.Get( '%s_Canv' % tnpBin['name'] )
+            c.Print( '%s/%s.png' % (plotDir,tnpBin['name']))
+            c.Print( '%s/%s.pdf' % (plotDir,tnpBin['name']))
+        else:
+            print('  get canvas: ' , '{c}_Canv_Stat{r}'.format(c=tnpBin['name'],r=replica))
+            c = rootfile.Get( '%s_Canv_Stat%d' % (tnpBin['name'],replica) )
+            c.Print( '%s/%s_Stat%d.png' % (plotDir,tnpBin['name'],replica))
+            c.Print( '%s/%s_Stat%d.pdf' % (plotDir,tnpBin['name'],replica))
         
 
 
@@ -263,7 +299,7 @@ def computeEffi( n1,n2,e1,e2):
     if (n1+n2):
         eff   = n1/(n1+n2)
         e_eff = 1/(n1+n2)*math.sqrt(e1*e1*n2*n2+e2*e2*n1*n1)/(n1+n2)
-        if e_eff < 0.001 : e_eff = 0.001
+        #if e_eff < 0.001 : e_eff = 0.001
     else:
         eff, e_eff = 1.1, 0.01
 
@@ -287,7 +323,7 @@ def getAllEffi( info, bindef ):
         nP = hP.IntegralAndError(bin1,bin2,eP)
         nF = hF.IntegralAndError(bin1,bin2,eF)
 
-        effis['mcNominal'] = computeEffi(nP,nF,float(eP.value),float(eF.value))
+        effis['mcNominal'] = computeEffi(nP,nF,float(eP.value),float(eF.value)) +[nP, nF, float(eP.value), float(eF.value)]
         rootfile.Close()
     else: effis['mcNominal'] = [-1,-1]
 
@@ -308,24 +344,30 @@ def getAllEffi( info, bindef ):
         
     if not info['mcAlt'] is None and os.path.isfile(info['mcAlt']):
         rootfile = ROOT.TFile( info['mcAlt'], 'read' )
-        hP = rootfile.Get('%s_Pass'%bindef['name'])
-        hF = rootfile.Get('%s_Fail'%bindef['name'])
-        bin1 = 1
-        bin2 = hP.GetXaxis().GetNbins()
-        eP = ROOT.Double(-1.0)
-        eF = ROOT.Double(-1.0)
-        nP = hP.IntegralAndError(bin1,bin2,eP)
-        nF = hF.IntegralAndError(bin1,bin2,eF)
+        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_mcAlt'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name'] ))
 
-        effis['mcAlt'] = computeEffi(nP,nF,eP,eF)
+        fitP = fitresP.floatParsFinal().find('nSigP')
+        fitF = fitresF.floatParsFinal().find('nSigF')
+        
+        nP = fitP.getVal()
+        nF = fitF.getVal()
+        eP = fitP.getError()
+        eF = fitF.getError()
+
+        effis['mcAlt'] = computeEffi(nP,nF,eP,eF) +[nP, nF, float(eP), float(eF)]
         rootfile.Close()
-    else: effis['mcAlt'] = [-1,-1]
+    else: 
+        effis['mcAlt'] = [-1,-1]
+        effis['canv_mcAlt'] = None
 
     if not info['dataNominal'] is None and os.path.isfile(info['dataNominal']) :
         rootfile = ROOT.TFile( info['dataNominal'], 'read' )
         from ROOT import RooFit,RooFitResult
         fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
         fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_dataNominal'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name']  ))
 
         fitP = fitresP.floatParsFinal().find('nSigP')
         fitF = fitresF.floatParsFinal().find('nSigF')
@@ -344,14 +386,17 @@ def getAllEffi( info, bindef ):
         if eF > math.sqrt(hF.Integral()) : eF = math.sqrt(hF.Integral())
         rootfile.Close()
 
-        effis['dataNominal'] = computeEffi(nP,nF,eP,eF)
+        effis['dataNominal'] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
     else:
         effis['dataNominal'] = [-1,-1]
+        effis['canv_dataNominal'] = None
+
     if not info['dataAltSig'] is None and os.path.isfile(info['dataAltSig']) :
         rootfile = ROOT.TFile( info['dataAltSig'], 'read' )
         from ROOT import RooFit,RooFitResult
         fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
         fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_dataAltSig'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name'] ))
 
         nP = fitresP.floatParsFinal().find('nSigP').getVal()
         nF = fitresF.floatParsFinal().find('nSigF').getVal()
@@ -367,10 +412,11 @@ def getAllEffi( info, bindef ):
         if eF > math.sqrt(hF.Integral()) : eF = math.sqrt(hF.Integral())
         rootfile.Close()
 
-        effis['dataAltSig'] = computeEffi(nP,nF,eP,eF)
+        effis['dataAltSig'] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
 
     else:
         effis['dataAltSig'] = [-1,-1]
+        effis['canv_dataAltSig'] = None
 
     if not info['dataAltBkg'] is None and os.path.isfile(info['dataAltBkg']):
         rootfile = ROOT.TFile( info['dataAltBkg'], 'read' )
@@ -395,6 +441,7 @@ def getAllEffi( info, bindef ):
         effis['dataAltBkg'] = computeEffi(nP,nF,eP,eF)
     else:
         effis['dataAltBkg'] = [-1,-1]
+
     return effis
 
 

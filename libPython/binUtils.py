@@ -1,6 +1,10 @@
 import copy
 
 
+## whoever wrote this code originally should take a few lessons in basic python operations
+## this is, by all means, terrible....
+## i'm not proud that i didn't fix it, i'm just lazy
+
 def createBins( bining, cut ):
     binCut = None
     nbin = 0
@@ -13,8 +17,10 @@ def createBins( bining, cut ):
     listOfIndex = []    
     listOfIndex.append( index )
 
+    print('this is listOfIndex', listOfIndex)
     ### first map nD bins in a single list
-    for iv in range(len(bining)):
+    for iiv,iv in enumerate(bining.keys()): ##marc range(len(bining)):
+    #for iv in range(len(bining)):
         var = bining[iv]['var']
         #python3if not bining[iv].has_key('type') or not bining[iv].has_key('bins'):
         if not 'type' in bining[iv] or not 'bins' in bining[iv]:
@@ -27,21 +33,23 @@ def createBins( bining, cut ):
             nb1D = len(bining[iv]['bins'])
         nbin = nbin * nb1D
 
+        print('this is nb1D', nb1D)
         listOfIndexInit = copy.deepcopy(listOfIndex)
         for ib_v in range(nb1D):
             if ib_v == 0 :
                 for ib in range(len(listOfIndex)):
-                    listOfIndex[ib][iv] = ib_v            
+                    listOfIndex[ib][iiv] = ib_v            
             else: 
                 for ib in range(len(listOfIndexInit)):
-                    listOfIndexInit[ib][iv] = ib_v
+                    listOfIndexInit[ib][iiv] = ib_v
                            
                 listOfIndex.extend(copy.deepcopy(listOfIndexInit))
 
     listOfBins = []
-    ibin = 0
+    #ibin = 0
     nbins = len(listOfIndex)
-    for ix in listOfIndex:
+    print('this is listOfIndex', listOfIndex)
+    for ibin,ix in enumerate(listOfIndex):
         ### make bin definition
         binCut   = None
         binName  = 'bin%02d'%ibin
@@ -54,10 +62,12 @@ def createBins( bining, cut ):
         if not cut is None:
             binCut = cut
 
-        for iv in range(len(ix)):
-            var     = bining[iv]['var']
-            bins1D  = bining[iv]['bins']
-            varType = bining[iv]['type']
+        #print('binname', binName)
+
+        for iv,v in enumerate(bining.keys()):
+            var     = bining[v]['var']
+            bins1D  = bining[v]['bins']
+            varType = bining[v]['type']
             if varType == 'float' :
                 if binCut is None: 
                     binCut   = '%s >= %f && %s < %f' % (var,bins1D[ix[iv]],var,bins1D[ix[iv]+1])
@@ -83,10 +93,9 @@ def createBins( bining, cut ):
             binName = binName.replace('.','p')
 
         listOfBins.append({'cut' : binCut, 'title': binTitle, 'name' : binName, 'vars' : binVars })
-        ibin = ibin + 1
  
     listOfVars = []
-    for iv in  range(len(bining)):
+    for iv in  bining.keys(): ## marc range(len(bining)):
         listOfVars.append(bining[iv]['var'])
         
     binDefinition = {

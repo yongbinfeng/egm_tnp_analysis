@@ -94,7 +94,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, tnpFit=True, re
 #############################################################
 ########## nominal fitter
 #############################################################
-def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
+def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, usePassingTemplateForNominalFit=False ):
         
     print('------- now nominal fitting bin:')
     for i in tnpBin:
@@ -114,7 +114,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
     infile = rt.TFile( sample.histFile, "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'] )
+    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     infile.Close()
 
     ## setup
@@ -126,7 +126,11 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
     ## for high pT change the failing spectra to any probe to get statistics
     fileTruth  = rt.TFile(sample.mcRef.histFile,'read')
     histZLineShapeP = fileTruth.Get('%s_Pass'%tnpBin['name'])
-    histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
+    if usePassingTemplateForNominalFit:
+        histZLineShapeF = fileTruth.Get('%s_Pass'%tnpBin['name'])
+    else:
+        histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
+
     if ptMin( tnpBin ) > minPtForSwitch: 
         histZLineShapeF = fileTruth.Get('%s_Pass'%tnpBin['name'])
 #        fitter.fixSigmaFtoSigmaP()
@@ -142,8 +146,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
     fitter.setWorkspace( workspace )
 
     title = tnpBin['title'].replace(';',' - ')
-    title = title.replace('probe_sc_eta','#eta_{SC}')
-    title = title.replace('probe_Ele_pt','p_{T}')
+    title = title.replace('probe_eta','#eta')
+    title = title.replace('probe_pt','p_{T}')
     fitter.fits(sample.mcTruth,title)
     # python3rootfile.Close()
 
@@ -196,7 +200,7 @@ def histScaleFitterNominal( sample, tnpBin, tnpWorkspaceParam, resample, batch=F
 #############################################################
 ########## alternate signal fitter
 #############################################################
-def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
+def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120 ):
 
     tnpWorkspacePar = createWorkspaceForAltSig( sample,  tnpBin, tnpWorkspaceParam )
 
@@ -220,7 +224,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
     ## MC only: this is to get MC parameters in data fit!
     if sample.isMC and ptMin( tnpBin ) > minPtForSwitch:     
         hF = infile.Get('%s_Pass' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'] )
+    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
 #    fitter.fixSigmaFtoSigmaP()
     infile.Close()
 
@@ -304,7 +308,7 @@ def histScaleFitterAltSig( sample, tnpBin, tnpWorkspaceParam, resample, batch=Fa
 #############################################################
 ########## alternate background fitter
 #############################################################
-def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
+def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120 ):
 
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
@@ -321,7 +325,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
     infile = rt.TFile(sample.histFile,'read')
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'] )
+    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     infile.Close()
 
     ## setup
@@ -357,7 +361,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
 #############################################################
 ########## alternate background scale fitter
 #############################################################
-def histScaleFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, resample ):
+def histScaleFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, resample, massbins=60, massmin=60, massmax=120 ):
 
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
@@ -373,7 +377,7 @@ def histScaleFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, resample ):
     ## init fitter
     infile = rt.TFile(getattr(sample, 'histFile%d' % resample),'read')
     hP = infile.Get('%s_Stat%d' % (tnpBin['name'],resample))
-    fitter = scaleFitter( hP, tnpBin['name'], resample )
+    fitter = scaleFitter( hP, tnpBin['name'], resample, massbins, massmin, massmax )
     infile.Close()
 
     ## setup

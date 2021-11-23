@@ -17,13 +17,17 @@ class efficiency:
         self.altEff  = [-1]*7
         self.syst    = [-1]*7
     
-    def __init__(self,ptBin,etaBin,effData,errEffData,effMC,errEffMC,effAltBkgModel,effAltSigModel,effAltMCSignal,effAltTagSel):
+    def __init__(self,ptBin,etaBin,effData,errEffData,effMC,errEffMC,effAltBkgModel,effAltSigModel,errAltSigModel,effAltMCSignal,errAltMCSig,effAltTagSel):
         self.ptBin      = ptBin
         self.etaBin     = etaBin
         self.effData    = effData
         self.effMC      = effMC
-        self.errEffData = errEffData        
+        self.errEffData = errEffData
         self.errEffMC   = errEffMC
+        self.effAltSig = effAltSigModel
+        self.errAltSig = errAltSigModel
+        self.effAltSigMC = effAltMCSignal
+        self.errAltSigMC = errAltMCSig
         self.altEff = [-1]*7
         self.syst   = [-1]*9
         self.altEff[self.iAltBkgModel] = effAltBkgModel
@@ -161,7 +165,7 @@ class efficiencyList:
                         effMinus =  self.effList[ptBin][etaBinMinus] 
 
                     if effMinus is None:
-                        print(" ---- efficiencyList: I did not find -eta bin!!!")
+                        pass #print(" ---- efficiencyList: I did not find -eta bin!!!")
                         
                     else:                        
                         averageData = (effPlus.effData + effMinus.effData)/2.
@@ -189,7 +193,7 @@ class efficiencyList:
 
                     if effMinus is None:
                         self.effList[ptBin][etaBinMinus] = effPlus
-                        print(" ---- efficiencyList: I did not find -eta bin!!!")
+                        pass # print(" ---- efficiencyList: I did not find -eta bin!!!")
                     else:
                         #### fix statistical errors if needed
                         if    effPlus.errEffData <= 0.00001 and effMinus.errEffData > 0.00001: 
@@ -256,7 +260,21 @@ class efficiencyList:
             htitle = 'lepton uncertainties'
             hname  = 'h2_uncertaintiesEGamma'             
 
+        if onlyError   == 40 :
+            htitle = 'lepton efficiencies data nominal'
+            hname  = 'h2_effDataNominal'
+        if onlyError   == 41 :
+            htitle = 'lepton efficiencies MC nominal'
+            hname  = 'h2_effMCNominal'
+        if onlyError   == 42 :
+            htitle = 'lepton efficiencies data altSig'
+            hname  = 'h2_effDataAltSig'
+        if onlyError   == 43 :
+            htitle = 'lepton efficiencies MC altSig'
+            hname  = 'h2_effMCAltSig'             
+
         h2 = rt.TH2F(hname,htitle,xbinsTab.size-1,xbinsTab,ybinsTab.size-1,ybinsTab)
+        h2.Sumw2()
 
         ## init histogram efficiencies and errors to 100%
         for ix in range(1,h2.GetXaxis().GetNbins()+1):
@@ -286,7 +304,7 @@ class efficiencyList:
                         averageMC = None
                         if effMinus is None:
                             averageMC = effPlus.effMC
-                            print(" ---- efficiencyList: I did not find -eta bin!!!")
+                            pass # print(" ---- efficiencyList: I did not find -eta bin!!!")
                         else:                        
                             averageMC   = (effPlus.effMC   + effMinus.effMC  )/2.
                         ### so this is h2D bin is inside the bining used by e/gamma POG
@@ -311,6 +329,19 @@ class efficiencyList:
                             if relError:
                                 denominator = self.effList[ptBin][etaBin].systCombined
                             h2.SetBinContent(ix,iy, abs(self.effList[ptBin][etaBin].syst[onlyError-1]) / denominator )
+                        ## this is the dumbest thing in the world. i am not proud of anything that follows, but jesus christ whoever wrote this should feel bad.
+                        if onlyError   == 40 :
+                            h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effData)
+                            h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].errEffData)
+                        if onlyError   == 41 :
+                            h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effMC)
+                            h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].errEffMC)
+                        if onlyError   == 42 :
+                            h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effAltSig)
+                            h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].errAltSig)
+                        if onlyError   == 43 :
+                            h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effAltSigMC)
+                            h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].errAltSigMC)
 
         h2.GetXaxis().SetTitle("#eta")
         h2.GetYaxis().SetTitle("p_{T} (GeV)")

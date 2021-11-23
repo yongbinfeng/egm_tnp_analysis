@@ -295,11 +295,11 @@ def diagnosticErrorPlot( effgr, ierror, nameout ):
 
 
 
-def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
+def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     print(" Opening file: {f} (plot lumi: {l:.1f})".format(f=filein, l=lumi ))
     CMS_lumi.lumi_13TeV = "%3.1f fb^{-1}" % lumi 
 
-    nameOutBase = filein 
+    nameOutBase = filein.replace('.txt','')
     if not os.path.exists( filein ) :
         print('file {f} does not exist'.format(f=filein))
         sys.exit(1)
@@ -316,9 +316,13 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
             etaKey = ( float(numbers[0]), float(numbers[1]) )
             ptKey  = ( float(numbers[2]), min(500,float(numbers[3])) )
         
-            myeff = efficiency(ptKey,etaKey,
-                               float(numbers[4]),float(numbers[5]),float(numbers[6] ),float(numbers[7] ),
-                               float(numbers[8]),float(numbers[9]),float(numbers[10]),float(numbers[11]) )
+            myeff = efficiency( ptKey,etaKey,
+                                float(numbers[4]),float(numbers[5]), ## data eff and error
+                                float(numbers[6]),float(numbers[7]), ## mc eff and error
+                                float(numbers[12]), ## eff data alt bkg model
+                                float(numbers[8] ), float(numbers[9]), ## eff data alt sig model and error 
+                                float(numbers[10]),float(numbers[11]), ## eff mc alt sig model and error 
+                                float(numbers[13]) )
 #                           float(numbers[8]),float(numbers[9]),float(numbers[10]), -1 )
 
             effGraph.addEfficiency(myeff)
@@ -339,7 +343,7 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
     ## marc customEtaBining.append( (2.000,2.500))
 
 
-    pdfout = nameOutBase + '_egammaPlots.pdf'
+    pdfout = nameOutBase + '_efficiencyPlots.pdf'
     cDummy = rt.TCanvas()
     cDummy.Print( pdfout + "[" )
 
@@ -363,9 +367,19 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
                               pdfout, 
                               xAxis = axis[1], yAxis = axis[0] ) )
 
-    h2EffData = effGraph.ptEtaScaleFactor_2DHisto(-3)
-    h2EffMC   = effGraph.ptEtaScaleFactor_2DHisto(-2)
-    h2SF      = effGraph.ptEtaScaleFactor_2DHisto(-1)
+    h2EffData       = effGraph.ptEtaScaleFactor_2DHisto(40)
+    h2EffMC         = effGraph.ptEtaScaleFactor_2DHisto(41)
+    h2EffDataAltSig = effGraph.ptEtaScaleFactor_2DHisto(42)
+    h2EffMCAltSig   = effGraph.ptEtaScaleFactor_2DHisto(43)
+    #h2SF      = effGraph.ptEtaScaleFactor_2DHisto(-1)
+    h2SF = h2EffData.Clone('h2_SF_nominal'); h2SF.SetTitle('SF nominal data / nominal MC')
+    h2SF.Divide(h2EffMC)
+    h2SFDataAltSig = h2EffDataAltSig.Clone('h2_SF_dataAltSig'); h2SFDataAltSig.SetTitle('SF altSig data / nominal MC')
+    h2SFDataAltSig.Divide(h2EffMC)
+    h2SFMCAltSig = h2EffData.Clone('h2_SF_MCAltSig'); h2SFMCAltSig.SetTitle('SF nominal data / altSig MC')
+    h2SFMCAltSig.Divide(h2EffMCAltSig)
+    h2SFDataMCAltSig = h2EffDataAltSig.Clone('h2_SF_dataMCAltSig'); h2SFDataMCAltSig.SetTitle('SF altSig data / altSig MC')
+    h2SFDataMCAltSig.Divide(h2EffMCAltSig)
     h2Error   = effGraph.ptEtaScaleFactor_2DHisto( 0)  ## only error bars
 
     rt.gStyle.SetPalette(1)
@@ -401,11 +415,16 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
 
     #print('this is listOfSF1D', listOfSF1D)
 
-    rootout = rt.TFile(nameOutBase + '_EGM2D.root','recreate')
+    rootout = rt.TFile(nameOutBase + '_2D.root','recreate')
     rootout.cd()
-    h2SF.Write('EGamma_SF2D',rt.TObject.kOverwrite)
-    h2EffData.Write('EGamma_EffData2D',rt.TObject.kOverwrite)
-    h2EffMC  .Write('EGamma_EffMC2D'  ,rt.TObject.kOverwrite)
+    h2SF.Write('SF2D_nominal',rt.TObject.kOverwrite)
+    h2EffData.Write('EffData2D',rt.TObject.kOverwrite)
+    h2EffMC  .Write('EffMC2D'  ,rt.TObject.kOverwrite)
+    h2EffDataAltSig.Write('EffDataAltSig2D', rt.TObject.kOverwrite)
+    h2EffMCAltSig  .Write('EffMCAltSig2D'  , rt.TObject.kOverwrite)
+    h2SFDataAltSig.Write('SF2D_dataAltSig', rt.TObject.kOverwrite)
+    h2SFMCAltSig.Write('SF2D_MCAltSig', rt.TObject.kOverwrite)
+    h2SFDataMCAltSig.Write('SF2D_dataMCAltSig', rt.TObject.kOverwrite)
     for igr in listOfSF1D:
         igr.Write( igr.GetName(), rt.TObject.kOverwrite) #'grSF1D_{ib}'.format(ib=igr), rt.TObject.kOverwrite)
     rootout.Close()
@@ -415,6 +434,14 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
 
     cDummy.Print( pdfout + "]" )
 
+    allEffsAndSFs= [h2SF, h2EffData, h2EffMC, h2EffDataAltSig, h2EffMCAltSig, h2SFDataAltSig, h2SFMCAltSig, h2SFDataMCAltSig]
+    canv = rt.TCanvas('c','c', 600, 600)
+    canv.SetRightMargin(0.15)
+    rt.gStyle.SetPalette(55)
+    for hist in allEffsAndSFs:
+        hist.Draw('colz')
+        canv.SaveAs(plotdir+'/'+hist.GetName()+'.png')
+        canv.SaveAs(plotdir+'/'+hist.GetName()+'.pdf')
 
 
 if __name__ == "__main__":
@@ -439,4 +466,4 @@ if __name__ == "__main__":
     if args.PV:
         axis = ['nVtx','eta']
 
-    doEGM_SFs(args.txtFile, args.lumi,axis)
+    doSFs(args.txtFile, args.lumi,axis,'')
