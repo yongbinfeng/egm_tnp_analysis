@@ -8,7 +8,8 @@ from libPython.tnpClassUtils import tnpSample
 #inputDir = '/data/shared/tnp/2021-07-12-newStyle/'
 #inputDir = '/data/shared/tnp/2021-09-20/'
 #inputDir = '/data/shared/tnp/2021-10-07-tighterGenMatchDR/'
-inputDir = '/data/shared/tnp/2021-10-29-trackInfo/'
+## on the old machine inputDir = '/data/shared/tnp/2021-10-29-trackInfo/'
+inuptDir = '/scratch/shared/tnp/2021-10-29-trackInfo/' ## on the new machine
 
 wmass_selection = {
     # MiniAOD TnP for IDs scale factors
