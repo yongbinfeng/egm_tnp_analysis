@@ -18,24 +18,24 @@ def removeNegativeBins(h):
 
 def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     ## open rootfile
-    tree = ROOT.TChain(sample.tree)
-    tmp_names = ROOT.std.vector('string')()
-    for p in sample.path:
-        print(' adding rootfile: ', p)
-        tree.Add(p)
-        tmp_names.push_back(p.replace('/eos/cms/','root://eoscms.cern.ch//'))
+    #tree = ROOT.TChain(sample.tree)
+    #tmp_names = ROOT.std.vector('string')()
+    #for p in sample.path:
+    #    print(' adding rootfile: ', p)
+    #    tree.Add(p)
+    #    tmp_names.push_back(p.replace('/eos/cms/','root://eoscms.cern.ch//'))
     
-    if not sample.puTree is None:
-        print(' - Adding weight tree: {w} from file {f} '.format(w=sample.weight.split('.')[0], f=sample.puTree))
-        tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
+    #if not sample.puTree is None:
+    #    print(' - Adding weight tree: {w} from file {f} '.format(w=sample.weight.split('.')[0], f=sample.puTree))
+    #    tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
 
     #rdf = ROOT.RDataFrame(sample.tree, tmp_names)
-    rdf  = ROOT.RDataFrame(sample.tree, tmp_names)
+    #rdf  = ROOT.RDataFrame(sample.tree, tmp_names)
 
     ## open outputFile
-    hPass = []
-    hFail = []
-    lCuts = []
+    #hPass = []
+    #hFail = []
+    #lCuts = []
 
     notflag = '!({f})'.format(f=flag)
 
@@ -82,56 +82,56 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     cutFail = '( {c} && {f} )' .format(c=cuts, f=notflag)
 
     ##fill the passing and failing 3D histogram
-    h_tmp_pass =  ROOT.TH3D('pass_'+sample.name, 'pass_'+sample.name, var['nbins']            , binning_mass, 
-                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
-                                                                      len(probe_binning_eta)-1, probe_binning_eta)
-    h_tmp_fail =  ROOT.TH3D('fail_'+sample.name, 'fail_'+sample.name, var['nbins']            , binning_mass, 
-                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
-                                                                      len(probe_binning_eta)-1, probe_binning_eta)
+    #h_tmp_pass =  ROOT.TH3D('pass_'+sample.name, 'pass_'+sample.name, var['nbins']            , binning_mass, 
+   #                                                                   len(probe_binning_pt) -1, probe_binning_pt ,
+    #                                                                  len(probe_binning_eta)-1, probe_binning_eta)
+   # h_tmp_fail =  ROOT.TH3D('fail_'+sample.name, 'fail_'+sample.name, var['nbins']            , binning_mass, 
+   #                                                                   len(probe_binning_pt) -1, probe_binning_pt ,
+   #                                                                   len(probe_binning_eta)-1, probe_binning_eta)
 
-    h_tmp_run_pass =  ROOT.TH3D('run_pass_'+sample.name, 'run_pass_'+sample.name, len(binning_runs)-1, binning_runs, 
-                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
-                                                                      len(probe_binning_eta)-1, probe_binning_eta)
-    h_tmp_run_fail =  ROOT.TH3D('run_fail_'+sample.name, 'run_fail_'+sample.name, len(binning_runs)-1, binning_runs, 
-                                                                      len(probe_binning_pt) -1, probe_binning_pt ,
-                                                                      len(probe_binning_eta)-1, probe_binning_eta)
-    h_tmp_pass.Sumw2()
-    h_tmp_fail.Sumw2()
+    #h_tmp_run_pass =  ROOT.TH3D('run_pass_'+sample.name, 'run_pass_'+sample.name, len(binning_runs)-1, binning_runs, 
+    #                                                                  len(probe_binning_pt) -1, probe_binning_pt ,
+    #                                                                  len(probe_binning_eta)-1, probe_binning_eta)
+    #h_tmp_run_fail =  ROOT.TH3D('run_fail_'+sample.name, 'run_fail_'+sample.name, len(binning_runs)-1, binning_runs, 
+    #                                                                  len(probe_binning_pt) -1, probe_binning_pt ,
+    #                                                                  len(probe_binning_eta)-1, probe_binning_eta)
+    #h_tmp_pass.Sumw2()
+    #h_tmp_fail.Sumw2()
 
     
-    rdf = rdf.Define('rdfweight', str(tmp_weight))
+    #rdf = rdf.Define('rdfweight', str(tmp_weight))
 
-    tmp_pass_model = ROOT.RDF.TH3DModel(h_tmp_pass)
-    tmp_fail_model = ROOT.RDF.TH3DModel(h_tmp_fail)
+    #tmp_pass_model = ROOT.RDF.TH3DModel(h_tmp_pass)
+    #tmp_fail_model = ROOT.RDF.TH3DModel(h_tmp_fail)
 
-    tmp_run_pass_model = ROOT.RDF.TH3DModel(h_tmp_run_pass)
-    tmp_run_fail_model = ROOT.RDF.TH3DModel(h_tmp_run_fail)
+    #tmp_run_pass_model = ROOT.RDF.TH3DModel(h_tmp_run_pass)
+    #tmp_run_fail_model = ROOT.RDF.TH3DModel(h_tmp_run_fail)
 
-    rdfpass = rdf.Filter(cutPass)
-    rdffail = rdf.Filter(cutFail)
+    #rdfpass = rdf.Filter(cutPass)
+    #rdffail = rdf.Filter(cutFail)
     
 
-    print('will fill 3d histogram with:' )
-    print('   cut:', cuts)
-    print('   using weight', tmp_weight)
-    print('   passing flag', flag)
+    #print('will fill 3d histogram with:' )
+    #print('   cut:', cuts)
+    #print('   using weight', tmp_weight)
+    #print('   passing flag', flag)
 
-    print('now filling the passing and failing histograms with rdf')
-    mass_passing = ''
-    mass_failing = ''
-    if not 'namePassing' in var:
-        mass_passing = var['name']
-    else:
-        mass_passing = var['namePassing']
-    if not 'nameFailing' in var:
-        mass_failing = var['name']
-    else:
-        mass_failing = var['nameFailing']
-    h_tmp_pass = rdfpass.Histo3D(tmp_pass_model, mass_passing, probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
-    h_tmp_fail = rdffail.Histo3D(tmp_fail_model, mass_failing, probe_var_pt, probe_var_eta, 'rdfweight')
+    #print('now filling the passing and failing histograms with rdf')
+    #mass_passing = ''
+    #mass_failing = ''
+    #if not 'namePassing' in var:
+    #    mass_passing = var['name']
+    #else:
+    #    mass_passing = var['namePassing']
+    #if not 'nameFailing' in var:
+    #    mass_failing = var['name']
+    #else:
+    #    mass_failing = var['nameFailing']
+    #h_tmp_pass = rdfpass.Histo3D(tmp_pass_model, mass_passing, probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
+    #h_tmp_fail = rdffail.Histo3D(tmp_fail_model, mass_failing, probe_var_pt, probe_var_eta, 'rdfweight')
 
-    h_tmp_run_pass = rdfpass.Histo3D(tmp_run_pass_model, 'run', probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
-    h_tmp_run_fail = rdffail.Histo3D(tmp_run_fail_model, 'run', probe_var_pt, probe_var_eta, 'rdfweight')
+    #h_tmp_run_pass = rdfpass.Histo3D(tmp_run_pass_model, 'run', probe_var_pass_pt, probe_var_pass_eta, 'rdfweight')
+    #h_tmp_run_fail = rdffail.Histo3D(tmp_run_fail_model, 'run', probe_var_pt, probe_var_eta, 'rdfweight')
 
     ## print('now filling passing histogram for sample', sample.name)
     ## drawret = tree.Draw('{z}:{y}:{x}>>{h}'.format(z=probe_var_eta,y=probe_var_pt,x=var['name'],h=h_tmp_pass.GetName()), '({c})*({w})'.format(c=cutPass,w=tmp_weight))
@@ -145,15 +145,35 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     ##     print('some error occured, please check!')
     ##     exit(0)
 
-    print('this is the integral of the passing', h_tmp_pass.Integral())
-    print('this is the integral of the failing', h_tmp_fail.Integral())
+    #print('this is the integral of the passing', h_tmp_pass.Integral())
+    #print('this is the integral of the failing', h_tmp_fail.Integral())
     
     print('done filling for sample', sample.name)
 
-    outfile = ROOT.TFile(sample.histFile,'recreate')
-    h_tmp_run_pass .Write()
-    h_tmp_run_fail .Write()
+    #h_tmp_run_pass .Write()
+    #h_tmp_run_fail .Write()
 
+   
+    p = sample.path[0] 
+    print("p = ",p)
+    print('pass_'+sample.name)
+    print('fail_'+sample.name) 
+    infile = ROOT.TFile(p)
+    print(infile.ls())
+    print("Type of infile = ",type(infile))
+    print("A")
+    h_tmp_pass = infile.Get("pass_"+sample.name)
+    #h_tmp_pass = ROOT.TH3D(h_tmp_pass)
+    print("Type of pass histogram = ",type(h_tmp_pass))
+    h_tmp_fail = infile.Get("fail_"+sample.name)
+    print("Type of fail histogram = ",type(h_tmp_fail))
+
+    outfile = ROOT.TFile(sample.histFile,'recreate')
+    
+
+    print('this is the integral of the passing', h_tmp_pass.Integral())
+    print('this is the integral of the failing', h_tmp_fail.Integral())
+    
     for ii,ib in enumerate(bins):
         h_name = ib['name' ]
         h_title= ib['title']

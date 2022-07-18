@@ -1,4 +1,3 @@
-
 ### python specific import
 import os
 import sys
@@ -67,9 +66,12 @@ binning_eta = [-2.4+0.1*i for i in range(49) ]
 #binning_pt  = [25., 35., 45., 55., 65.]#27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
 binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
 
-binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+#binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+
 
 typeflag = options.flag.split('_')[1]
+
+print("typeflag = ",typeflag)
 
 #binningDef = [
 #   { 'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta },
@@ -119,11 +121,12 @@ elif typeflag == 'alttrack':
 elif typeflag == 'reco':
     binning_pt   = [25., 65.]
     binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+    binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
     binning_eta  = [-2.4+0.1*i for i in range(49) ]
     binningDef = {
         'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
+        'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
+        #'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
     }
 
 elif typeflag == 'altreco':
@@ -311,6 +314,9 @@ if options.createBins:
     os.makedirs( outputDirectory )
     tnpBins = tnpBiner.createBins(binningDef,flags[options.flag][1])
     tnpBiner.tuneCuts( tnpBins, additionalCuts )
+    #print("tnpBins = ",tnpBins)
+    #print("Os_path = ",os.path)
+    #print("Output_directory = ",outputDirectory)
     pickle.dump( tnpBins, open( '%s/bining.pkl'%(outputDirectory),'wb') )
     print('created dir: {o} '.format(o= outputDirectory))
     print('bining created successfully... ')
@@ -365,7 +371,6 @@ if options.createHists:
     
     pool = Pool()
     pool.map(parallel_hists, samplesDef.keys())
-
     sys.exit(0)
 
 
@@ -402,6 +407,7 @@ if  options.doFit:
     sampleToFit.dump()
     ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
+        print("tnpBins['bins'][ib] = ",tnpBins['bins'][ib])
         if (options.binNumber >= 0 and ib == options.binNumber) or options.binNumber < 0:
             if options.altSig:                 
                 fitUtils.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax )
@@ -438,7 +444,7 @@ if  options.doPlot:
         os.makedirs( plottingDir )
     shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
 
-    verbosePlotting = False
+    verbosePlotting = True
     for ib in range(len(tnpBins['bins'])):
         if (options.binNumber >= 0 and ib == options.binNumber) or options.binNumber < 0:
             tnpRoot.histPlotter( fileName, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
