@@ -414,7 +414,7 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     c2D.Print( pdfout )
 
     #print('this is listOfSF1D', listOfSF1D)
-
+    print("NameOutBase = ",nameOutBase + '_2D.root')
     rootout = rt.TFile(nameOutBase + '_2D.root','recreate')
     rootout.cd()
     h2SF.Write('SF2D_nominal',rt.TObject.kOverwrite)

@@ -330,8 +330,9 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 
     ## setup
     ## parallel rootfile = rt.TFile(sample.altBkgFit,'update')
-    rootfile = rt.TFile(sample.altBkgFit+'_bin_'+tnpBin['name'],'update')
-    fitter.setOutputFile( rootfile )
+    #rootfile = rt.TFile(sample.altBkgFit+'_bin_'+tnpBin['name'],'update')
+    #fitter.setOutputFile( rootfile )
+    fitter.setOutputFile(sample.altBkgFit+'_bin_'+tnpBin['name'])
 #    fitter.setFitRange(65,115)
 
     ## generated Z LineShape
@@ -355,7 +356,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     title = title.replace('probe_sc_eta','#eta_{SC}')
     title = title.replace('probe_Ele_pt','p_{T}')
     fitter.fits(sample.mcTruth,title)
-    rootfile.Close()
+    #rootfile.Close()
 
 
 #############################################################

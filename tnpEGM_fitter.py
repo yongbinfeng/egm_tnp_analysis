@@ -30,6 +30,9 @@ parser.add_option('--sumUp'      , action='store_true'  , help = 'sum up efficie
 parser.add_option('--iBin'       , dest = 'binNumber'   , type = int,  default=-1, help='bin number (to refit individual bin)')
 parser.add_option('--flag'       , default = None       , help ='WP to test')
 parser.add_option('--era'        , type='string', default = '', help ='era to perform tnp fits for. options are: [BtoF, GtoH, BtoH]')
+parser.add_option('--inputMC' , type='string', default = '', help = "MC input file which contains 3d histograms")
+parser.add_option('--inputData' , type='string', default = '', help = "Data input file which contains 3d histograms")
+
 ##parser.add_argument('settings'     , default = None       , help = 'setting file [mandatory]')
 
 
@@ -51,7 +54,7 @@ import libPython.fitUtils as fitUtils
 if options.flag is None:
     print('[tnpEGM_fitter] flag is MANDATORY, this is the working point as defined in the settings.py')
     sys.exit(0)
-    
+
 ## put most of the stuff here and make it configurable...
 ## ===========================================================================
 
@@ -148,7 +151,7 @@ else:
 
 
 cutTrigger     = 'probe_triggerMatch > 0.5'
-cutIdIp        = 'probe_mediumId > 0.5 && fabs(probe_dxy) < 0.05' 
+cutIdIp        = 'probe_mediumId > 0.5 && fabs(probe_dxy) < 0.05'
 ## && fabs(probe_dz) < 0.2'
 cutIso         = 'probe_iso < 0.15'
 
@@ -187,10 +190,90 @@ flags = {
     'mu_trigger_both'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
     'mu_trigger_minus'  : (cutTrigger  , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp]) ),
     'mu_trigger_plus'   : (cutTrigger  , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin1'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin2'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin3'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin4'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin5'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin6'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin7'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin8'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin9'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin10'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin11'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin12'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin13'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin14'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin15'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin16'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin17'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin18'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin19'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin20'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin21'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin22'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin23'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin24'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin25'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin26'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin27'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin28'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin29'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin30'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin31'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin32'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin33'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin34'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin35'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin36'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin37'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin38'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin39'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
+    'mu_trigger_both_qtbin40'   : (cutTrigger  , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
 
     'mu_iso_both'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
     'mu_iso_minus'      : (cutIso      , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp, cutTrigger]) ),
     'mu_iso_plus'       : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin1'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin2'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin3'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin4'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin5'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin6'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin7'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin8'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin9'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin10'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin11'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin12'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin13'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin14'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin15'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin16'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin17'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin18'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin19'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin20'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin21'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin22'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin23'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin24'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin25'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin26'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin27'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin28'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin29'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin30'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin31'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin32'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin33'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin34'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin35'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin36'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin37'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin38'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin39'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
+    'mu_iso_both_qtbin40'       : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp, cutTrigger]) ),
 
     'mu_isonotrig_both' : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
     'mu_isonotrig_minus': (cutIso      , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp]) ),
@@ -202,10 +285,12 @@ import etc.inputs.tnpSampleDef as tnpSamples
 
 samples_data_preVFP  = tnpSamples.wmass_selection['mu_RunBtoF'  ].clone()
 samples_data_postVFP = tnpSamples.wmass_selection['mu_RunGtoH'  ].clone()
+setattr(samples_data_postVFP,'path',[options.inputData])
 samples_data_all     = tnpSamples.wmass_selection['mu_RunBtoH'  ].clone()
 
 samples_dy_preVFP  = tnpSamples.wmass_selection['mu_DY_preVFP' ].clone()
 samples_dy_postVFP = tnpSamples.wmass_selection['mu_DY_postVFP'].clone()
+setattr(samples_dy_postVFP, 'path',[options.inputMC] )
 samples_dy_all     = tnpSamples.wmass_selection['mu_DY_all'].clone()
 
 #weightName = 'totWeight/std::abs(totWeight)*std::max(4.f,std::abs(totWeight))'
@@ -266,7 +351,7 @@ tnpParAltSigFit = [
     "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
     "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
-     
+
 tnpParAltBkgFit = [
     "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
     "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
@@ -307,7 +392,7 @@ if options.checkBins:
         print(tnpBins['bins'][ib]['name'])
         print('  - cut: ',tnpBins['bins'][ib]['cut'])
     sys.exit(0)
-    
+
 if options.createBins:
     if os.path.exists( outputDirectory ):
         shutil.rmtree( outputDirectory )
@@ -368,7 +453,7 @@ if options.createHists:
                     var = { 'name' : 'pair_mass', 'nbins' : massbins, 'min' : massmin, 'max': massmax }
             ## tnpRoot.makePassFailHistograms( sample, tnpConf.flags[args.flag], tnpBins, var )
             tnpRoot.makePassFailHistograms( sample, flags[options.flag][0], tnpBins['bins'], binningDef, flags[options.flag][1], var)#tnpBins, var )
-    
+
     pool = Pool()
     pool.map(parallel_hists, samplesDef.keys())
     sys.exit(0)
@@ -409,7 +494,7 @@ if  options.doFit:
     def parallel_fit(ib): ## parallel
         print("tnpBins['bins'][ib] = ",tnpBins['bins'][ib])
         if (options.binNumber >= 0 and ib == options.binNumber) or options.binNumber < 0:
-            if options.altSig:                 
+            if options.altSig:
                 fitUtils.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax )
             elif options.altBkg:
                 fitUtils.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax )
@@ -421,24 +506,24 @@ if  options.doFit:
 
 
     options.doPlot = True
-     
+
 ####################################################################
 ##### dumping plots
 ####################################################################
 if  options.doPlot:
     fileName = sampleToFit.nominalFit
     fitType  = 'nominalFit'
-    if options.altSig : 
+    if options.altSig :
         fileName = sampleToFit.altSigFit
         fitType  = 'altSigFit'
-    if options.altBkg : 
+    if options.altBkg :
         fileName = sampleToFit.altBkgFit
         fitType  = 'altBkgFit'
 
     os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*')) #fileName.replace('.root', '*.root')))
     os.system('sleep 1')
     os.system('rm '+fileName+'_bin_bin*')
-        
+
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.name,fitType)
     if not os.path.exists( plottingDir ):
         os.makedirs( plottingDir )
@@ -454,7 +539,7 @@ if  options.doPlot:
 
 
 ####################################################################
-##### dumping egamma txt file 
+##### dumping egamma txt file
 ####################################################################
 if options.sumUp:
     import ROOT, copy
@@ -487,7 +572,7 @@ if options.sumUp:
 
     ## foob def parallel_fit(ib): ## parallel
     ## foob     if (options.binNumber >= 0 and ib == options.binNumber) or options.binNumber < 0:
-    ## foob         if options.altSig:                 
+    ## foob         if options.altSig:
     ## foob             fitUtils.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax )
     ## foob         elif options.altBkg:
     ## foob             fitUtils.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax )
@@ -498,12 +583,12 @@ if options.sumUp:
     ## foob pool.map(parallel_fit, range(len(tnpBins['bins']))) ## parallel
 
 
-    
+
     def parallel_sumUp(_bin):
         effis = tnpRoot.getAllEffi( info, _bin )
         ##print('this is _bin', _bin)
 
-        ### formatting assuming 2D bining -- to be fixed        
+        ### formatting assuming 2D bining -- to be fixed
         v1Range = _bin['title'].split(';')[1].split('<')
         v2Range = _bin['title'].split(';')[2].split('<')
 
@@ -511,21 +596,21 @@ if options.sumUp:
 
         fOut = open(effFileName+'_tmpTMP_'+str(ib), 'w')
 
-        
+
         if not ib:
             astr = '### var1 : %s\n' % v1Range[1]
             fOut.write( astr )
             astr = '### var2 : %s\n' % v2Range[1]
             fOut.write( astr )
             exp = '{v0:8s}\t{v1:8s}\t{v2:8s}\t{v3:8s}\t{edv:10s}\t{ede:10s}\t{emcv:10s}\t{emce:10s}\t{edalts:15s}\t{edaltse:15s}\t{emcalt:15s}\t{emcalte:15s}\t{edaltb:15s}\t{etagsel:10s}\n'.format(
-                v0='var1min', v1='var1max', v2='var2min', v3='var2max', 
-                edv='eff data', ede='err data', 
-                emcv='eff mc', emce='err mc', 
+                v0='var1min', v1='var1max', v2='var2min', v3='var2max',
+                edv='eff data', ede='err data',
+                emcv='eff mc', emce='err mc',
                 edalts='eff data altS', edaltse='err data altS',
                 emcalt='eff mc alt', emcalte='err mc alt', edaltb='eff data altB', etagsel='eff tag sel')
             print(exp)
             fOut.write(exp)
-            
+
         astr =  '%-+8.3f\t%-+8.3f\t%-+8.3f\t%-+8.3f\t%-10.5f\t%-10.5f\t%-10.5f\t%-10.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-10.5f' % (
             float(v1Range[0]), float(v1Range[2]),
             float(v2Range[0]), float(v2Range[2]),
@@ -612,24 +697,24 @@ if options.sumUp:
     ## this works, si jamais for ib,_bin in enumerate(tnpBins['bins']):
     ## this works, si jamais     effis = tnpRoot.getAllEffi( info, _bin )
 
-    ## this works, si jamais     ### formatting assuming 2D bining -- to be fixed        
+    ## this works, si jamais     ### formatting assuming 2D bining -- to be fixed
     ## this works, si jamais     v1Range = _bin['title'].split(';')[1].split('<')
     ## this works, si jamais     v2Range = _bin['title'].split(';')[2].split('<')
-    ## this works, si jamais     
+    ## this works, si jamais
     ## this works, si jamais     if not ib:
     ## this works, si jamais         astr = '### var1 : %s\n' % v1Range[1]
     ## this works, si jamais         fOut.write( astr )
     ## this works, si jamais         astr = '### var2 : %s\n' % v2Range[1]
     ## this works, si jamais         fOut.write( astr )
     ## this works, si jamais         exp = '{v0:8s}\t{v1:8s}\t{v2:8s}\t{v3:8s}\t{edv:10s}\t{ede:10s}\t{emcv:10s}\t{emce:10s}\t{edalts:15s}\t{edaltse:15s}\t{emcalt:15s}\t{emcalte:15s}\t{edaltb:15s}\t{etagsel:10s}\n'.format(
-    ## this works, si jamais             v0='var1min', v1='var1max', v2='var2min', v3='var2max', 
-    ## this works, si jamais             edv='eff data', ede='err data', 
-    ## this works, si jamais             emcv='eff mc', emce='err mc', 
+    ## this works, si jamais             v0='var1min', v1='var1max', v2='var2min', v3='var2max',
+    ## this works, si jamais             edv='eff data', ede='err data',
+    ## this works, si jamais             emcv='eff mc', emce='err mc',
     ## this works, si jamais             edalts='eff data altS', edaltse='err data altS',
     ## this works, si jamais             emcalt='eff mc alt', emcalte='err mc alt', edaltb='eff data altB', etagsel='eff tag sel')
     ## this works, si jamais         print(exp)
     ## this works, si jamais         fOut.write(exp)
-    ## this works, si jamais         
+    ## this works, si jamais
     ## this works, si jamais     astr =  '%-+8.3f\t%-+8.3f\t%-+8.3f\t%-+8.3f\t%-10.5f\t%-10.5f\t%-10.5f\t%-10.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-10.5f' % (
     ## this works, si jamais         float(v1Range[0]), float(v1Range[2]),
     ## this works, si jamais         float(v2Range[0]), float(v2Range[2]),
@@ -719,7 +804,7 @@ if options.sumUp:
     for ifile in alltmpfiles:
         if not 'tmpTMP' in ifile: continue
         lsfiles.append(outputDirectory+'/'+ifile)
-    
+
     lsfiles = sorted(lsfiles, key = lambda x: int(x.split('_')[-1]))
     #print(lsfiles)
 
@@ -727,7 +812,7 @@ if options.sumUp:
     os.system('rm  '+' '.join(lsfiles))
 
     os.system('cp /afs/cern.ch/user/m/mdunser/public/index.php {d}/index.php'.format(d=outputDirectory+'/plots/'))
-        
+
 
     #fOut.close()
 

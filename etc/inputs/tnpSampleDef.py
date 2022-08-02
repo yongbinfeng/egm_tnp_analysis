@@ -15,7 +15,7 @@ inputDir = '/home/users/rajarshi/Steve/Steve_Marc_Raj/' ## on the new machine
 wmass_selection = {
     # MiniAOD TnP for IDs scale factors
     'mu_DY_preVFP'        : tnpSample('mu_DY_preVFP'    , inputDir +'/dy_preVFP.root'         , isMC = True       , nEvts = -1 ) ,
-    'mu_DY_postVFP'       : tnpSample('mu_DY_postVFP'   , inputDir +'/Steve_MC_Isolation_14_07_2022.root'        , isMC = True       , nEvts = -1 ) ,
+    'mu_DY_postVFP'       : tnpSample('mu_DY_postVFP'   , inputDir +'/Steve_MC_Isolation_20_07_2022.root'        , isMC = True       , nEvts = -1 ) ,
 
     'mu_DY_all'           : tnpSample('mu_DY_all'       , inputDir +'/dy_all.root'            , isMC = True       , nEvts = -1 ) ,
 
@@ -29,7 +29,7 @@ wmass_selection = {
     'mu_RunH'         : tnpSample('mu_RunH'         , inputDir +'/data_runH.root'         , lumi =  8.65063 ) ,
 
     'mu_RunBtoF'          : tnpSample('mu_RunBtoF'      , inputDir +'/data_BtoF.root'         , lumi = 19.28503 ) ,
-    'mu_RunGtoH'          : tnpSample('mu_RunGtoH'      , inputDir +'/Steve_Data_Isolation_14_07_2022.root'         , lumi = 16.64043 ) ,
+    'mu_RunGtoH'          : tnpSample('mu_RunGtoH'      , inputDir +'/Steve_Data_Isolation_20_07_2022.root'         , lumi = 16.64043 ) ,
     'mu_RunBtoH'          : tnpSample('mu_RunBtoH'      , inputDir +'/data_BtoH.root'         , lumi = 35.92546 ) ,
 
 }

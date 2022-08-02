@@ -153,7 +153,7 @@ def makePassFailHistograms( sample, flag, bins, bindef, commonCuts, var ):
     #h_tmp_run_pass .Write()
     #h_tmp_run_fail .Write()
 
-   
+    print("sample.path = ",sample.path) 
     p = sample.path[0] 
     print("p = ",p)
     print('pass_'+sample.name)
