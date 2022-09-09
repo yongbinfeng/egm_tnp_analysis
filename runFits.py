@@ -16,6 +16,8 @@ def runCommands(wp,era,inputMC,inputData,mc=False,lowPU=False):
     cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig'                        ])
     cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig',  '--altSig'])
     cmds.append(['python', ex, opt_e, opt_f, '--doFit',             '--altSig'])
+    cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig',  '--altBkg'])
+    cmds.append(['python', ex, opt_e, opt_f, '--doFit',             '--altBkg'])
     cmds.append(['python', ex, opt_e, opt_f, '--sumUp'                        ])
 
     pretend = 0

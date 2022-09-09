@@ -123,9 +123,9 @@ elif typeflag == 'alttrack':
 
 elif typeflag == 'reco':
     binning_pt   = [25., 65.]
-    binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
-    binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
-    binning_eta  = [-2.4+0.1*i for i in range(49) ]
+    #binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+    #binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
+    binning_eta  = [round(-2.4+0.1*i,2) for i in range(49) ]
     binningDef = {
         'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
@@ -554,8 +554,10 @@ if options.sumUp:
         'dataAltSig'  : sampleToFit.altSigFit ,
         'dataAltBkg'  : sampleToFit.altBkgFit ,
         'mcNominal'   : sampleToFit.mcRef.histFile,
+        'mcNominal_fit'   : sampleToFit.mcRef.nominalFit,
         ## marc 'mcAlt'       : None,
         'mcAlt'       : sampleToFit.mcRef.altSigFit,
+        'mcAltBkg'    : sampleToFit.mcRef.altBkgFit,
         'tagSel'      : None
         }
 
@@ -586,6 +588,7 @@ if options.sumUp:
 
     def parallel_sumUp(_bin):
         effis = tnpRoot.getAllEffi( info, _bin )
+        print("effis =",effis)
         ##print('this is _bin', _bin)
 
         ### formatting assuming 2D bining -- to be fixed
@@ -796,8 +799,10 @@ if options.sumUp:
     ## this works, si jamais     canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
     ## this works, si jamais     canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
     ## this works, si jamais     ROOT.gErrorIgnoreLevel = odllevel
+    
     pool = Pool()
     pool.map(parallel_sumUp, tnpBins['bins'])
+    #parallel_sumUp(tnpBins['bins'])
 
     lsfiles = []
     alltmpfiles = os.listdir(outputDirectory)

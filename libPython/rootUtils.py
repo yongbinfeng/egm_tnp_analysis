@@ -347,6 +347,27 @@ def getAllEffi( info, bindef ):
         rootfile.Close()
     else: effis['mcNominal'] = [-1,-1]
 
+    if not info['mcNominal_fit'] is None and os.path.isfile(info['mcNominal_fit']):
+        rootfile = ROOT.TFile( info['mcNominal_fit'], 'read' )
+        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_mcNominal_fit'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name'] ))
+
+        fitP = fitresP.floatParsFinal().find('nSigP')
+        fitF = fitresF.floatParsFinal().find('nSigF')
+        
+        nP = fitP.getVal()
+        nF = fitF.getVal()
+        eP = fitP.getError()
+        eF = fitF.getError()
+
+        effis['mcNominal_fit'] = computeEffi(nP,nF,eP,eF) +[nP, nF, float(eP), float(eF)]
+        rootfile.Close()
+    else: 
+        effis['mcNominal_fit'] = [-1,-1]
+        effis['canv_mcNominal_fit'] = None
+    
+
     if not info['tagSel'] is None and os.path.isfile(info['tagSel']):
         rootfile = ROOT.TFile( info['tagSel'], 'read' )
         hP = rootfile.Get('%s_Pass'%bindef['name'])
@@ -381,6 +402,27 @@ def getAllEffi( info, bindef ):
     else: 
         effis['mcAlt'] = [-1,-1]
         effis['canv_mcAlt'] = None
+
+    
+    if not info['mcAltBkg'] is None and os.path.isfile(info['mcAltBkg']):
+        rootfile = ROOT.TFile( info['mcAltBkg'], 'read' )
+        fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
+        fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_mcAltBkg'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name'] ))
+
+        fitP = fitresP.floatParsFinal().find('nSigP')
+        fitF = fitresF.floatParsFinal().find('nSigF')
+        
+        nP = fitP.getVal()
+        nF = fitF.getVal()
+        eP = fitP.getError()
+        eF = fitF.getError()
+
+        effis['mcAltBkg'] = computeEffi(nP,nF,eP,eF) +[nP, nF, float(eP), float(eF)]
+        rootfile.Close()
+    else: 
+        effis['mcAltBkg'] = [-1,-1]
+        effis['canv_mcAltBkg'] = None
 
     if not info['dataNominal'] is None and os.path.isfile(info['dataNominal']) :
         rootfile = ROOT.TFile( info['dataNominal'], 'read' )
@@ -443,6 +485,7 @@ def getAllEffi( info, bindef ):
         from ROOT import RooFit,RooFitResult
         fitresP = rootfile.Get( '%s_resP' % bindef['name']  )
         fitresF = rootfile.Get( '%s_resF' % bindef['name'] )
+        effis['canv_dataAltBkg'] = copy.deepcopy(rootfile.Get( '%s_Canv' % bindef['name'] ))
 
         nP = fitresP.floatParsFinal().find('nSigP').getVal()
         nF = fitresF.floatParsFinal().find('nSigF').getVal()
@@ -461,6 +504,7 @@ def getAllEffi( info, bindef ):
         effis['dataAltBkg'] = computeEffi(nP,nF,eP,eF)
     else:
         effis['dataAltBkg'] = [-1,-1]
+        effis['canv_dataAltBkg'] = None
 
     return effis
 
