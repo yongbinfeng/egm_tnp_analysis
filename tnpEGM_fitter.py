@@ -61,7 +61,7 @@ if options.flag is None:
 massbins, massmin, massmax = 80, 50, 130
 
 ## define the binning here, much easier...
-binning_eta = [-2.4+0.1*i for i in range(49) ]
+binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
 #binning_eta = [-2.4+0.1*i for i in range(4) ]
 #binning_eta = [-2.4, -2.25, -2.10, -1.95, -1.8, -1.7, -1.:q
 #binning_eta = [0.+0.2*i for i in range(13) ]
@@ -100,15 +100,16 @@ cutTrackingAlt = 'probe_standaloneMatchDR < 0.1 && probe_pt > 15.'
 cutTrackingEff = '(probe_isStandalone > 0.5)'
 
 if typeflag == 'tracking':
-    binning_pt  = [25., 65.]
-    binning_pt  = [-15., -7.5, 7.5, 15.]  ## ALERT
-    binning_eta = [-2.4+0.1*i for i in range(49) ]
+    binning_pt  = [15., 25.,35.,45.,55.,65.,80.]
+    massbins, massmin, massmax = 100, 40, 140
+    #binning_pt  = [-15., -7.5, 7.5, 15.]  ## ALERT
+    #binning_eta = [-2.4+0.1*i for i in range(49) ]
     binningDef = {
         #'eta' : {'var' : 'probe_standaloneEta', 'var_passing': 'probe_matchedTrackEta', 'type': 'float', 'bins': binning_eta},
         #'pt'  : {'var' : 'probe_standalonePt' , 'var_passing': 'probe_matchedTrackPt' , 'type': 'float', 'bins': binning_pt }
         'eta' : {'var' : 'probe_standaloneEta', 'type': 'float', 'bins': binning_eta},
         #'pt'  : {'var' : 'probe_standalonePt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
+        'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt } ## ALERT
     }
 
 elif typeflag == 'alttrack':
@@ -122,10 +123,19 @@ elif typeflag == 'alttrack':
     }
 
 elif typeflag == 'reco':
-    binning_pt   = [25., 65.]
+    #binning_pt   = [24., 65.]
+    massbins, massmin, massmax = 100, 40, 140
     #binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
     #binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
-    binning_eta  = [round(-2.4+0.1*i,2) for i in range(49) ]
+    #binning_eta  = [round(-2.4+0.1*i,2) for i in range(49) ]
+    binningDef = {
+        'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
+        'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
+        #'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
+    }
+
+elif typeflag == 'veto':
+    binning_pt = [(10. + 5.*i) for i in range(12)]
     binningDef = {
         'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
@@ -146,7 +156,7 @@ else:
     binningDef = {
         'eta' : {'var' : 'probe_eta', 'type': 'float', 'bins': binning_eta},
         #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
+        'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt } ## ALERT
     }
 
 
@@ -277,7 +287,10 @@ flags = {
 
     'mu_isonotrig_both' : (cutIso      , joinCuts([cutBase,           cutTracking, cutIdIp]) ),
     'mu_isonotrig_minus': (cutIso      , joinCuts([cutBase, cutMinus, cutTracking, cutIdIp]) ),
-    'mu_isonotrig_plus' : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) )
+    'mu_isonotrig_plus' : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) ),
+    
+
+    'mu_veto_both' : (cutIso      , joinCuts([cutBase, cutPlus , cutTracking, cutIdIp]) )
 }
 
 
@@ -362,7 +375,8 @@ tnpParAltBkgFit = [
 today = datetime.date.isoformat(datetime.date.today())
 #today='2021-10-05'
 
-baseOutDir = 'results_nodz_dxybs{mc}_{d}_binnedInZ/efficiencies_{era}/'.format(d=today,era=options.era,mc='_mcTruth' if options.mcTruth else '')
+#baseOutDir = 'results_nodz_dxybs{mc}_{d}_binnedInZ/efficiencies_{era}/'.format(d=today,era=options.era,mc='_mcTruth' if options.mcTruth else '')
+baseOutDir = 'results_{mc}{d}_binnedInPtEta/efficiencies_{era}/'.format(d=today,era=options.era,mc='mcTruth_' if options.mcTruth else '')
 #baseOutDir = 'results_newStyle{mc}/efficiencies_{era}/'.format(era=options.era,mc='_mcTruth' if options.mcTruth else '')
 
 ## done making it more configurable
@@ -409,6 +423,8 @@ if options.createBins:
     sys.exit(0)
 
 tnpBins = pickle.load( open( '%s/bining.pkl'%(outputDirectory),'rb') )
+
+
 
 
 ####################################################################

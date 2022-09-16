@@ -6,13 +6,16 @@ hists = []
 
 prepost = {}
 
-resdir = 'results_nodz_dxybs_mcTruth_2021-11-08_binnedInZ/'#nodz_dxybs_2021-09-14/' #'results_mcTruth' if mcTruth else 'results'
+resdir = 'results_2022-09-11_binnedInPtEta/'#nodz_dxybs_2021-09-14/' #'results_mcTruth' if mcTruth else 'results'
 mcTruth = 'mcTruth' in resdir
 
 for ch in ['plus', 'minus', 'both']:
-    for era in ['lowPU', 'BtoF', 'GtoH', 'BtoH', 'B', 'C', 'D', 'E', 'F_preVFP', 'G', 'H']:
-        for tnp in ['altreco', 'reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig', 'alttrack', 'idiso']:
-            for fl in ['mu', 'el']:
+    for era in ['GtoH']:
+        for tnp in ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig', 'veto']:
+            for fl in ['mu']:
+                if ("plus" in ch and "trigger" not in tnp): continue
+                if ("minus" in ch and "trigger" not in tnp): continue
+                if ("both" in ch and "trigger" in tnp): continue
                 tmp_infile = ROOT.TFile(resdir+'/efficiencies_{e}/{f}_{t}_{ch}/allEfficiencies_2D.root'.format(f=fl,e=era,ch=ch,t=tnp), 'read')
                 if not tmp_infile.IsOpen():
                     continue
@@ -112,7 +115,7 @@ for ch in ['plus', 'minus', 'both']:
 
                 #tmp_infile.Close()
 
-of = 'allSFs_nodz_dxybs_mcTruth' if mcTruth else 'allSFs_nodz_dxybs'
+of = 'allSFs_nodz_dxybs_mcTruth' if mcTruth else 'allSFs'
 if 'owPU' in resdir:
     of +='_lowPU'
 outfile = ROOT.TFile(str(today)+'_'+of+'.root', 'recreate')

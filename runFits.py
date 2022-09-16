@@ -12,12 +12,12 @@ def runCommands(wp,era,inputMC,inputData,mc=False,lowPU=False):
     ex = 'tnpEGM_fitter.py' if not lowPU else 'tnp_fitter_lowPU.py'
     cmds.append(['python', ex, opt_e, opt_f, '--createBins'                   ])
     cmds.append(['python', ex, opt_e, opt_f, opt_iMC , opt_iData , '--createHists'])
-    cmds.append(['python', ex, opt_e, opt_f, '--doFit'                        ])
+    cmds.append(['python', ex, opt_e, opt_f, '--doFit',                        ])
     cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig'                        ])
     cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig',  '--altSig'])
     cmds.append(['python', ex, opt_e, opt_f, '--doFit',             '--altSig'])
-    cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig',  '--altBkg'])
-    cmds.append(['python', ex, opt_e, opt_f, '--doFit',             '--altBkg'])
+    #cmds.append(['python', ex, opt_e, opt_f, '--doFit', '--mcSig',  '--altBkg'])
+    #cmds.append(['python', ex, opt_e, opt_f, '--doFit',             '--altBkg'])
     cmds.append(['python', ex, opt_e, opt_f, '--sumUp'                        ])
 
     pretend = 0
@@ -47,13 +47,16 @@ def runCommands(wp,era,inputMC,inputData,mc=False,lowPU=False):
         
 #            for c in charges:
 
-#working_points = {
-#     'mu_reco_both': ['input_MC_file','input_Data_file'],
-#     'mu_tracking_both': ['input_MC_file','input_Data_file'],
-#     'mu_idip_both': ['input_MC_file','input_Data_file'],
-#     'mu_trigger_both': ['input_MC_file','input_Data_file'],
-#     'mu_iso_both': ['input_MC_file','input_Data_file']
-#}
+working_points = {
+     'mu_reco_both': ['/scratchnvme/rbhattac/Steve_root_files/Histos_15_09_2022_v2/tnp_reco_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_15_09_2022_v2/tnp_reco_data_vertexWeights1_oscharge1.root'],
+     'mu_tracking_both': ['/scratchnvme/rbhattac/Steve_root_files/Histos_15_09_2022_v2/tnp_tracking_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_15_09_2022_v2/tnp_tracking_data_vertexWeights1_oscharge1.root'],
+     #'mu_idip_both': ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_idip_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_idip_data_vertexWeights1_oscharge1.root'],
+     #'mu_trigger_plus': ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_triggerplus_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_triggerplus_data_vertexWeights1_oscharge1.root'],
+     #'mu_trigger_minus': ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_triggerminus_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_triggerminus_data_vertexWeights1_oscharge1.root'], 
+     #'mu_iso_both': ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_iso_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_iso_data_vertexWeights1_oscharge1.root'],
+     #'mu_isonotrig_both': ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_isonotrig_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
+     #'mu_veto_both' : ['/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_veto_mc_vertexWeights1_oscharge1.root','/scratchnvme/rbhattac/Steve_root_files/Histos_10_09_2022/tnp_veto_data_vertexWeights1_oscharge1.root']
+}
 
 import time
 
@@ -61,10 +64,10 @@ tstart = time.time()
 cpustrat = time.process_time()
 
 
-working_points = {'mu_iso_both': ['/home/users/rajarshi/Steve_Erc/Isolation_MC_full_2_08_2022.root','/home/users/rajarshi/Steve_Erc/Isolation_Data_full_2_08_2022.root'],}
-for i in range(1,41):
+#working_points = {'mu_iso_both': ['/home/users/rajarshi/Steve_Erc/Isolation_MC_full_2_08_2022.root','/home/users/rajarshi/Steve_Erc/Isolation_Data_full_2_08_2022.root'],}
+#for i in range(1,41):
     #working_points['mu_trigger_both_qtbin{0}'.format(i)] = ['input_MC_file_{0}.root'.format(i),'input_Data_file_{0}.root'.format(i)] 
-    working_points['mu_iso_both_qtbin{0}'.format(i)] = ['/home/users/rajarshi/Steve_Erc/Isolation_MC_2_08_2022_{0}.root'.format(i),'/home/users/rajarshi/Steve_Erc/Isolation_Data_2_08_2022_{0}.root'.format(i)] 
+#    working_points['mu_iso_both_qtbin{0}'.format(i)] = ['/home/users/rajarshi/Steve_Erc/Isolation_MC_2_08_2022_{0}.root'.format(i),'/home/users/rajarshi/Steve_Erc/Isolation_Data_2_08_2022_{0}.root'.format(i)] 
      
 eras = ['GtoH']
 

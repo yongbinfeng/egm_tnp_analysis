@@ -91,11 +91,12 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins,
       hPass->SetBinContent(ib,0);
       hFail->SetBinContent(ib,0);
     }
-  
+ 
   _work = new RooWorkspace("w") ;
   //_work->factory("x[50,130]");
   _work->factory(TString::Format("x[%f,%f]",massmin, massmax));
-  
+
+
   RooDataHist rooPass("hPass","hPass",*_work->var("x"),hPass);
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
   _work->import(rooPass) ;
@@ -167,12 +168,12 @@ int tnpFitter::fits(bool mcTruth,string title) {
 
   _work->var("sigmaF")->setVal(_work->var("sigmaP")->getVal());
   _work->var("sigmaF")->setRange(0.8* _work->var("sigmaP")->getVal(), 3.0* _work->var("sigmaP")->getVal());
-  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"));
+  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(2));
   //RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save());
 
 
-  RooPlot *pPass = _work->var("x")->frame(50,130); // always plot 50 - 130
-  RooPlot *pFail = _work->var("x")->frame(50,130);
+  RooPlot *pPass = _work->var("x")->frame(_xFitMin,_xFitMax); // always plot 50 - 130
+  RooPlot *pFail = _work->var("x")->frame(_xFitMin,_xFitMax);
   pPass->SetTitle("passing probe");
   pFail->SetTitle("failing probe");
 
