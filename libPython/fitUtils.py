@@ -31,6 +31,9 @@ def ptMin( tnpBin ):
     return ptmin
 
 def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 ):
+
+    if sample.isMonteCarlo():
+        return tnpWorkspaceParam
     
     fileref = sample.mcRef.altSigFit
     filemc  = ROOT.TFile(fileref,'read')
