@@ -29,17 +29,19 @@ public:
   tnpFitter( TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax  );
   ~tnpFitter(void) {if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
-  void setWorkspace(std::vector<std::string>);
+    void setWorkspace(std::vector<std::string>, bool);
   //python3void setOutputFile( TFile *fOut ) {_fOut = fOut;}
   //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
   void setOutputFile(TString fname ) {_fOut = new TFile(fname, "recreate"); } 
-  int fits(bool mcTruth,std::string title = "");
+  int fits(std::string title = "");
   void useMinos(bool minos = true) {_useMinos = minos;}
   void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p);
-  
   void fixSigmaFtoSigmaP(bool fix=true) { _fixSigmaFtoSigmaP= fix;}
-
   void setFitRange(double xMin,double xMax) { _xFitMin = xMin; _xFitMax = xMax; }
+  void setPassStrategy(int strategy) {_strategyPassFit = std::clamp(strategy, 0, 2); } 
+  void setFailStrategy(int strategy) {_strategyFailFit = std::clamp(strategy, 0, 2); } 
+  void setPrintLevel(int level) {_printLevel = std::clamp(level, -1, 9); } 
+
 private:
   RooWorkspace *_work;
   std::string _histname_base;
@@ -48,6 +50,9 @@ private:
   bool _useMinos;
   bool _fixSigmaFtoSigmaP;
   double _xFitMin,_xFitMax;
+  int _strategyPassFit = 1;
+  int _strategyFailFit = 1;
+  int _printLevel = 3;
 };
 
 tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
@@ -114,7 +119,7 @@ void tnpFitter::setZLineShapes(TH1 *hZPass, TH1 *hZFail ) {
   _work->import(rooFail) ;  
 }
 
-void tnpFitter::setWorkspace(std::vector<std::string> workspace) {
+void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = false) {
   for( unsigned icom = 0 ; icom < workspace.size(); ++icom ) {
     _work->factory(workspace[icom].c_str());
   }
@@ -125,14 +130,19 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace) {
   _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
   _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
-  _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
-  _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+  if (isMCfit) {
+      _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
+      _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+  } else{ 
+      _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
+      _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+  }
   _work->factory("SUM::pdfPass(nSigP*sigPass,nBkgP*bkgPass)");
   _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
-  _work->Print();			         
+  //_work->Print(); // FIXME: might want to comment this one to avoid unnecessary output text
 }
 
-int tnpFitter::fits(bool mcTruth,string title) {
+int tnpFitter::fits(string title) {
 
   cout << " this is the title : " << title << endl;
 
@@ -140,26 +150,11 @@ int tnpFitter::fits(bool mcTruth,string title) {
   RooAbsPdf *pdfPass = _work->pdf("pdfPass");
   RooAbsPdf *pdfFail = _work->pdf("pdfFail");
 
-  if( mcTruth ) {
-    _work->var("nBkgP")->setVal(0); _work->var("nBkgP")->setConstant();
-    _work->var("nBkgF")->setVal(0); _work->var("nBkgF")->setConstant();
-    if( _work->var("sosP")   ) { _work->var("sosP")->setVal(0);
-      _work->var("sosP")->setConstant(); }
-    if( _work->var("sosF")   ) { _work->var("sosF")->setVal(0);
-      _work->var("sosF")->setConstant(); }
-    if( _work->var("acmsP")  ) _work->var("acmsP")->setConstant();
-    if( _work->var("acmsF")  ) _work->var("acmsF")->setConstant();
-    if( _work->var("betaP")  ) _work->var("betaP")->setConstant();
-    if( _work->var("betaF")  ) _work->var("betaF")->setConstant();
-    if( _work->var("gammaP") ) _work->var("gammaP")->setConstant();
-    if( _work->var("gammaF") ) _work->var("gammaF")->setConstant();
-  }
-
   /// FC: seems to be better to change the actual range than using a fitRange in the fit itself (???)
   /// FC: I don't know why but the integral is done over the full range in the fit not on the reduced range
   _work->var("x")->setRange(_xFitMin,_xFitMax);
   _work->var("x")->setRange("fitMassRange",_xFitMin,_xFitMax);
-  RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"));
+  RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(_strategyPassFit), PrintLevel(_printLevel));
   //RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),Minos(_useMinos),SumW2Error(kTRUE),Save());
   if( _fixSigmaFtoSigmaP ) {
     _work->var("sigmaF")->setVal( _work->var("sigmaP")->getVal() );
@@ -168,7 +163,7 @@ int tnpFitter::fits(bool mcTruth,string title) {
 
   _work->var("sigmaF")->setVal(_work->var("sigmaP")->getVal());
   _work->var("sigmaF")->setRange(0.8* _work->var("sigmaP")->getVal(), 3.0* _work->var("sigmaP")->getVal());
-  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(2));
+  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(_strategyFailFit), PrintLevel(_printLevel));
   //RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save());
 
 
@@ -200,7 +195,8 @@ int tnpFitter::fits(bool mcTruth,string title) {
   resFail->Write(TString::Format("%s_resF",_histname_base.c_str()),TObject::kOverwrite);
   _fOut->Close();
   
-return 1;
+  return 1;
+
 }
 
 
@@ -222,9 +218,9 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
   double e_nF = nSigF->getError();
   double nTot = nP+nF;
   eff = nP / (nP+nF);
-  e_eff = 1./(nTot*nTot) * sqrt( nP*nP* e_nF*e_nF + nF*nF * e_nP*e_nP );
+  e_eff = 1./(nTot*nTot) * sqrt( nP*nP* e_nF*e_nF + nF*nF * e_nP*e_nP );  // this is linear error propagation assuming uncorrelated nP and nF, but might not be correct when efficiency is close to 1
 
-  TPaveText *text1 = new TPaveText(0,0.8,1,1);
+  TPaveText *text1 = new TPaveText(0,0.84,1,1);
   text1->SetFillColor(0);
   text1->SetBorderSize(0);
   text1->SetTextAlign(12);
@@ -235,11 +231,11 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
   //  text->SetTextSize(0.06);
 
 //  text->AddText("* Passing parameters");
-  TPaveText *text = new TPaveText(0,0,1,0.8);
+  TPaveText *text = new TPaveText(0,0,1,0.84);
   text->SetFillColor(0);
   text->SetBorderSize(0);
   text->SetTextAlign(12);
-  text->AddText("    --- parmeters " );
+  text->AddText("    --- parameters " );
   RooArgList listParFinalP = resP->floatParsFinal();
   for( int ip = 0; ip < listParFinalP.getSize(); ip++ ) {
     TString vName = listParFinalP[ip].GetName();

@@ -401,9 +401,9 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     c2D.cd(1)
     dmin = 1.0 - h2SF.GetMinimum()
     dmax = h2SF.GetMaximum() - 1.0
-    dall = max(dmin,dmax)
-    h2SF.SetMinimum(1-dall)
-    h2SF.SetMaximum(1+dall)
+    #dall = max(dmin,dmax)
+    #h2SF.SetMinimum(1-dall)
+    #h2SF.SetMaximum(1+dall)
     h2SF.DrawCopy("colz TEXT45")
     
     c2D.cd(2)
@@ -435,9 +435,10 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     cDummy.Print( pdfout + "]" )
 
     allEffsAndSFs= [h2SF, h2EffData, h2EffMC, h2EffDataAltSig, h2EffMCAltSig, h2SFDataAltSig, h2SFMCAltSig, h2SFDataMCAltSig]
-    canv = rt.TCanvas('c','c', 600, 600)
-    canv.SetRightMargin(0.15)
+    canv = rt.TCanvas('c','c', 800, 800)
+    canv.SetRightMargin(0.20)
     rt.gStyle.SetPalette(55)
+    rt.gStyle.SetNumberContours(51)
     for hist in allEffsAndSFs:
         hist.Draw('colz')
         canv.SaveAs(plotdir+'/'+hist.GetName()+'.png')

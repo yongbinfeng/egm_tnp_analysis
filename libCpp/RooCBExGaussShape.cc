@@ -47,7 +47,7 @@ Double_t RooCBExGaussShape::evaluate() const
   // }
 
   Double_t absAlpha = fabs((Double_t)alpha);
-  if( tailLeft >= 0 ) {
+  if( tailLeft > 0 ) {
     if (t>0) {
       rval= exp(-0.5*t0*t0);
     }
@@ -62,7 +62,7 @@ Double_t RooCBExGaussShape::evaluate() const
       Double_t b = exp(n*(t+absAlpha));
       rval = a*b;
     }
-  } else {
+  } else if (tailLeft < 0) {
     //// rather fit high tail for n < 0
     if (t0<0) {
       rval= exp(-0.5*t*t);
@@ -75,6 +75,15 @@ Double_t RooCBExGaussShape::evaluate() const
       Double_t a =  TMath::Power(absN/absAlpha,absN)*exp(-0.5*absAlpha*absAlpha);
       Double_t b= absN/absAlpha - absAlpha;
       rval= a/TMath::Power(b + t0, absN);
+    }
+
+  } else {
+    //// no tail
+    if (t0<0) {
+      rval= exp(-0.5*t*t);
+    }
+    else {
+      rval= exp(-0.5*t0*t0);
     }
 
   }

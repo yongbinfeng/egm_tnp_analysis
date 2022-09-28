@@ -6,8 +6,6 @@ import copy
 ## i'm not proud that i didn't fix it, i'm just lazy
 
 def createBins( bining, cut ):
-    binCut = None
-    nbin = 0
 
     nbin = 1
     #index = range(len(bining))
@@ -33,7 +31,7 @@ def createBins( bining, cut ):
             nb1D = len(bining[iv]['bins'])
         nbin = nbin * nb1D
 
-        print('this is nb1D', nb1D)
+        print(f"Variable {iv} -> {nb1D} bins")
         listOfIndexInit = copy.deepcopy(listOfIndex)
         for ib_v in range(nb1D):
             if ib_v == 0 :
@@ -71,7 +69,7 @@ def createBins( bining, cut ):
             if varType == 'float' :
                 if binCut is None: 
                     binCut   = '%s >= %f && %s < %f' % (var,bins1D[ix[iv]],var,bins1D[ix[iv]+1])
-                    binTitle = '%1.3f < %s < %1.3f'  % (bins1D[ix[iv]],var,bins1D[ix[iv]+1])
+                    binTitle = ';%1.3f < %s < %1.3f'  % (bins1D[ix[iv]],var,bins1D[ix[iv]+1])
                 else:
                     binCut   = '%s && %s >= %f && %s < %f' % (binCut  ,var,bins1D[ix[iv]],var,bins1D[ix[iv]+1])
                     binTitle = '%s; %1.3f < %s < %1.3f'    % (binTitle,bins1D[ix[iv]],var,bins1D[ix[iv]+1])
@@ -82,7 +80,7 @@ def createBins( bining, cut ):
             if varType == 'int' :
                 if binCut is None: 
                     binCut   = '%s == %d' % (var,bins1D[ix[iv]])
-                    binTitle = '%s = %d'  % (var,bins1D[ix[iv]])
+                    binTitle = ';%s = %d'  % (var,bins1D[ix[iv]])
                 else:
                     binCut   = '%s && %s == %d' % (binCut,var,bins1D[ix[iv]])
                     binTitle = '%s; %s = %d'    % (binTitle,var,bins1D[ix[iv]])

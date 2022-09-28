@@ -16,10 +16,10 @@ fi
 
 export PYTHONPATH=.:$PYTHONPATH
 
-/data/shared/singularity/pythonrootdevf32.sif
+#/data/shared/singularity/pythonrootdevf32.sif
 
 ## for python 2
-/data/shared/singularity/python2rootdevf32.sif
+#/data/shared/singularity/python2rootdevf32.sif
 
 ## setup for cmswmass2
 ##=============================================
