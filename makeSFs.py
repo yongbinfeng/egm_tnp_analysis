@@ -1,4 +1,11 @@
 import ROOT, copy, datetime
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--inputdir', type=str, nargs=1,
+                    help='input folder (the one containing "efficiencies_ERA/")')
+args = parser.parse_args()
+
 
 today = datetime.date.today()
 
@@ -6,8 +13,8 @@ hists = []
 
 prepost = {}
 
-resdir = 'results_2022-09-11_binnedInPtEta/'#nodz_dxybs_2021-09-14/' #'results_mcTruth' if mcTruth else 'results'
-mcTruth = 'mcTruth' in resdir
+#resdir = 'plots/results_Sept2022_binnedInPtEta_mass60to120/'#nodz_dxybs_2021-09-14/' #'results_mcTruth' if mcTruth else 'results'
+resdir = args.inputdir[0]
 
 for ch in ['plus', 'minus', 'both']:
     for era in ['GtoH']:
@@ -115,7 +122,7 @@ for ch in ['plus', 'minus', 'both']:
 
                 #tmp_infile.Close()
 
-of = 'allSFs_nodz_dxybs_mcTruth' if mcTruth else 'allSFs'
+of = 'allSFs'
 if 'owPU' in resdir:
     of +='_lowPU'
 outfile = ROOT.TFile(str(today)+'_'+of+'.root', 'recreate')

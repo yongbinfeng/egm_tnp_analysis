@@ -69,7 +69,7 @@ if args.flag is None:
 ## put most of the stuff here and make it configurable...
 ## ===========================================================================
 
-massbins, massmin, massmax = 80, 50, 130
+massbins, massmin, massmax = 60, 60, 120
 
 ## define the binning here, much easier...
 binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
@@ -309,6 +309,7 @@ if  args.doFit:
     print(">>> running fits")
     #print('sampleToFit.dump()', sampleToFit.dump())
     useAllTemplateForFail = True if typeflag == "tracking" else False
+    altSignalFail = True if typeflag in ["reco", "tracking"] else False
     #sampleToFit.dump()
     ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
@@ -317,11 +318,11 @@ if  args.doFit:
             if args.altSig:
                 if typeflag == 'tracking':
                     if fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0: # force peak more on the right for high pt bins and tracking efficiency
-                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax, altSignalFail=True)
+                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax, altSignalFail=altSignalFail)
                     else:
-                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=True)
+                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
                 else:
-                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax)
+                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
             elif not args.mcSig:
                 # do this only for data
                 if args.altBkg:
