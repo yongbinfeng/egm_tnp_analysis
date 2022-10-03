@@ -1,13 +1,16 @@
 import ROOT, copy, datetime
 import argparse
 
+workingPoints = ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig', 'veto']
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--inputdir', type=str, nargs=1,
+parser.add_argument('inputdir', type=str, nargs=1,
                     help='input folder (the one containing "efficiencies_ERA/")')
+parser.add_argument('-wpc','--workinPointsByCharge', default=["trigger"], nargs='*', type=str, choices=list(workingPoints),
+                    help='Default runs all working points, but can choose only some if needed')
 args = parser.parse_args()
 
-
-today = datetime.date.today()
+#today = datetime.date.today()
 
 hists = []
 
@@ -18,11 +21,10 @@ resdir = args.inputdir[0]
 
 for ch in ['plus', 'minus', 'both']:
     for era in ['GtoH']:
-        for tnp in ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig', 'veto']:
+        for tnp in ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig']:#, 'veto']:
             for fl in ['mu']:
-                if ("plus" in ch and "trigger" not in tnp): continue
-                if ("minus" in ch and "trigger" not in tnp): continue
-                if ("both" in ch and "trigger" in tnp): continue
+                if (ch in ["plus", "minus"] and tnp not in args.workinPointsByCharge): continue
+                if (ch in ["both"] and tnp in args.workinPointsByCharge): continue
                 tmp_infile = ROOT.TFile(resdir+'/efficiencies_{e}/{f}_{t}_{ch}/allEfficiencies_2D.root'.format(f=fl,e=era,ch=ch,t=tnp), 'read')
                 if not tmp_infile.IsOpen():
                     continue
@@ -125,10 +127,12 @@ for ch in ['plus', 'minus', 'both']:
 of = 'allSFs'
 if 'owPU' in resdir:
     of +='_lowPU'
-outfile = ROOT.TFile(str(today)+'_'+of+'.root', 'recreate')
+outname = f"{resdir}/{of}.root"
+outfile = ROOT.TFile(outname, 'recreate')
 outfile.cd()
 
 for h in hists:
     h.Write()
 
 outfile.Close()
+print(f"Output file: {outname}")

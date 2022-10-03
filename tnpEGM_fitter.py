@@ -34,6 +34,15 @@ if "RooCBExGaussShape_cc.so" not in ROOT.gSystem.GetLibraries():
 if "RooCMSShape_cc.so" not in ROOT.gSystem.GetLibraries():
     compileMacro("./libCpp/RooCMSShape.cc")
 
+
+def testBinning(bins, testbins, var="var", flag="workingPoint"):
+    if bins != testbins:
+        print(f"Error: {var} binning not consistent with the one in histograms for {flag}")
+        print(f"{bins}")
+        print(f"{testbins}")
+        print("Please check!")
+        quit()
+        
 parser = argparse.ArgumentParser()
 parser.add_argument('--checkBins'  , action='store_true'  , help = 'check  bining definition')
 parser.add_argument('--createBins' , action='store_true'  , help = 'create bining definition')
@@ -92,27 +101,20 @@ if typeflag == 'tracking':
     #massbins, massmin, massmax = 100, 40, 140
     binning_pt  = [25., 35., 45., 55., 65.]  # [24., 65.]
     massbins, massmin, massmax = 80, 50, 130
-    #binning_pt  = [-15., -7.5, 7.5, 15.]  ## ALERT
-    #binning_eta = [-2.4+0.1*i for i in range(49) ]
     binningDef = {
-        #'eta' : {'var' : 'probe_standaloneEta', 'var_passing': 'probe_matchedTrackEta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_standalonePt' , 'var_passing': 'probe_matchedTrackPt' , 'type': 'float', 'bins': binning_pt }
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_standalonePt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt } ## ALERT
+        'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
     }
 
 elif typeflag == 'reco':
     #binning_pt   = [24., 65.]
     massbins, massmin, massmax = 60, 60, 120
-    binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]  # [24., 65.]
-    #binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
+    binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]
+    #binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
     #binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
-    #binning_eta  = [round(-2.4+0.1*i,2) for i in range(49) ]
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
-        #'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
     }
 
 elif typeflag == 'veto':
@@ -120,14 +122,12 @@ elif typeflag == 'veto':
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
-        #'pt'  : {'var' : 'constr_z' , 'type': 'float', 'bins': binning_pt } ## ALERT
     }
 
 else:
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
-        #'pt'  : {'var' : 'probe_pt' , 'type': 'float', 'bins': binning_pt }
-        'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt } ## ALERT
+        'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
     }
 
 
@@ -165,6 +165,14 @@ else:
         # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
+
+tnpParAltSigFitTuneRecoFail = [
+    "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
+    "meanF[-0.0,-5.0,5.0]",
+    "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
+    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
+    "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+]
 
 # for pt >= 55 and tracking, might also remove CB tail
 tnpParAltSigFitTrackingHighPt = [
@@ -212,9 +220,22 @@ samples_dy = tnpSampleNew(mcName,
                           f"{outputDirectory}/{mcName}_{args.flag}.root",
                           True,
                           -1)
-
 #samples_data.printConfig()
 #samples_dy.printConfig()
+
+## check binning in histogram and consistency with settings above
+## FIXME: should be done for each step, but histograms are not always passed
+if args.createHists:
+    ftest = ROOT.TFile(args.inputData, "read")
+    htest = ftest.Get(f"pass_{dataName}")
+    if massmin < htest.GetXaxis().GetBinLowEdge(1) or massmax > htest.GetXaxis().GetBinLowEdge(htest.GetNbinsX()+1):
+        print(f"Error: you are trying to use a wider mass range ({massmin}-{massmax}) than the histograms for {typeflag}")
+        quit()
+        this_binning_pt = [round(htest.GetYaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsY()+2) ]
+        testBinning(binning_pt, this_binning_pt, "pt", typeflag)
+        this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsZ()+2) ]
+        testBinning(binning_eta, this_binning_eta, "eta", typeflag)
+    ftest.Close()
 
 samplesDef = {
     'data'   : samples_data,
@@ -321,6 +342,11 @@ if  args.doFit:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax, altSignalFail=altSignalFail)
                     else:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
+                    print(">>>>>")
+                    print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
+                    print(">>>>>")
+                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax, altSignalFail=altSignalFail)
                 else:
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
             elif not args.mcSig:

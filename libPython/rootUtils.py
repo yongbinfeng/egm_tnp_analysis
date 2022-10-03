@@ -28,7 +28,7 @@ def makePassFailHistograms(sample, bins, bindef, var ):
 
     probe_var_pass_pt, probe_var_pass_eta = probe_var_pt, probe_var_eta
 
-    binning_mass = array.array('d', [var['min'] + i*(var['max']-var['min'])/var['nbins'] for i in range(var['nbins']+1)])
+    #binning_mass = array.array('d', [var['min'] + i*(var['max']-var['min'])/var['nbins'] for i in range(var['nbins']+1)])
 
     #print("sample.getInputPath() = ",sample.getInputPath()) 
     p = sample.getInputPath() 

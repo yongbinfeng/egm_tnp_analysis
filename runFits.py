@@ -35,6 +35,10 @@ def runCommands(wp, era, inputMC, inputData, outdir, pretend):
 working_points = {
     'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_data_vertexWeights1_oscharge1.root'],
+    # 'mu_reco_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_recoplus_mc_vertexWeights1_oscharge1.root',
+    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_recoplus_data_vertexWeights1_oscharge1.root'],
+    # 'mu_reco_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_recominus_mc_vertexWeights1_oscharge1.root',
+    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_recominus_data_vertexWeights1_oscharge1.root'],
     # OK
     'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_mc_vertexWeights1_oscharge0.root',
                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_data_vertexWeights1_oscharge0.root'],
@@ -47,6 +51,10 @@ working_points = {
                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
     'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_iso_mc_vertexWeights1_oscharge1.root',
                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_iso_data_vertexWeights1_oscharge1.root'],
+    # 'mu_iso_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isoplus_mc_vertexWeights1_oscharge1.root',
+    #                 '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isoplus_data_vertexWeights1_oscharge1.root'],
+    # 'mu_iso_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isominus_mc_vertexWeights1_oscharge1.root',
+    #                 '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isominus_data_vertexWeights1_oscharge1.root'],
     'mu_isonotrig_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isonotrig_mc_vertexWeights1_oscharge1.root',
                           '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
     'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_veto_mc_vertexWeights1_oscharge1.root',
