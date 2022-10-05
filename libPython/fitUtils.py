@@ -124,7 +124,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 
 #############################################################
 ########## nominal fitter
 #############################################################
-def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False):
+def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1):
         
     print('------- now nominal fitting bin:')
     for i in tnpBin:
@@ -159,12 +159,12 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     ## for high pT change the failing spectra to any probe to get statistics
     fileTruth  = ROOT.TFile(sample.mcRef.getOutputPath(),'read')
     histZLineShapeP = fileTruth.Get('%s_Pass'%tnpBin['name'])
+    histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
+        
     if useAllTemplateForFail or ptMin(tnpBin) > minPtForSwitch:
-        histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
-        histZLineShapeF.Add(histZLineShapeP)
-    else:
-        histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
-
+        if maxFailIntegralToUseAllProbe > 0 and histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
+            histZLineShapeF.Add(histZLineShapeP)
+    
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()
 
@@ -255,7 +255,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 #############################################################
 ########## alternate background fitter
 #############################################################
-def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False):
+def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1):
 
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
@@ -287,11 +287,11 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     ## for high pT change the failing spectra to any probe to get statistics
     fileTruth = ROOT.TFile(sample.mcRef.getOutputPath(),'read')
     histZLineShapeP = fileTruth.Get('%s_Pass'%tnpBin['name'])
+    histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
     if useAllTemplateForFail or ptMin(tnpBin) > minPtForSwitch:
-        histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
-        histZLineShapeF.Add(histZLineShapeP)
-    else:
-        histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
+        if maxFailIntegralToUseAllProbe > 0 and histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
+            histZLineShapeF.Add(histZLineShapeP)
+
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()
 

@@ -166,6 +166,7 @@ else:
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
 
+# was to tune few bins, might be used everywhere
 tnpParAltSigFitTuneRecoFail = [
     "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
     "meanF[-0.0,-5.0,5.0]",
@@ -329,8 +330,9 @@ if args.mcSig :
 if  args.doFit:
     print(">>> running fits")
     #print('sampleToFit.dump()', sampleToFit.dump())
-    useAllTemplateForFail = True if typeflag == "tracking" else False
+    useAllTemplateForFail = True if typeflag in ["reco", "tracking"] else False
     altSignalFail = True if typeflag in ["reco", "tracking"] else False
+    maxFailIntegralToUseAllProbe = 300 if typeflag in ["reco"] else -1 # for reco use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
     #sampleToFit.dump()
     ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
@@ -342,19 +344,23 @@ if  args.doFit:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax, altSignalFail=altSignalFail)
                     else:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
-                elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
-                    print(">>>>>")
-                    print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
-                    print(">>>>>")
+                # elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
+                #     print(">>>>>")
+                #     print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
+                #     print(">>>>>")
+                #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                # else:
+                #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                elif typeflag == 'reco': 
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax, altSignalFail=altSignalFail)
                 else:
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
             elif not args.mcSig:
                 # do this only for data
                 if args.altBkg:
-                    fitUtils.histFitterAltBkg(sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax, useAllTemplateForFail )
+                    fitUtils.histFitterAltBkg(sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
                 else:
-                    fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail)
+                    fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
 
     pool = Pool() ## parallel
     pool.map(parallel_fit, range(len(tnpBins['bins']))) ## parallel
@@ -473,10 +479,12 @@ if args.sumUp:
         canv_all.Draw()
         ipad = 1
         canv_all.cd(0)
-        txt = ROOT.TLatex(); txt.SetTextFont(42); txt.SetTextSize(0.03)
+        txt = ROOT.TLatex()
+        txt.SetTextFont(42)
+        txt.SetTextSize(0.03)
         txt.SetNDC()
         txt.DrawLatex(0.01, 0.97, '{n}'.format(n=_bin['name'].replace('_',' ').replace('To', '-').replace('probe ', '').replace('m','-').replace('pt','XX').replace('p','.').replace('XX','p_{T}')))
-        txt.SetTextSize(0.07)
+        txt.SetTextSize(0.08)
         for ip, p in enumerate(effis['canv_mcAlt'].GetListOfPrimitives()):
             if not ip: continue
             canv_all.cd(ipad)
@@ -484,19 +492,19 @@ if args.sumUp:
             p.Draw()
             ipad+=1
         canv_all.cd(ipad)
-        txt.DrawLatex(0.01, 0.85, 'MC counting efficiency:')
+        txt.DrawLatex(0.00, 0.85, 'MC counting efficiency:')
         tmp = effis['mcNominal']
-        txt.DrawLatex(0.20, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.20, 0.65, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.DrawLatex(0.10, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.65, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.20, 0.55, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.10, 0.55, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         tmp = effis['mcAlt']
-        txt.DrawLatex(0.01, 0.35, 'MC fitted signal:')
-        txt.DrawLatex(0.20, 0.25, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.20, 0.15, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
+        txt.DrawLatex(0.10, 0.25, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.15, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.20, 0.05, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.10, 0.05, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad+=1
         for ip, p in enumerate(effis['canv_dataNominal'].GetListOfPrimitives()):
@@ -507,11 +515,11 @@ if args.sumUp:
             ipad+=1
         canv_all.cd(ipad)
         tmp = effis['dataNominal']
-        txt.DrawLatex(0.01, 0.65, 'data nominal:')
-        txt.DrawLatex(0.20, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.20, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.DrawLatex(0.00, 0.65, 'data nominal:')
+        txt.DrawLatex(0.10, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.20, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.10, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad+=1
         for ip, p in enumerate(effis['canv_dataAltSig'].GetListOfPrimitives()):
@@ -522,11 +530,11 @@ if args.sumUp:
             ipad+=1
         canv_all.cd(ipad)
         tmp = effis['dataAltSig']
-        txt.DrawLatex(0.01, 0.65, 'data alternative:')
-        txt.DrawLatex(0.20, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.20, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.DrawLatex(0.00, 0.65, 'data alternative:')
+        txt.DrawLatex(0.10, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.20, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.10, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
 
         #effis['canv_dataAltSig'].Draw()
