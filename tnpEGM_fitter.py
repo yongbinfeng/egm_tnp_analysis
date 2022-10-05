@@ -492,19 +492,23 @@ if args.sumUp:
             p.Draw()
             ipad+=1
         canv_all.cd(ipad)
+        txt.SetTextFont(62)
         txt.DrawLatex(0.00, 0.85, 'MC counting efficiency:')
+        txt.SetTextFont(42)
         tmp = effis['mcNominal']
         txt.DrawLatex(0.10, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.65, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.DrawLatex(0.10, 0.64, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.55, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.10, 0.53, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         tmp = effis['mcAlt']
-        txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
-        txt.DrawLatex(0.10, 0.25, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.15, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.05, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
+        txt.SetTextFont(42)
+        txt.DrawLatex(0.10, 0.24, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.13, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.SetTextFont(62)
+        txt.DrawLatex(0.10, 0.02, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad+=1
         for ip, p in enumerate(effis['canv_dataNominal'].GetListOfPrimitives()):
@@ -515,11 +519,13 @@ if args.sumUp:
             ipad+=1
         canv_all.cd(ipad)
         tmp = effis['dataNominal']
-        txt.DrawLatex(0.00, 0.65, 'data nominal:')
-        txt.DrawLatex(0.10, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.00, 0.65, 'data nominal:')
+        txt.SetTextFont(42)
+        txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.SetTextFont(62)
+        txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad+=1
         for ip, p in enumerate(effis['canv_dataAltSig'].GetListOfPrimitives()):
@@ -530,11 +536,13 @@ if args.sumUp:
             ipad+=1
         canv_all.cd(ipad)
         tmp = effis['dataAltSig']
-        txt.DrawLatex(0.00, 0.65, 'data alternative:')
-        txt.DrawLatex(0.10, 0.55, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.45, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
         txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.35, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+        txt.DrawLatex(0.00, 0.65, 'data alternative:')
+        txt.SetTextFont(42)
+        txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+        txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+        txt.SetTextFont(62)
+        txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
 
         #effis['canv_dataAltSig'].Draw()
