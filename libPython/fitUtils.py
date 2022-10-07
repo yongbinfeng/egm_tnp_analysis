@@ -44,8 +44,8 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 
         fitresP = filemc.Get( '%s_resP_Stat%d' % (tnpBin['name'],refResample)  )
     fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
 
-    listOfParamP = ['nP', 'alphaP', 'sigmaP', 'sigmaP_2']
-    listOfParamF = ['nF', 'alphaF', 'sigmaF', 'sigmaF_2']
+    listOfParamP = ['meanP', 'sigmaP', 'nP', 'alphaP', 'sigmaP', 'sigmaP_2', 'fsrMeanP', 'fsrSigmaP']
+    listOfParamF = ['meanF', 'sigmaF', 'nF', 'alphaF', 'sigmaF', 'sigmaF_2', 'fsrMeanF', 'fsrSigmaF']
 
     # set central value of signal parameters as in MC alt sig fit, but do not fix them
     # while those for background from the nominal fit in data (but only for failing probes, passing ones are good)
@@ -173,7 +173,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     workspace = ROOT.vector("string")()
     for iw in tnpWorkspace:
         workspace.push_back(iw)
-    fitter.setWorkspace( workspace, sample.isMonteCarlo() )
+    fitter.setWorkspace( workspace, sample.isMonteCarlo(), False, False )
 
     title = tnpBin['title'].replace(';',' - ')
     title = title.replace('probe_eta','#eta')
@@ -184,7 +184,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 #############################################################
 ########## alternate signal fitter
 #############################################################
-def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False):
+def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False):
 
     tnpWorkspacePar = createWorkspaceForAltSig( sample,  tnpBin, tnpWorkspaceParam )
 
@@ -209,6 +209,13 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
             "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]
 
+    if analyticPhysicsShape:
+        bwShapes = ["BreitWigner::sigPhysPass(x,91.1876,2.4952)",
+                    "BreitWigner::sigPhysFail(x,91.1876,2.4952)"]
+        tnpWorkspaceFunc.extend(bwShapes)
+
+    if modelFSR:
+        tnpWorkspaceFunc.append("Gaussian::sigFsrFail(x,fsrMeanF,fsrSigmaF)")
 
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspacePar)
@@ -233,18 +240,19 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
     fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
-    
-    ## generated Z LineShape
-    fileTruth = ROOT.TFile('etc/inputs/ZeeGenLevel.root','read')
-    histZLineShape = fileTruth.Get('Mass')
-    fitter.setZLineShapes(histZLineShape,histZLineShape)
-    fileTruth.Close()
+
+    if not analyticPhysicsShape:
+        ## generated Z LineShape
+        fileTruth = ROOT.TFile('etc/inputs/ZeeGenLevel.root','read')
+        histZLineShape = fileTruth.Get('Mass')
+        fitter.setZLineShapes(histZLineShape,histZLineShape)
+        fileTruth.Close()
 
     ### set workspace
     workspace = ROOT.vector("string")()
     for iw in tnpWorkspace:
         workspace.push_back(iw)
-    fitter.setWorkspace( workspace, sample.isMonteCarlo() )
+    fitter.setWorkspace( workspace, sample.isMonteCarlo(), analyticPhysicsShape, modelFSR)
 
     title = tnpBin['title'].replace(';',' - ')
     fitter.fits(title)
@@ -299,7 +307,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     workspace = ROOT.vector("string")()
     for iw in tnpWorkspace:
         workspace.push_back(iw)
-    fitter.setWorkspace( workspace, sample.isMonteCarlo() )
+    fitter.setWorkspace( workspace, sample.isMonteCarlo(), False, False )
 
     title = tnpBin['title'].replace(';',' - ')
     fitter.fits(title)

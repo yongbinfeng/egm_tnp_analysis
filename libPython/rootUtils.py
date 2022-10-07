@@ -186,7 +186,8 @@ def computeEffi( n1,n2,e1,e2):
     effout = []
     if (n1+n2):
         eff   = n1/(n1+n2)
-        e_eff = 1/(n1+n2)*math.sqrt(e1*e1*n2*n2+e2*e2*n1*n1)/(n1+n2)
+        nTot = n1+n2
+        e_eff = math.sqrt(e1*e1*n2*n2+e2*e2*n1*n1) / (nTot*nTot)
         #if e_eff < 0.001 : e_eff = 0.001
     else:
         eff, e_eff = 1.1, 0.01

@@ -29,7 +29,7 @@ public:
   tnpFitter( TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax  );
   ~tnpFitter(void) {if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
-    void setWorkspace(std::vector<std::string>, bool);
+  void setWorkspace(std::vector<std::string>, bool, bool, bool);
   //python3void setOutputFile( TFile *fOut ) {_fOut = fOut;}
   //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
   void setOutputFile(TString fname ) {_fOut = new TFile(fname, "recreate"); } 
@@ -119,27 +119,50 @@ void tnpFitter::setZLineShapes(TH1 *hZPass, TH1 *hZFail ) {
   _work->import(rooFail) ;  
 }
 
-void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = false) {
+void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = false, bool analyticPhysicsShape = false, bool modelFSR = false) {
   for( unsigned icom = 0 ; icom < workspace.size(); ++icom ) {
     _work->factory(workspace[icom].c_str());
   }
 
-  _work->factory("HistPdf::sigPhysPass(x,hGenZPass)");
-  _work->factory("HistPdf::sigPhysFail(x,hGenZFail)");
+  if (not analyticPhysicsShape) {
+      _work->factory("HistPdf::sigPhysPass(x,hGenZPass)");
+      _work->factory("HistPdf::sigPhysFail(x,hGenZFail)");
+  }
+  
   _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
-  _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
   _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
-  if (isMCfit) {
-      _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
-      _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
-  } else{ 
-      _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
-      _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
-  }
   _work->factory("SUM::pdfPass(nSigP*sigPass,nBkgP*bkgPass)");
-  _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
+
+  if (modelFSR) {
+
+      _work->factory("FCONV::sigMainFail(x, sigPhysFail , sigResFail)");
+      _work->factory("SUM::sigFail(fracMainF[0.95,0.8,1.0]*sigMainFail, sigFsrFail)");
+      if (isMCfit) {
+          _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
+          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+      } else{ 
+          _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
+          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+      }
+      _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
+      
+  } else {
+
+      _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
+      if (isMCfit) {
+          _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
+          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+      } else{ 
+          _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
+          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+      }
+      _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
+
+  }
+
   //_work->Print(); // FIXME: might want to comment this one to avoid unnecessary output text
+
 }
 
 int tnpFitter::fits(string title) {

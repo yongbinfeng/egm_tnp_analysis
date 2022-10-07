@@ -37,6 +37,21 @@ if "RooCMSShape_cc.so" not in ROOT.gSystem.GetLibraries():
 
 def testBinning(bins, testbins, var="var", flag="workingPoint"):
     if bins != testbins:
+        if bins[0] in testbins:
+            firstTestIdx = testbins.index(bins[0])
+            if all(bins[i] == testbins[i+firstTestIdx] for i in range(len(bins))):
+                print()
+                print("PLEASE READ!")
+                print()
+                print(f"Warning: {var} binning not consistent with the one in histograms for {flag}")
+                print(f"{bins}")
+                print(f"{testbins}")
+                print(f"However it seems to be a slice of it, so I will continue assuming it is intentional. Proceed with caution!")
+                print()
+                print()
+                return 0
+            else:
+                pass
         print(f"Error: {var} binning not consistent with the one in histograms for {flag}")
         print(f"{bins}")
         print(f"{testbins}")
@@ -88,6 +103,7 @@ binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
 
 #binning_pt  = [25., 35., 45., 55., 65.]#27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
 binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
+binning_pt  = [24., 26., 28., 30.]
 
 #binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
 
@@ -141,8 +157,8 @@ tnpParNomFit = [
 #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
     "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
     "meanF[-0.0,-10.0,10.0]","sigmaF[0.5,0.1,5.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
 if typeflag == 'tracking':
@@ -150,8 +166,8 @@ if typeflag == 'tracking':
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-15.0,15.0]",
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
         # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
@@ -160,18 +176,24 @@ else:
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-5.0,5.0]",
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
         # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
 
+# add second gaussian at low mass around 70 to model FSR bump for working points with isolation
+flagsWithFSR = ["iso", "trigger", "isonotrig"]
+if any(x in typeflag for x in flagsWithFSR):
+    fsrGauss = ["fsrMeanF[70.0,65.0,82.0]", "fsrSigmaF[1.0,1.2,5.0]"]
+    tnpParAltSigFit.extend(fsrGauss)
+       
 # was to tune few bins, might be used everywhere
 tnpParAltSigFitTuneRecoFail = [
     "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
     "meanF[-0.0,-5.0,5.0]",
     "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
+    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
     "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
 ]
 
@@ -180,8 +202,8 @@ tnpParAltSigFitTrackingHighPt = [
     "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
     "meanF[4.0,-1.0,15.0]",
     "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,3.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
 tnpParAltBkgFit = [
@@ -232,10 +254,10 @@ if args.createHists:
     if massmin < htest.GetXaxis().GetBinLowEdge(1) or massmax > htest.GetXaxis().GetBinLowEdge(htest.GetNbinsX()+1):
         print(f"Error: you are trying to use a wider mass range ({massmin}-{massmax}) than the histograms for {typeflag}")
         quit()
-        this_binning_pt = [round(htest.GetYaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsY()+2) ]
-        testBinning(binning_pt, this_binning_pt, "pt", typeflag)
-        this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsZ()+2) ]
-        testBinning(binning_eta, this_binning_eta, "eta", typeflag)
+    this_binning_pt = [round(htest.GetYaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsY()+2) ]
+    testBinning(binning_pt, this_binning_pt, "pt", typeflag)
+    this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsZ()+2) ]
+    testBinning(binning_eta, this_binning_eta, "eta", typeflag)
     ftest.Close()
 
 samplesDef = {
@@ -333,6 +355,7 @@ if  args.doFit:
     useAllTemplateForFail = True if typeflag in ["reco", "tracking"] else False
     altSignalFail = True if typeflag in ["reco", "tracking"] else False
     maxFailIntegralToUseAllProbe = 300 if typeflag in ["reco"] else -1 # for reco use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
+    modelFSR = True if typeflag in flagsWithFSR else False
     #sampleToFit.dump()
     ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
@@ -341,9 +364,11 @@ if  args.doFit:
             if args.altSig:
                 if typeflag == 'tracking':
                     if fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0: # force peak more on the right for high pt bins and tracking efficiency
-                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax,
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
                     else:
-                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                        fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
                 # elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
                 #     print(">>>>>")
                 #     print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
@@ -352,9 +377,11 @@ if  args.doFit:
                 # else:
                 #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
                 elif typeflag == 'reco': 
-                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax,
+                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
                 else:
-                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
+                    fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
+                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR)
             elif not args.mcSig:
                 # do this only for data
                 if args.altBkg:
