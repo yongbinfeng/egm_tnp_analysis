@@ -42,7 +42,6 @@ working_points = {
     # OK
     'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_mc_vertexWeights1_oscharge0.root',
                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_data_vertexWeights1_oscharge0.root'],
-
     'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_idip_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_idip_data_vertexWeights1_oscharge1.root'],
     'mu_trigger_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_triggerplus_mc_vertexWeights1_oscharge1.root',

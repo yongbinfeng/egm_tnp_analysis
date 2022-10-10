@@ -57,6 +57,39 @@ def testBinning(bins, testbins, var="var", flag="workingPoint"):
         print(f"{testbins}")
         print("Please check!")
         quit()
+
+def safeGetObject(fileObject, objectName, quitOnFail=True, silent=False, detach=True):
+    obj = fileObject.Get(objectName)
+    if obj == None:
+        if not silent:
+            print(f"Error getting {objectName} from file {fileObject.GetName()}")
+        if quitOnFail:
+            quit()
+        return None
+    else:
+        if detach:
+            obj.SetDirectory(0)
+        return obj
+
+def safeOpenFile(fileName, quitOnFail=True, silent=False, mode="READ"):
+    fileObject = ROOT.TFile.Open(fileName, mode)
+    if not fileObject or fileObject.IsZombie():
+        if not silent:
+            print(f"Error when opening file {fileName}")
+        if quitOnFail:
+            quit()
+        else:
+            return None
+    elif not fileObject.IsOpen():
+        if not silent:
+            print(f"File {fileName} was not opened")
+        if quitOnFail:
+            quit()
+        else:
+            return None
+    else:
+        return fileObject
+
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--checkBins'  , action='store_true'  , help = 'check  bining definition')
@@ -103,7 +136,7 @@ binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
 
 #binning_pt  = [25., 35., 45., 55., 65.]#27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
 binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
-binning_pt  = [24., 26., 28., 30.]
+#binning_pt  = [24., 26., 28., 30.]
 
 #binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
 
@@ -115,7 +148,9 @@ print("typeflag = ",typeflag)
 if typeflag == 'tracking':
     #binning_pt  = [15., 25.,35.,45.,55.,65.,80.]
     #massbins, massmin, massmax = 100, 40, 140
+    #binning_pt  = [55., 65.]
     binning_pt  = [25., 35., 45., 55., 65.]  # [24., 65.]
+    #massbins, massmin, massmax = 100, 50, 150
     massbins, massmin, massmax = 80, 50, 130
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
@@ -134,7 +169,7 @@ elif typeflag == 'reco':
     }
 
 elif typeflag == 'veto':
-    binning_pt = [(10. + 5.*i) for i in range(12)]
+    binning_pt = [(15. + 5.*i) for i in range(11)]
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
@@ -150,28 +185,56 @@ else:
 #############################################################
 ########## fitting params to tune fit by hand if necessary
 #############################################################
-tnpParNomFit = [
-#    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
-#    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
-#    "acmsP[60.,50.,80.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-#    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
-    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
-    "meanF[-0.0,-10.0,10.0]","sigmaF[0.5,0.1,5.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+if typeflag == 'tracking':
+    tnpParNomFit = [
+        #    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
+        #    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
+        #    "acmsP[60.,50.,80.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
+        "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,3.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
-if typeflag == 'tracking':
+    # these might be partially overridden when running the fit to data by taking the values from the MC fit and narrowing the rangein which they can float to help convergence
     tnpParAltSigFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
-        "meanF[-0.0,-15.0,15.0]",
-        "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
+        "meanF[-0.0,-12.0,12.0]",
+        "sigmaF[2,0.7,12.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
         "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
         "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
         # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
+
+    # for pt >= 55 and tracking (se also note above)
+    tnpParAltSigFitTrackingHighPt = [
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
+        "meanF[4.0,-1.0,15.0]",
+        "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,3.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+    ]
+
+    if not args.mcSig:
+        tnpParNomFit.extend(["maxFracSigF[0.12]"])
+        tnpParAltSigFit.extend(["maxFracSigF[0.12]"])
+        tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.12]"])
+
+    
 else:
+    tnpParNomFit = [
+        #    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
+        #    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
+        #    "acmsP[60.,50.,80.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
+        "meanF[-0.0,-10.0,10.0]","sigmaF[0.5,0.1,5.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+    ]
+    
     tnpParAltSigFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-5.0,5.0]",
@@ -182,30 +245,22 @@ else:
         # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
     ]
 
+    # was to tune few bins, might be used everywhere
+    tnpParAltSigFitTuneRecoFail = [
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
+        "meanF[-0.0,-5.0,5.0]",
+        "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+    ]
+
+    
 # add second gaussian at low mass around 70 to model FSR bump for working points with isolation
 flagsWithFSR = ["iso", "trigger", "isonotrig"]
 if any(x in typeflag for x in flagsWithFSR):
-    fsrGauss = ["fsrMeanF[70.0,65.0,82.0]", "fsrSigmaF[1.0,1.2,5.0]"]
+    fsrGauss = ["fsrMeanF[70.0,65.0,80.0]", "fsrSigmaF[1.0,1.2,5.0]"]
     tnpParAltSigFit.extend(fsrGauss)
        
-# was to tune few bins, might be used everywhere
-tnpParAltSigFitTuneRecoFail = [
-    "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
-    "meanF[-0.0,-5.0,5.0]",
-    "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-    "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-]
-
-# for pt >= 55 and tracking, might also remove CB tail
-tnpParAltSigFitTrackingHighPt = [
-    "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
-    "meanF[4.0,-1.0,15.0]",
-    "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,3.0]",
-    "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-    "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-    ]
-
 tnpParAltBkgFit = [
     "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
     "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
@@ -346,16 +401,16 @@ for s in samplesDef.keys():
     setattr( sample, 'altBkgFit' , '%s/%s_%s.altBkgFit.root'  % ( outputDirectory , sample.getName(), args.flag ) )
 
 ### change the sample to fit if mc fit
-if args.mcSig :
+if args.mcSig:
     sampleToFit = samplesDef['mcNom']
 
 if  args.doFit:
     print(">>> running fits")
     #print('sampleToFit.dump()', sampleToFit.dump())
-    useAllTemplateForFail = True if typeflag in ["reco", "tracking"] else False
-    altSignalFail = True if typeflag in ["reco", "tracking"] else False
-    maxFailIntegralToUseAllProbe = 300 if typeflag in ["reco"] else -1 # for reco use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
-    modelFSR = True if typeflag in flagsWithFSR else False
+    useAllTemplateForFail = True # if typeflag in ["reco", "tracking"] else False # use all probes to build MC template for failing probes when fitting data nominal
+    maxFailIntegralToUseAllProbe = 300 if typeflag not in ["tracking"] else -1 # use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
+    altSignalFail = True if typeflag in ["reco", "tracking", "veto"] else False # use Gaussian as resolution function for altSig model
+    modelFSR = True if typeflag in flagsWithFSR else False # add Gaussian to model low mass bump from FSR, in altSig fit
     #sampleToFit.dump()
     ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
@@ -363,12 +418,13 @@ if  args.doFit:
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             if args.altSig:
                 if typeflag == 'tracking':
-                    if fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0: # force peak more on the right for high pt bins and tracking efficiency
+                    # constrainSignalFailFromMC sets the data fit parameters to MC value +/- 3*uncertainty
+                    if fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0: # force peak mean more on the right for high pt bins and tracking efficiency
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax,
-                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True)
                     else:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
-                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True)
                 # elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
                 #     print(">>>>>")
                 #     print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
@@ -387,8 +443,9 @@ if  args.doFit:
                 if args.altBkg:
                     fitUtils.histFitterAltBkg(sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
                 else:
+                    #useAllTemplateForFail = False if typeflag in ["tracking"] and fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0 else True
                     fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
-
+                        
     pool = Pool() ## parallel
     pool.map(parallel_fit, range(len(tnpBins['bins']))) ## parallel
 
@@ -407,9 +464,21 @@ if  args.doPlot:
         fileName = sampleToFit.altBkgFit
         fitType  = 'altBkgFit'
 
-    os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*')) #fileName.replace('.root', '*.root')))
-    os.system('sleep 1')
-    os.system('rm '+fileName+'_bin_bin*')
+    # if doing one bin get the new plots and update the file, don't overwrite it or all other bins are lost
+    if args.binNumber >= 0:
+        thisbin = tnpBins['bins'][args.binNumber]['name']
+        rootfileBin = safeOpenFile(f"{fileName}_bin_{thisbin}")
+        rootfile = safeOpenFile(f"{fileName}", mode="UPDATE")
+        for k in rootfileBin.GetListOfKeys():
+            obj = safeGetObject(rootfileBin, k.GetName(), detach=False)
+            obj.Write(k.GetName(), ROOT.TObject.kOverwrite) # write in merged root file overwriting keys if they already existed
+        rootfile.Close()
+        rootfileBin.Close()
+        os.system('rm '+fileName+'_bin_bin*')
+    else:
+        os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*'))
+        os.system('sleep 1')
+        os.system('rm '+fileName+'_bin_bin*')
 
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
     if not os.path.exists( plottingDir ):

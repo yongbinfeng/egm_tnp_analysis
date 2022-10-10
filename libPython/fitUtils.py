@@ -20,8 +20,6 @@ import re
 import math
 
 
-minPtForSwitch = 70
-
 def ptMin( tnpBin ):
     ptmin = 1
     if tnpBin['name'].find('pt_') >= 0:
@@ -30,22 +28,18 @@ def ptMin( tnpBin ):
         ptmin = float(tnpBin['name'].split('et_')[1].split('p')[0])
     return ptmin
 
-def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 ):
-
-    if sample.isMonteCarlo():
-        return tnpWorkspaceParam
+def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, constrainSignalFailFromMC=False):
     
     fileref = sample.mcRef.altSigFit
     filemc  = ROOT.TFile(fileref,'read')
 
-    if refResample<0:
-        fitresP = filemc.Get( '%s_resP' % tnpBin['name']  )
-    else:
-        fitresP = filemc.Get( '%s_resP_Stat%d' % (tnpBin['name'],refResample)  )
+    fitresP = filemc.Get( '%s_resP' % tnpBin['name']  )
     fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
 
-    listOfParamP = ['meanP', 'sigmaP', 'nP', 'alphaP', 'sigmaP', 'sigmaP_2', 'fsrMeanP', 'fsrSigmaP']
+    listOfParamP = ['meanP', 'sigmaP', 'nP', 'alphaP', 'sigmaP', 'sigmaP_2']
     listOfParamF = ['meanF', 'sigmaF', 'nF', 'alphaF', 'sigmaF', 'sigmaF_2', 'fsrMeanF', 'fsrSigmaF']
+    #listOfParamP = ['nP', 'alphaP', 'sigmaP', 'sigmaP_2']
+    #listOfParamF = ['nF', 'alphaF', 'sigmaF', 'sigmaF_2', 'fsrMeanF', 'fsrSigmaF']
 
     # set central value of signal parameters as in MC alt sig fit, but do not fix them
     # while those for background from the nominal fit in data (but only for failing probes, passing ones are good)
@@ -55,37 +49,52 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 
     for ipar in range(len(fitPar)):
         pName = fitPar[ipar].GetName()
         #print('{n}[{f:.3f}]'.format(n=pName,f=fitPar[ipar].getVal()))
-        x = re.compile('%s.*?' % pName)
+        x = re.compile('%s\[.*?' % pName)
         for par in listOfParamF:
             if pName == par:
                 listToRM = list(filter(x.match, tnpWorkspaceParam))
-                ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
-                #print(f">>>>> old {ir}")
-                tnpWorkspaceParam.remove(ir)
-                parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
-                parRange = ",".join(parRange[1:]) # concatenate everything except the first element
-                new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
-                #print(f">>>>> new {new_ir}")
-                tnpWorkspaceParam.append( new_ir )
+                if len(listToRM):
+                    # for sigma since there is also sigma_2, but it usually picks the correct value when the first element is taken
+                    #if len(listToRM) > 1:
+                    #    print(f"Error: listToRM has more than 1 element: {listToRM}")
+                    #    quit()
+                    ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
+                    #print(f">>>>> old {ir}")
+                    tnpWorkspaceParam.remove(ir)
+                    if constrainSignalFailFromMC:
+                        newval = fitPar[ipar].getVal()
+                        newerr = fitPar[ipar].getError()
+                        new_ir = "%s[%2.3f,%2.3f,%2.3f]" % (pName, newval, newval-3.0*newerr, newval+3.0*newerr)
+                    else:
+                        parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
+                        parRange = ",".join(parRange[1:]) # concatenate everything except the first element                    
+                        new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
+                    #print(f">>>>> new {new_ir}")
+                    tnpWorkspaceParam.append( new_ir )
                     
     # now for passing probes
     fitPar = fitresP.floatParsFinal()
     for ipar in range(len(fitPar)):
         pName = fitPar[ipar].GetName()
         #print('{n}[{f:.3f}]'.format(n=pName,f=fitPar[ipar].getVal()))
-        x = re.compile('%s.*?' % pName)
+        x = re.compile('%s\[.*?' % pName)
         for par in listOfParamP:
             if pName == par:
                 listToRM = list(filter(x.match, tnpWorkspaceParam))
-                ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
-                #print(f">>>>> old {ir}")
-                tnpWorkspaceParam.remove(ir)
-                parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
-                parRange = ",".join(parRange[1:]) # concatenate everything except the first element
-                new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
-                #print(f">>>>> new {new_ir}")
-                tnpWorkspaceParam.append( new_ir )
-                
+                if len(listToRM):
+                    # for sigma since there is also sigma_2, but it usually picks the correct value when the first element is taken
+                    #if len(listToRM) > 1:
+                    #    print(f"Error: listToRM has more than 1 element: {listToRM}")
+                    #    quit()
+                    ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
+                    #print(f">>>>> old {ir}")
+                    tnpWorkspaceParam.remove(ir)
+                    parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
+                    parRange = ",".join(parRange[1:]) # concatenate everything except the first element
+                    new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
+                    #print(f">>>>> new {new_ir}")
+                    tnpWorkspaceParam.append( new_ir )
+                    
     filemc.Close()
 
     # print(">>>>>")
@@ -102,18 +111,22 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, refResample=-1 
     for ipar in range(len(fitPar)):
         pName = fitPar[ipar].GetName()
         #print('{n}[{f:.3f}]'.format(n=pName,f=fitPar[ipar].getVal()))
-        x = re.compile('%s.*?' % pName)
+        x = re.compile('%s\[.*?' % pName)
         for par in listOfBkgParamF:
             if pName == par:
                 listToRM = list(filter(x.match, tnpWorkspaceParam))
-                ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
-                #print(f">>>>> old {ir}")
-                tnpWorkspaceParam.remove(ir)
-                parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
-                parRange = ",".join(parRange[1:]) # concatenate everything except the first element
-                new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
-                #print(f">>>>> new {new_ir}")
-                tnpWorkspaceParam.append( new_ir )
+                if len(listToRM):
+                    #if len(listToRM) > 1:
+                    #    print(f"Error: listToRM has more than 1 element: {listToRM}")
+                    #    quit()
+                    ir = listToRM[0] # should always be only 1 element, otherwise adding it back below becomes a problem
+                    #print(f">>>>> old {ir}")
+                    tnpWorkspaceParam.remove(ir)
+                    parRange = ir.split("[")[1].split("]")[0].split(",")  # get elements within square brackets, "ir" is like "name[value,low,high]"
+                    parRange = ",".join(parRange[1:]) # concatenate everything except the first element
+                    new_ir = "%s[%2.3f,%s]" % (pName, fitPar[ipar].getVal(), parRange)
+                    #print(f">>>>> new {new_ir}")
+                    tnpWorkspaceParam.append( new_ir )
                                     
     filedata.Close()
 
@@ -153,17 +166,22 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
-    fitter.setOutputFile( sample.nominalFit+'_bin_'+tnpBin['name'])
+    fitter.setOutputFile(sample.nominalFit+'_bin_'+tnpBin['name'])
     
     ## generated Z LineShape
     ## for high pT change the failing spectra to any probe to get statistics
-    fileTruth  = ROOT.TFile(sample.mcRef.getOutputPath(),'read')
+    fileTruth = ROOT.TFile(sample.mcRef.getOutputPath(),'read')
     histZLineShapeP = fileTruth.Get('%s_Pass'%tnpBin['name'])
     histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
+    altPass = '%s_Pass_alt'%tnpBin['name']
+    if altPass in [k.GetName() for k in fileTruth.GetListOfKeys()]:
+        histZLineShapeP_alt = fileTruth.Get('%s_Pass_alt'%tnpBin['name'])
+    else:
+        histZLineShapeP_alt = None
         
-    if useAllTemplateForFail or ptMin(tnpBin) > minPtForSwitch:
-        if maxFailIntegralToUseAllProbe > 0 and histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
-            histZLineShapeF.Add(histZLineShapeP)
+    if useAllTemplateForFail:
+        if maxFailIntegralToUseAllProbe < 0 or histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
+            histZLineShapeF.Add(histZLineShapeP_alt if histZLineShapeP_alt else histZLineShapeP)
     
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()
@@ -184,9 +202,12 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 #############################################################
 ########## alternate signal fitter
 #############################################################
-def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False):
+def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=False):
 
-    tnpWorkspacePar = createWorkspaceForAltSig( sample,  tnpBin, tnpWorkspaceParam )
+    if sample.isMonteCarlo():
+        tnpWorkspacePar = tnpWorkspaceParam
+    else:
+        tnpWorkspacePar = createWorkspaceForAltSig( sample,  tnpBin, tnpWorkspaceParam, constrainSignalFailFromMC=constrainSignalFailFromMC )
 
     ### tricky: use n < 0 for high pT bin (so need to remove param and add it back)
     ptmin = ptMin(tnpBin)        
@@ -225,12 +246,8 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    ## for high pT change the failing spectra to passing probe to get statistics 
-    ## MC only: this is to get MC parameters in data fit!
-    if sample.isMonteCarlo() and ptMin( tnpBin ) > minPtForSwitch:     
-        hF = infile.Get('%s_Pass' % tnpBin['name'] )
     fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
-#    fitter.fixSigmaFtoSigmaP()
+    #    fitter.fixSigmaFtoSigmaP()
     infile.Close()
 
     ## setup
@@ -296,9 +313,15 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fileTruth = ROOT.TFile(sample.mcRef.getOutputPath(),'read')
     histZLineShapeP = fileTruth.Get('%s_Pass'%tnpBin['name'])
     histZLineShapeF = fileTruth.Get('%s_Fail'%tnpBin['name'])
-    if useAllTemplateForFail or ptMin(tnpBin) > minPtForSwitch:
-        if maxFailIntegralToUseAllProbe > 0 and histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
-            histZLineShapeF.Add(histZLineShapeP)
+    altPass = '%s_Pass_alt'%tnpBin['name']
+    if altPass in [k.GetName() for k in fileTruth.GetListOfKeys()]:
+        histZLineShapeP_alt = fileTruth.Get('%s_Pass_alt'%tnpBin['name'])
+    else:
+        histZLineShapeP_alt = None
+
+    if useAllTemplateForFail:
+        if maxFailIntegralToUseAllProbe < 0 or histZLineShapeF.Integral() < maxFailIntegralToUseAllProbe:
+            histZLineShapeF.Add(histZLineShapeP_alt if histZLineShapeP_alt else histZLineShapeP)
 
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()

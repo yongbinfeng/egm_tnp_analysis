@@ -41,7 +41,8 @@ public:
   void setPassStrategy(int strategy) {_strategyPassFit = std::clamp(strategy, 0, 2); } 
   void setFailStrategy(int strategy) {_strategyFailFit = std::clamp(strategy, 0, 2); } 
   void setPrintLevel(int level) {_printLevel = std::clamp(level, -1, 9); } 
-
+  void setMaxSignalFractionFail(double max) { _maxSignalFractionFail = max; }
+    
 private:
   RooWorkspace *_work;
   std::string _histname_base;
@@ -53,6 +54,7 @@ private:
   int _strategyPassFit = 1;
   int _strategyFailFit = 1;
   int _printLevel = 3;
+  double _maxSignalFractionFail = -1; // not used by default if negative
 };
 
 tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
@@ -154,11 +156,20 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
           _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
           _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
       } else{ 
-          _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
-          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+          if (_work->var("maxFracSigF") != nullptr) {
+              // std::cout << "Test setting signal fraction" << std::endl;
+              double maxFracSigF = _work->var("maxFracSigF")->getVal(); 
+              double minFracBkgF = 1.0 - maxFracSigF;
+              double halfFracSigF = maxFracSigF/2.0;
+              _work->factory(TString::Format("nSigF[%f,0.5,%f]", _nTotF*halfFracSigF, _nTotF*maxFracSigF));
+              _work->factory(TString::Format("nBkgF[%f,%f,%f]", _nTotF*(minFracBkgF+halfFracSigF), _nTotF*minFracBkgF,_nTotF*1.5));          
+          } else {
+              _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
+              _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));          
+          }
       }
       _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
-
+      
   }
 
   //_work->Print(); // FIXME: might want to comment this one to avoid unnecessary output text
@@ -184,11 +195,9 @@ int tnpFitter::fits(string title) {
     _work->var("sigmaF")->setConstant();
   }
 
-  _work->var("sigmaF")->setVal(_work->var("sigmaP")->getVal());
-  _work->var("sigmaF")->setRange(0.8* _work->var("sigmaP")->getVal(), 3.0* _work->var("sigmaP")->getVal());
+  // _work->var("sigmaF")->setVal(_work->var("sigmaP")->getVal());
+  // _work->var("sigmaF")->setRange(0.8* _work->var("sigmaP")->getVal(), 3.0* _work->var("sigmaP")->getVal());
   RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(_strategyFailFit), PrintLevel(_printLevel));
-  //RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save());
-
 
   RooPlot *pPass = _work->var("x")->frame(_xFitMin,_xFitMax); // always plot 50 - 130
   RooPlot *pFail = _work->var("x")->frame(_xFitMin,_xFitMax);

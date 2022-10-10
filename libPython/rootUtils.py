@@ -37,7 +37,12 @@ def makePassFailHistograms(sample, bins, bindef, var ):
     #print(infile.ls())
     h_tmp_pass = infile.Get("pass_" + sample.getName())
     h_tmp_fail = infile.Get("fail_" + sample.getName())
-
+    altPass = "pass_" + sample.getName() + "_alt"
+    keyNames = [k.GetName() for k in infile.GetListOfKeys()]
+    h_tmp_pass_alt = None # will be needed for tracking when using all probes to form failing probe MC template to fit data, in this case the alternate version of passing probe made with  standalone variables is needed 
+    if altPass in keyNames:
+        h_tmp_pass_alt = infile.Get(altPass)        
+        
     outfile = ROOT.TFile(sample.getOutputPath(), 'recreate')
     
     #print('this is the integral of the passing', h_tmp_pass.Integral())
@@ -60,110 +65,17 @@ def makePassFailHistograms(sample, bins, bindef, var ):
         h_fail = h_tmp_fail.ProjectionX(h_name+'_Fail', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
         h_pass.SetTitle(h_title+' passing')
         h_fail.SetTitle(h_title+' failing')
-
         removeNegativeBins(h_pass)
         removeNegativeBins(h_fail)
-
         h_pass.Write(h_pass.GetName())
         h_fail.Write(h_fail.GetName())
-
-        # bin1 = 1
-        # bin2 = h_pass.GetXaxis().GetNbins()
-        # epass = ctypes.c_double(-1.0)
-        # efail = ctypes.c_double(-1.0)
-        # passI = h_pass.IntegralAndError(bin1,bin2,epass)
-        # failI = h_fail.IntegralAndError(bin1,bin2,efail)
-        # eff   = 0
-        # e_eff = 0
-        # epass = float(epass.value)
-        # efail = float(efail.value)
-        # if passI > 0 :
-        #     itot  = (passI+failI)
-        #     eff   = passI / (passI+failI)
-        #     e_eff = math.sqrt(passI*passI*efail*efail + failI*failI*epass*epass) / (itot*itot)
-        #print(ib['cut'])
-        #print('    ==> pass: {p:.1f} +/- {pe:.1f} ; fail :{f:.1f} +/- {fe:.1f}: eff: {e:.3f} +/- {ee:.3f}'.format(p=passI,pe=epass,f=failI,fe=efail,e=eff,ee=e_eff))
-
+        if h_tmp_pass_alt:
+            h_pass_alt = h_tmp_pass_alt.ProjectionX(h_name+'_Pass_alt', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
+            h_pass_alt.SetTitle(h_title+' passing alternate')
+            removeNegativeBins(h_pass_alt)
+            h_pass_alt.Write(h_pass_alt.GetName())
+            
     outfile.Close()
-
-
-# def makeBootstrapHistograms( sample, flag, bindef, var, resample ):
-#     ## open rootfile
-#     tree = ROOT.TChain(sample.tree)
-    
-#     tmp_names = ROOT.std.vector('string')()
-
-#     for p in sample.path:
-#         print(' adding rootfile: ', p)
-#         tree.Add(p)
-#         tmp_names.push_back(n.replace('/eos/cms/','root://eoscms.cern.ch//'))
-    
-#     if not sample.puTree is None:
-#         print(' - Adding weight tree: {t} from file {f} '.format(t=sample.weight.split('.')[0], f=sample.puTree))
-#         tree.AddFriend(sample.weight.split('.')[0],sample.puTree)
-
-
-#     ## open outputFile
-#     outfilename = getattr(sample,'histFile{ir}'.format(ir=resample))
-#     print('histograms output file = ',outfilename)
-#     outfile = ROOT.TFile(outfilename,'recreate')
-
-#     seed = 123456789+resample
-#     np.random.seed(seed)
-#     for ib in range(len(bindef['bins'])):
-
-#         ## select the events passing cuts
-#         cuts = bindef['bins'][ib]['cut']
-#         if sample.mcTruth :
-#             cuts = '%s && mcTrue==1' % cuts
-#         if not sample.cut is None :
-#             cuts = '%s && %s' % (cuts,sample.cut)
-        
-#         notflag = '!(%s)' % flag
-        
-#         if sample.isMC and not sample.weight is None:
-#             cutPass = '( %s && %s ) * %s ' % (cuts,    flag, sample.weight)
-#             if sample.maxWeight < 999:
-#                 cutPass = '( %s && %s ) * (%s < %f ? %s : 1.0 )' % (cuts,    flag, sample.weight,sample.maxWeight,sample.weight)
-#         else:
-#             cutPass = '( %s && %s )' % (cuts,    flag)
-     
-#         tree.Draw('>>elist',cutPass)
-#         elist = ROOT.gDirectory.Get('elist')
-
-#         print('Tot events = ',tree.GetEntries(),' selected by the cut ',cutPass,' = ',elist.GetN())
-
-#         print('Resampling # ',resample)
-#         ## get the list of resampled events
-#         entriesList = range(elist.GetN())
-#         resamples = np.random.choice(entriesList, size=len(entriesList))
-        
-#         hPass = ROOT.TH1D('{name}_Stat{i}'.format(name=bindef['bins'][ib]['name'],i=resample),bindef['bins'][ib]['title'],var['nbins'],var['min'],var['max'])
-#         hPass.Sumw2()
-    
-#         ## fill the histograms
-#         print("Now looping on the resampled dataset to fill ",hPass.GetName())
-#         tree.SetBranchStatus("*",0)
-#         tree.SetBranchStatus(var['name'],1)
-#         for ie,entry in enumerate(resamples):
-#             if ie%1000==0: print("Processing selected event ",ie," / ",len(resamples))
-#             tev = elist.GetEntry(entry)
-#             tree.GetEntry(tev)
-#             hPass.Fill(getattr(tree,var['name']))
-#         tree.SetBranchStatus("*",1)
-
-#         removeNegativeBins(hPass)
-     
-#         hPass.Write(hPass.GetName())
-     
-#         bin1 = 1
-#         bin2 = hPass.GetXaxis().GetNbins()
-#         epass = ROOT.Double(-1.0)
-#         passI = hPass.IntegralAndError(bin1,bin2,epass)
-#         print(cuts)
-#         print('    ==> Resample ',resample,' pass: {p:.1f} +/- {pe:.1f} '.format(p=passI,pe=epass))
-#     outfile.Close()
-
 
 
 def histPlotter( rootfile, tnpBin, plotDir, replica=-1, verbosePlotting=True ):
