@@ -109,6 +109,7 @@ parser.add_argument('--inputMC'    , type=str, default = '', help = "MC input fi
 parser.add_argument('--inputData'  , type=str, default = '', help = "Data input file which contains 3d histograms")
 parser.add_argument('--outdir'     , type=str, default=None,
                     help="name of the output folder (if not passed, a default one is used, which has the time stamp in it)")
+parser.add_argument('--useTrackerMuons', action='store_true'  , help = 'Measuring efficiencies specific for tracker muons (different tunings needed')
 
 args = parser.parse_args()
 
@@ -160,8 +161,10 @@ if typeflag == 'tracking':
 elif typeflag == 'reco':
     #binning_pt   = [24., 65.]
     massbins, massmin, massmax = 60, 60, 120
-    binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]
-    #binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
+    if args.useTrackerMuons:
+        binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
+    else:
+        binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]
     #binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
@@ -218,12 +221,18 @@ if typeflag == 'tracking':
     ]
 
     if not args.mcSig:
-        tnpParNomFit.extend(["maxFracSigF[0.12]"])
-        tnpParAltSigFit.extend(["maxFracSigF[0.12]"])
-        tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.12]"])
+        if args.useTrackerMuons:
+            # for tracker muons the fraction is much larger
+            tnpParNomFit.extend(["maxFracSigF[0.5]"])
+            tnpParAltSigFit.extend(["maxFracSigF[0.5]"])
+            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.5]"])
+        else:
+            tnpParNomFit.extend(["maxFracSigF[0.12]"])
+            tnpParAltSigFit.extend(["maxFracSigF[0.12]"])
+            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.12]"])
 
-    
 else:
+    
     tnpParNomFit = [
         #    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         #    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
@@ -254,6 +263,10 @@ else:
         "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
+    if not args.mcSig and typeflag == "reco" and args.useTrackerMuons:
+        # for tracker muons
+        tnpParNomFit.extend(["maxFracSigF[0.1]"] if args.binNumber in [24, 50, 69, 79, 133, 420] else ["maxFracSigF[0.3]"])
+        tnpParAltSigFitTuneRecoFail.extend(["maxFracSigF[0.1]"] if args.binNumber in [29] else ["maxFracSigF[0.3]"])
     
 # add second gaussian at low mass around 70 to model FSR bump for working points with isolation
 flagsWithFSR = ["iso", "trigger", "isonotrig"]
@@ -411,8 +424,6 @@ if  args.doFit:
     maxFailIntegralToUseAllProbe = 300 if typeflag not in ["tracking"] else -1 # use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
     altSignalFail = True if typeflag in ["reco", "tracking", "veto"] else False # use Gaussian as resolution function for altSig model
     modelFSR = True if typeflag in flagsWithFSR else False # add Gaussian to model low mass bump from FSR, in altSig fit
-    #sampleToFit.dump()
-    ## parallel for ib in range(len(tnpBins['bins'])):
     def parallel_fit(ib): ## parallel
         #print("tnpBins['bins'][ib] = ",tnpBins['bins'][ib])
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
@@ -425,13 +436,6 @@ if  args.doFit:
                     else:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
                                                   altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True)
-                # elif typeflag == 'reco' and ib in [200, 201, 226, 229, 239]: 
-                #     print(">>>>>")
-                #     print(f">>>>> Doing {typeflag} bin {ib} altSig fit with tuned parameters")
-                #     print(">>>>>")
-                #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax, altSignalFail=altSignalFail)
-                # else:
-                #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax, altSignalFail=altSignalFail)
                 elif typeflag == 'reco': 
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax,
                                               altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)

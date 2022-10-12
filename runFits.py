@@ -3,7 +3,9 @@ import subprocess
 import time
 import argparse
 
-def runCommands(wp, era, inputMC, inputData, outdir, pretend):
+def runCommands(wp, era, inputMC, inputData, options):
+    outdir = options.outdir
+    pretend = options.dryRun
     print()
     print("-"*30)
     print("Working point = ",wp)
@@ -27,12 +29,16 @@ def runCommands(wp, era, inputMC, inputData, outdir, pretend):
     for cmd in cmds:
         if outdir:
             cmd.append(f"--outdir={outdir}")
+        if options.useTrackerMuons:
+            cmd.append("--useTrackerMuons")
         if pretend:
             print(' '.join(cmd))
         else:
             subprocess.run(cmd, check=True)
 
-working_points = {
+working_points_global = {
+    ## for global muons
+    ##
     'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_data_vertexWeights1_oscharge1.root'],
     # 'mu_reco_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_recoplus_mc_vertexWeights1_oscharge1.root',
@@ -60,6 +66,26 @@ working_points = {
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_veto_data_vertexWeights1_oscharge1.root'],
 }
 
+working_points_tracker = {
+    'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_reco_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_reco_data_vertexWeights1_oscharge1.root'],
+    'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_tracking_mc_vertexWeights1_oscharge0.root',
+                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_tracking_data_vertexWeights1_oscharge0.root'],
+    'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_idip_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_idip_data_vertexWeights1_oscharge1.root'],
+    'mu_trigger_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerplus_mc_vertexWeights1_oscharge1.root',
+                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerplus_data_vertexWeights1_oscharge1.root'],
+    'mu_trigger_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerminus_mc_vertexWeights1_oscharge1.root',
+                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
+    'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_iso_mc_vertexWeights1_oscharge1.root',
+                    '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_iso_data_vertexWeights1_oscharge1.root'],
+    'mu_isonotrig_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_isonotrig_mc_vertexWeights1_oscharge1.root',
+                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
+    'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_veto_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_veto_data_vertexWeights1_oscharge1.root'],
+}
+
+
 #working_points = {'mu_iso_both': ['/home/users/rajarshi/Steve_Erc/Isolation_MC_full_2_08_2022.root','/home/users/rajarshi/Steve_Erc/Isolation_Data_full_2_08_2022.root'],}
 #for i in range(1,41):
     #working_points['mu_trigger_both_qtbin{0}'.format(i)] = ['input_MC_file_{0}.root'.format(i),'input_Data_file_{0}.root'.format(i)] 
@@ -73,14 +99,22 @@ parser.add_argument('-e',  '--era', default=['GtoH'], nargs='+', type=str, choic
                     help='Choose the era')
 parser.add_argument('-d',  '--dryRun', action='store_true',
                     help='Do not execute commands, just print them')
-parser.add_argument('-s','--steps', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points.keys()]),
+parser.add_argument('-s','--steps', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
                     help='Default runs all working points, but can choose only some if needed')
+parser.add_argument('-x','--skip', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
+                    help='Default runs all working points, but can skip some if needed')
+parser.add_argument('--useTrackerMuons', action='store_true'  , help = 'Measuring efficiencies specific for tracker muons (different tunings needed')
 args = parser.parse_args()
 
 tstart = time.time()
 cpustrat = time.process_time()
 
+if args.skip and args.steps:
+    print("Warning: --skip and --steps are not supposed to be used together. Try again")
+    quit()
+
 eras = args.era
+working_points = working_points_tracker if args.useTrackerMuons else working_points_global
 
 stepsToRun = []
 if args.steps:
@@ -89,7 +123,13 @@ if args.steps:
         if step in args.steps:
             stepsToRun.append(x)
 else:
-    stepsToRun = working_points.keys()        
+    if args.skip:
+        for x in working_points.keys():
+            step = x.split("_")[1]
+            if step not in args.skip:
+                stepsToRun.append(x)
+    else:
+        stepsToRun = working_points.keys()        
     
 #procs = []
 for e in eras:
@@ -98,15 +138,7 @@ for e in eras:
             continue
         inputMC = working_points[wp][0]
         inputData = working_points[wp][1]
-        runCommands( wp, e, inputMC, inputData, args.outdir, args.dryRun)
-        #proc = Process(target=runCommands, args=(wp,e,inputMC,inputData,))
-        #procs.append(proc)
-        #proc.start()
-        
-
-#for proc in procs:
-#    proc.join()
-
+        runCommands( wp, e, inputMC, inputData, args)
 
 elapsed = time.time() - tstart
 elapsed_cpu = time.process_time() - cpustrat

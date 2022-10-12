@@ -1,4 +1,4 @@
-#!bin/bash 
+#!/bin/bash 
 
 if [[ `uname -n` == *"lxplus"* ]] || [[ `uname -n` == *"cmswmass2"* ]]; then 
 ## install gcc 4.9
