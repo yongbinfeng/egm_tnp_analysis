@@ -19,9 +19,9 @@ lumiTextOffset   = 0.2
 cmsTextSize      = 0.75
 cmsTextOffset    = 0.1
 
-relPosX    = 0.045
+relPosX    = 0.080
 relPosY    = 0.035
-relExtraDY = 1.2
+irelExtraDY = 1.2
 
 extraOverCmsTextSize  = 0.76
 

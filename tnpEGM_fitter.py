@@ -265,7 +265,7 @@ else:
 
     if not args.mcSig and typeflag == "reco" and args.useTrackerMuons:
         # for tracker muons
-        tnpParNomFit.extend(["maxFracSigF[0.1]"] if args.binNumber in [24, 50, 69, 79, 133, 420] else ["maxFracSigF[0.3]"])
+        tnpParNomFit.extend(["maxFracSigF[0.05]"] if args.binNumber in [24] else ["maxFracSigF[0.05]"] if args.binNumber in [50, 69, 79, 133, 420] else ["maxFracSigF[0.3]"])
         tnpParAltSigFitTuneRecoFail.extend(["maxFracSigF[0.1]"] if args.binNumber in [29] else ["maxFracSigF[0.3]"])
     
 # add second gaussian at low mass around 70 to model FSR bump for working points with isolation

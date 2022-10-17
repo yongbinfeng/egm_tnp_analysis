@@ -99,8 +99,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     c.SetTopMargin(0.055)
     c.SetBottomMargin(0.10)
     c.SetLeftMargin(0.12)
-    
-    
+        
     p1 = rt.TPad( canName + '_up', canName + '_up', 0, yUp, 1,   1, 0,0,0)
     p2 = rt.TPad( canName + '_do', canName + '_do', 0,   0, 1, yUp, 0,0,0)
     p1.SetBottomMargin(0.0075)
@@ -110,8 +109,13 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     p1.SetLeftMargin( c.GetLeftMargin() )
     p2.SetLeftMargin( c.GetLeftMargin() )
     firstGraph = True
-    leg = rt.TLegend(0.5,0.80,0.95 ,0.92) if xAxis=='pT' else rt.TLegend(0.5, 0.8, 0.95, 0.92)
-    leg.SetNColumns(2)
+    nGraph = len(effDataList.keys())
+    nCol = 2 if nGraph < 10 else 3 if nGraph < 20 else 4
+    nRow = 1 + int((nGraph-1) / nCol)
+    ymaxLeg = 0.92
+    yminLeg = max(0.72, ymaxLeg - nRow * 0.03)
+    leg = rt.TLegend(0.15, yminLeg, 0.9, ymaxLeg)
+    leg.SetNColumns(nCol)
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
 
@@ -199,7 +203,7 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
         listOfTGraph2.append( grBinsSF ) 
         listOfMC.append( grBinsEffMC   )
         if 'eta' in yAxis or 'Eta' in yAxis:
-            leg.AddEntry( grBinsEffData, '%1.3f #leq | #eta | #leq  %1.3f' % (float(key[0]),float(key[1])), "PL")        
+            leg.AddEntry( grBinsEffData, '%1.1f #leq |#eta| #leq  %1.1f' % (float(key[0]),float(key[1])), "PL")        
         elif 'pt' in yAxis or 'pT' in yAxis:
             leg.AddEntry( grBinsEffData, '%3.0f #leq p_{T} #leq  %3.0f GeV' % (float(key[0]),float(key[1])), "PL")        
         elif 'vtx' in yAxis or 'Vtx' in yAxis or 'PV' in yAxis:
@@ -254,10 +258,11 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     c.cd()
     p2.Draw()
     p1.Draw()
+    CMS_lumi.CMS_lumi(c, 4, 0)
 
     leg.Draw()    
-    CMS_lumi.CMS_lumi(c, 4, 10)
-
+    c.RedrawAxis("sameaxis")
+    
     c.Print(nameout)
 
     return listOfTGraph1+listOfTGraph2+listOfMC
@@ -429,8 +434,8 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
         igr.Write( igr.GetName(), rt.TObject.kOverwrite) #'grSF1D_{ib}'.format(ib=igr), rt.TObject.kOverwrite)
     rootout.Close()
 
-    for isyst in range(len(efficiency.getSystematicNames())):
-        diagnosticErrorPlot( effGraph, isyst, pdfout )
+    #for isyst in range(len(efficiency.getSystematicNames())):
+    #    diagnosticErrorPlot( effGraph, isyst, pdfout )
 
     cDummy.Print( pdfout + "]" )
 

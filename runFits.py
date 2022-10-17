@@ -67,22 +67,22 @@ working_points_global = {
 }
 
 working_points_tracker = {
-    'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_reco_mc_vertexWeights1_oscharge1.root',
-                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_reco_data_vertexWeights1_oscharge1.root'],
-    'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_tracking_mc_vertexWeights1_oscharge0.root',
-                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_tracking_data_vertexWeights1_oscharge0.root'],
-    'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_idip_mc_vertexWeights1_oscharge1.root',
-                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_idip_data_vertexWeights1_oscharge1.root'],
-    'mu_trigger_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerplus_mc_vertexWeights1_oscharge1.root',
-                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerplus_data_vertexWeights1_oscharge1.root'],
-    'mu_trigger_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerminus_mc_vertexWeights1_oscharge1.root',
-                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
-    'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_iso_mc_vertexWeights1_oscharge1.root',
-                    '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_iso_data_vertexWeights1_oscharge1.root'],
-    'mu_isonotrig_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_isonotrig_mc_vertexWeights1_oscharge1.root',
-                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
-    'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_veto_mc_vertexWeights1_oscharge1.root',
-                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_trackerMuons_allWP/tnp_veto_data_vertexWeights1_oscharge1.root'],
+    'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_reco_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_reco_data_vertexWeights1_oscharge1.root'],
+    'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_tracking_mc_vertexWeights1_oscharge0.root',
+                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_tracking_data_vertexWeights1_oscharge0.root'],
+    'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_idip_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_idip_data_vertexWeights1_oscharge1.root'],
+    'mu_trigger_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_triggerplus_mc_vertexWeights1_oscharge1.root',
+                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_triggerplus_data_vertexWeights1_oscharge1.root'],
+    'mu_trigger_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_triggerminus_mc_vertexWeights1_oscharge1.root',
+                        '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
+    'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_iso_mc_vertexWeights1_oscharge1.root',
+                    '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_iso_data_vertexWeights1_oscharge1.root'],
+    'mu_isonotrig_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_isonotrig_mc_vertexWeights1_oscharge1.root',
+                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
+    'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_veto_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_veto_data_vertexWeights1_oscharge1.root'],
 }
 
 
@@ -101,16 +101,16 @@ parser.add_argument('-d',  '--dryRun', action='store_true',
                     help='Do not execute commands, just print them')
 parser.add_argument('-s','--steps', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
                     help='Default runs all working points, but can choose only some if needed')
-parser.add_argument('-x','--skip', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
-                    help='Default runs all working points, but can skip some if needed')
+parser.add_argument('-x','--exclude', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
+                    help='Default runs all working points, but can exclude some if needed')
 parser.add_argument('--useTrackerMuons', action='store_true'  , help = 'Measuring efficiencies specific for tracker muons (different tunings needed')
 args = parser.parse_args()
 
 tstart = time.time()
 cpustrat = time.process_time()
 
-if args.skip and args.steps:
-    print("Warning: --skip and --steps are not supposed to be used together. Try again")
+if args.exclude and args.steps:
+    print("Warning: --exclude and --steps are not supposed to be used together. Try again")
     quit()
 
 eras = args.era
@@ -123,10 +123,10 @@ if args.steps:
         if step in args.steps:
             stepsToRun.append(x)
 else:
-    if args.skip:
+    if args.exclude:
         for x in working_points.keys():
             step = x.split("_")[1]
-            if step not in args.skip:
+            if step not in args.exclude:
                 stepsToRun.append(x)
     else:
         stepsToRun = working_points.keys()        
