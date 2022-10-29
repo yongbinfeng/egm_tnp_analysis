@@ -1,5 +1,5 @@
 import ROOT, math, array, ctypes, copy
-from ROOT import RooFit,RooFitResult
+#from ROOT import RooFit,RooFitResult
 import numpy as np
 import os.path
 from . import fitUtils
@@ -7,7 +7,7 @@ from . import fitUtils
 import functools
 #from fitSimultaneousUtils import *
 
-ROOT.ROOT.EnableImplicitMT()
+#ROOT.ROOT.EnableImplicitMT()
 #ROOT.ROOT.TTreeProcessorMT.SetMaxTasksPerFilePerWorker(1)
 
 #ROOT.gROOT.LoadMacro('pileupWeights.C+')

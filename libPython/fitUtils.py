@@ -13,8 +13,8 @@ import ROOT
 #ROOT.gROOT.LoadMacro('./libCpp/RooCMSShape.cc+')
 #ROOT.gROOT.SetBatch(1)
 
-from ROOT import RooFit,RooFitResult
-from ROOT import tnpFitter,scaleFitter
+#from ROOT import RooFit,RooFitResult
+from ROOT import tnpFitter #,scaleFitter
 
 import re
 import math

@@ -18,7 +18,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 ROOT.gInterpreter.ProcessLine(".O3")
 
-from libPython.tnpClassUtils import tnpSampleNew
+from libPython.tnpClassUtils import tnpSample
 
 def compileMacro(x): #, basedir=os.environ['PWD']):
     #ROOT.gROOT.ProcessLine(".L %s/%s+" % (os.environ['CMSSW_BASE'],x));
@@ -27,13 +27,17 @@ def compileMacro(x): #, basedir=os.environ['PWD']):
         print("Loading and compiling %s failed! Exit" % x)
         quit()
 
-if "histFitter_C.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("./libCpp/histFitter.C")
-if "RooCBExGaussShape_cc.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("./libCpp/RooCBExGaussShape.cc")
-if "RooCMSShape_cc.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("./libCpp/RooCMSShape.cc")
+if "/RooCBExGaussShape_cc.so" not in ROOT.gSystem.GetLibraries():
+    compileMacro("libCpp/RooCBExGaussShape.cc")
+if "/RooCMSShape_cc.so" not in ROOT.gSystem.GetLibraries():
+    compileMacro("libCpp/RooCMSShape.cc")
+if "/histFitter_C.so" not in ROOT.gSystem.GetLibraries():
+    compileMacro("libCpp/histFitter.C")
 
+### tnp library
+import libPython.binUtils  as tnpBiner
+import libPython.rootUtils as tnpRoot
+import libPython.fitUtils as fitUtils
 
 def testBinning(bins, testbins, var="var", flag="workingPoint"):
     if bins != testbins:
@@ -112,13 +116,6 @@ parser.add_argument('--outdir'     , type=str, default=None,
 parser.add_argument('--useTrackerMuons', action='store_true'  , help = 'Measuring efficiencies specific for tracker muons (different tunings needed')
 
 args = parser.parse_args()
-
-### tnp library
-import libPython.binUtils  as tnpBiner
-import libPython.rootUtils as tnpRoot
-import libPython.fitUtils as fitUtils
-#from libPython import rootUtils as tnpRoot
-
 
 if args.flag is None:
     print('[tnpEGM_fitter] flag is MANDATORY, this is the working point as defined in the settings.py')
@@ -298,19 +295,19 @@ print(outputDirectory)
 
 luminosity = 16.8 if args.era == "GtoH" else 19.5
 dataName = f"mu_Run{args.era}"
-samples_data = tnpSampleNew(dataName,
-                            args.inputData,
-                            f"{outputDirectory}/{dataName}_{args.flag}.root",
-                            False,
-                            luminosity)
+samples_data = tnpSample(dataName,
+                         args.inputData,
+                         f"{outputDirectory}/{dataName}_{args.flag}.root",
+                         False,
+                         luminosity)
 
 eraMC = "postVFP" if args.era == "GtoH" else "preVFP"
 mcName = f"mu_DY_{eraMC}"
-samples_dy = tnpSampleNew(mcName,
-                          args.inputMC,
-                          f"{outputDirectory}/{mcName}_{args.flag}.root",
-                          True,
-                          -1)
+samples_dy = tnpSample(mcName,
+                       args.inputMC,
+                       f"{outputDirectory}/{mcName}_{args.flag}.root",
+                       True,
+                       -1)
 #samples_data.printConfig()
 #samples_dy.printConfig()
 

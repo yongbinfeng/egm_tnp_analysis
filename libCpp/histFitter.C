@@ -1,27 +1,31 @@
-#include "RooDataHist.h"
-#include "RooWorkspace.h"
-#include "RooRealVar.h"
-#include "RooAbsPdf.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
+#ifndef HIST_FITTER
+#define HIST_FITTER
+
+#include "TROOT.h"
 #include "TH1.h"
 #include "TSystem.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TPaveText.h"
 
+#include "RooDataHist.h"
+#include "RooWorkspace.h"
+#include "RooRealVar.h"
+#include "RooAbsPdf.h"
+#include "RooPlot.h"
+#include "RooFitResult.h"
 /// include pdfs
 #include "RooCBExGaussShape.h"
 #include "RooCMSShape.h"
 
 #include <vector>
 #include <string>
-#ifdef __CINT__
-#pragma link C++ class std::vector<std::string>+;
-#endif
+// #ifdef __CINT__
+// #pragma link C++ class std::vector<std::string>+;
+// #endif
 
+//using namespace std;
 using namespace RooFit;
-using namespace std;
 
 class tnpFitter {
 public:
@@ -176,9 +180,9 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
 
 }
 
-int tnpFitter::fits(string title) {
+int tnpFitter::fits(std::string title) {
 
-  cout << " this is the title : " << title << endl;
+  std::cout << " this is the title : " << title << std::endl;
 
   
   RooAbsPdf *pdfPass = _work->pdf("pdfPass");
@@ -291,3 +295,6 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
   text1->Draw();
   text->Draw();
 }
+
+
+#endif

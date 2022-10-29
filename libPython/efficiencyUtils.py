@@ -1,4 +1,6 @@
 import math
+import ROOT as rt
+import numpy as np
 
 class efficiency:
     #    altEff = [-1]*7
@@ -111,9 +113,6 @@ class efficiency:
         return effout
     
 
-
-import ROOT as rt
-import numpy as np
 
 def makeTGraphFromList( listOfEfficiencies , keyMin, keyMax ):
     grOut = rt.TGraphErrors(len(listOfEfficiencies))
