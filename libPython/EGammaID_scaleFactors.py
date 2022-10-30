@@ -5,8 +5,8 @@ from math import sqrt
 import ROOT as rt
 from . import CMS_lumi, tdrstyle
 
-from efficiencyUtils import efficiency
-from efficiencyUtils import efficiencyList
+from .efficiencyUtils import efficiency
+from .efficiencyUtils import efficiencyList
 from . import efficiencyUtils as effUtil
 
 tdrstyle.setTDRStyle()

@@ -134,7 +134,12 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
       _work->factory("HistPdf::sigPhysPass(x,hGenZPass)");
       _work->factory("HistPdf::sigPhysFail(x,hGenZFail)");
   }
-  
+  // this x variable should only be needed for the convolution, since the actual binning comes from the histograms
+  // increase number of bins and also the range so to span the whole range where the pdfs is larger than 0 (maybe the range is less important here)
+  // see also https://root-forum.cern.ch/t/bad-fit-at-boundaries-for-convoluted-roohistpdf/21980/9
+  _work->var("x")->setBins(1080, "cache"); 
+  // _work->var("x")->setMin("cache", 45.0); 
+  // _work->var("x")->setMax("cache", 135.0); 
   _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
   _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));

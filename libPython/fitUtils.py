@@ -162,7 +162,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 
     ## setup
     ## make configurable from outside
-    fitter.useMinos()
+    # fitter.useMinos()
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
@@ -252,7 +252,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 
     ## setup
     ## make configurable from outside
-    fitter.useMinos()
+    # fitter.useMinos()
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
@@ -302,7 +302,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 
     ## setup
     ## make configurable from outside
-    fitter.useMinos()
+    # fitter.useMinos()
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)

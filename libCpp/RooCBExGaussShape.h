@@ -1,16 +1,18 @@
 #ifndef ROO_CB_EX_GAUSS_SHAPE
 #define ROO_CB_EX_GAUSS_SHAPE
 
+#include "TROOT.h"
+#include "TFitResult.h"
+#include "TMath.h"
 
 #include "RooAbsPdf.h"
-#include "RooAbsArg.h"
-#include "RooRealProxy.h"
-#include "RooRealVar.h"
-#include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
-#include "RooAbsCategory.h"
-#include "TMath.h"
-#include "Riostream.h"
+#include "RooRealVar.h"
+#include "RooRealProxy.h"
+// #include "RooAbsArg.h"
+// #include "RooCategoryProxy.h"
+// #include "RooAbsCategory.h"
+// #include "Riostream.h"
 
 class RooCBExGaussShape : public RooAbsPdf {
 public:
@@ -31,7 +33,7 @@ public:
   inline ~RooCBExGaussShape(){}
   Double_t evaluate() const ;
   
-  ClassDef(RooCBExGaussShape, 2)
+  // ClassDef(RooCBExGaussShape, 2)
 
 protected:
 
