@@ -19,13 +19,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gInterpreter.ProcessLine(".O3")
 
 from libPython.tnpClassUtils import tnpSample
-
-def compileMacro(x): #, basedir=os.environ['PWD']):
-    #ROOT.gROOT.ProcessLine(".L %s/%s+" % (os.environ['CMSSW_BASE'],x));
-    success = ROOT.gSystem.CompileMacro("%s" % (x), "k")
-    if not success:
-        print("Loading and compiling %s failed! Exit" % x)
-        quit()
+from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile
 
 if "/RooCBExGaussShape_cc.so" not in ROOT.gSystem.GetLibraries():
     compileMacro("libCpp/RooCBExGaussShape.cc")
@@ -38,62 +32,6 @@ if "/histFitter_C.so" not in ROOT.gSystem.GetLibraries():
 import libPython.binUtils  as tnpBiner
 import libPython.rootUtils as tnpRoot
 import libPython.fitUtils as fitUtils
-
-def testBinning(bins, testbins, var="var", flag="workingPoint"):
-    if bins != testbins:
-        if bins[0] in testbins:
-            firstTestIdx = testbins.index(bins[0])
-            if all(bins[i] == testbins[i+firstTestIdx] for i in range(len(bins))):
-                print()
-                print("PLEASE READ!")
-                print()
-                print(f"Warning: {var} binning not consistent with the one in histograms for {flag}")
-                print(f"{bins}")
-                print(f"{testbins}")
-                print(f"However it seems to be a slice of it, so I will continue assuming it is intentional. Proceed with caution!")
-                print()
-                print()
-                return 0
-            else:
-                pass
-        print(f"Error: {var} binning not consistent with the one in histograms for {flag}")
-        print(f"{bins}")
-        print(f"{testbins}")
-        print("Please check!")
-        quit()
-
-def safeGetObject(fileObject, objectName, quitOnFail=True, silent=False, detach=True):
-    obj = fileObject.Get(objectName)
-    if obj == None:
-        if not silent:
-            print(f"Error getting {objectName} from file {fileObject.GetName()}")
-        if quitOnFail:
-            quit()
-        return None
-    else:
-        if detach:
-            obj.SetDirectory(0)
-        return obj
-
-def safeOpenFile(fileName, quitOnFail=True, silent=False, mode="READ"):
-    fileObject = ROOT.TFile.Open(fileName, mode)
-    if not fileObject or fileObject.IsZombie():
-        if not silent:
-            print(f"Error when opening file {fileName}")
-        if quitOnFail:
-            quit()
-        else:
-            return None
-    elif not fileObject.IsOpen():
-        if not silent:
-            print(f"File {fileName} was not opened")
-        if quitOnFail:
-            quit()
-        else:
-            return None
-    else:
-        return fileObject
-
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--checkBins'  , action='store_true'  , help = 'check  bining definition')
@@ -101,6 +39,7 @@ parser.add_argument('--createBins' , action='store_true'  , help = 'create binin
 parser.add_argument('--createHists', action='store_true'  , help = 'create histograms')
 parser.add_argument('--sample'     , default='all'        , help = 'create histograms (per sample, expert only)')
 parser.add_argument('--altSig'     , action='store_true'  , help = 'alternate signal model fit')
+#parser.add_argument('--noBkg'      , action='store_true'  , help = 'Use no background for alternate signal model fit (mainly for test in MC)')
 parser.add_argument('--altBkg'     , action='store_true'  , help = 'alternate background model fit')
 parser.add_argument('--doFit'      , action='store_true'  , help = 'fit sample (sample should be defined in settings.py)')
 parser.add_argument('--mcSig'      , action='store_true'  , help = 'fit MC nom [to init fit params]')
@@ -193,8 +132,10 @@ if typeflag == 'tracking':
         #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,3.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     # these might be partially overridden when running the fit to data by taking the values from the MC fit and narrowing the rangein which they can float to help convergence
@@ -202,10 +143,10 @@ if typeflag == 'tracking':
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-12.0,12.0]",
         "sigmaF[2,0.7,12.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
-        # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
+        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     # for pt >= 55 and tracking (se also note above)
@@ -213,8 +154,10 @@ if typeflag == 'tracking':
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[4.0,-1.0,15.0]",
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,3.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     if not args.mcSig:
@@ -237,18 +180,20 @@ else:
         #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         "meanF[-0.0,-10.0,10.0]","sigmaF[0.5,0.1,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.,40.,140.]","betaP[0.05,0.01,0.5]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,140.]","betaF[0.05,0.01,0.5]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        #"acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        #"acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
     
     tnpParAltSigFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-5.0,5.0]",
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        # "acmsP[60.,50.,75.]","betaP[0.04,0.01,0.06]","gammaP[0.1, 0.005, 1]","peakP[90.0]",
-        # "acmsF[60.,50.,75.]","betaF[0.04,0.01,0.06]","gammaF[0.1, 0.005, 1]","peakF[90.0]",
+        "acmsP[60.,40.,140.]","betaP[0.05,0.01,0.5]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,140.]","betaF[0.05,0.01,0.5]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        #"acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        #"acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     # was to tune few bins, might be used everywhere
@@ -256,8 +201,10 @@ else:
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-5.0,5.0]",
         "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        #"acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
+        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     if not args.mcSig and typeflag == "reco" and args.useTrackerMuons:
@@ -437,6 +384,8 @@ if  args.doFit:
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax,
                                               altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
                 else:
+                    #fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
+                    #                          altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR, zeroBackground=True)
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
                                               altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR)
             elif not args.mcSig:
@@ -446,7 +395,11 @@ if  args.doFit:
                 else:
                     #useAllTemplateForFail = False if typeflag in ["tracking"] and fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0 else True
                     fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
-                        
+            # else:
+            #     # nominal fit in MC still with analytc form but no background
+            #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
+            #                               altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR, zeroBackground=True)
+                    
     pool = Pool() ## parallel
     pool.map(parallel_fit, range(len(tnpBins['bins']))) ## parallel
 
@@ -487,11 +440,11 @@ if  args.doPlot:
     shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
 
     verbosePlotting = True
+    rootfile = safeOpenFile(f"{fileName}")
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
-            rootfile = ROOT.TFile(fileName, "read")
             tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
-
+    rootfile.Close()
     print(' ===> Plots saved in <=======')
 #    print('localhost/%s/' % plottingDir)
 

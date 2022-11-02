@@ -219,13 +219,10 @@ def getAllEffi( info, bindef ):
         eF = fitF.getError()
         rootfile.Close()
 
-        rootfile = ROOT.TFile( info['data'], 'read' )
-        hP = rootfile.Get('%s_Pass'%bindef['name'])
-        hF = rootfile.Get('%s_Fail'%bindef['name'])
-
-        if eP > math.sqrt(hP.Integral()) : eP = math.sqrt(hP.Integral())
-        if eF > math.sqrt(hF.Integral()) : eF = math.sqrt(hF.Integral())
-        rootfile.Close()
+        # if the fit is reliable the uncertainty in nSignal for data must be at least equal to sqrt(nSignal)
+        # it can be larger because of the presence of parameters and backgrounds
+        eP = max(math.sqrt(nP), eP)
+        eF = max(math.sqrt(nF), eF)
 
         effis['dataNominal'] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
     else:
@@ -244,14 +241,12 @@ def getAllEffi( info, bindef ):
         eF = fitresF.floatParsFinal().find('nSigF').getError()
         rootfile.Close()
 
-        rootfile = ROOT.TFile( info['data'], 'read' )
-        hP = rootfile.Get('%s_Pass'%bindef['name'])
-        hF = rootfile.Get('%s_Fail'%bindef['name'])
+        # if the fit is reliable the uncertainty in nSignal for data must be at least equal to sqrt(nSignal)
+        # it can be larger because of the presence of parameters and backgrounds
+        eP = max(math.sqrt(nP), eP)
+        eF = max(math.sqrt(nF), eF)
 
-        if eP > math.sqrt(hP.Integral()) : eP = math.sqrt(hP.Integral())
-        if eF > math.sqrt(hF.Integral()) : eF = math.sqrt(hF.Integral())
-        rootfile.Close()
-
+        
         effis['dataAltSig'] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
 
     else:
@@ -270,13 +265,10 @@ def getAllEffi( info, bindef ):
         eF = fitresF.floatParsFinal().find('nSigF').getError()
         rootfile.Close()
 
-        rootfile = ROOT.TFile( info['data'], 'read' )
-        hP = rootfile.Get('%s_Pass'%bindef['name'])
-        hF = rootfile.Get('%s_Fail'%bindef['name'])
-
-        if eP > math.sqrt(hP.Integral()) : eP = math.sqrt(hP.Integral())
-        if eF > math.sqrt(hF.Integral()) : eF = math.sqrt(hF.Integral())
-        rootfile.Close()
+        # if the fit is reliable the uncertainty in nSignal for data must be at least equal to sqrt(nSignal)
+        # it can be larger because of the presence of parameters and backgrounds
+        eP = max(math.sqrt(nP), eP)
+        eF = max(math.sqrt(nF), eF)
 
         effis['dataAltBkg'] = computeEffi(nP,nF,eP,eF)
     else:

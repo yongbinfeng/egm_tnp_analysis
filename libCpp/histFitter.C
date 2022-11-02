@@ -38,10 +38,11 @@ public:
   //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
   void setOutputFile(TString fname ) {_fOut = new TFile(fname, "recreate"); } 
   int fits(std::string title = "");
-  void useMinos(bool minos = true) {_useMinos = minos;}
+  void useMinos(bool minos = true) {_useMinos = minos; }
   void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p);
-  void fixSigmaFtoSigmaP(bool fix=true) { _fixSigmaFtoSigmaP= fix;}
+  void fixSigmaFtoSigmaP(bool fix=true) { _fixSigmaFtoSigmaP= fix; }
   void setFitRange(double xMin,double xMax) { _xFitMin = xMin; _xFitMax = xMax; }
+  void setZeroBackground(bool zeroBkg = true) {_zeroBackground = zeroBkg; }
   void setPassStrategy(int strategy) {_strategyPassFit = std::clamp(strategy, 0, 2); } 
   void setFailStrategy(int strategy) {_strategyFailFit = std::clamp(strategy, 0, 2); } 
   void setPrintLevel(int level) {_printLevel = std::clamp(level, -1, 9); } 
@@ -53,6 +54,7 @@ private:
   TFile *_fOut;
   double _nTotP, _nTotF;
   bool _useMinos;
+  bool _zeroBackground;  
   bool _fixSigmaFtoSigmaP;
   double _xFitMin,_xFitMax;
   int _strategyPassFit = 1;
@@ -61,7 +63,7 @@ private:
   double _maxSignalFractionFail = -1; // not used by default if negative
 };
 
-tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
+tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false), _zeroBackground(false) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   _histname_base = histname;  
 
@@ -89,7 +91,7 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float ma
   _xFitMax = massmax;
 }
 
-tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
+tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax ) : _useMinos(false),_fixSigmaFtoSigmaP(false),_zeroBackground(false) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   _histname_base = histname;
   
@@ -131,39 +133,57 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
   }
 
   if (not analyticPhysicsShape) {
-      _work->factory("HistPdf::sigPhysPass(x,hGenZPass)");
-      _work->factory("HistPdf::sigPhysFail(x,hGenZFail)");
+      _work->factory("HistPdf::sigPhysPass(x,hGenZPass,3)");
+      _work->factory("HistPdf::sigPhysFail(x,hGenZFail,3)");
   }
   // this x variable should only be needed for the convolution, since the actual binning comes from the histograms
   // increase number of bins and also the range so to span the whole range where the pdfs is larger than 0 (maybe the range is less important here)
   // see also https://root-forum.cern.ch/t/bad-fit-at-boundaries-for-convoluted-roohistpdf/21980/9
-  _work->var("x")->setBins(1080, "cache"); 
-  // _work->var("x")->setMin("cache", 45.0); 
-  // _work->var("x")->setMax("cache", 135.0); 
-  _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
+  _work->var("x")->setBins(10000, "cache"); 
+  // _work->var("x")->setMin("cache", 50.0); 
+  // _work->var("x")->setMax("cache", 130.0); 
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
-  _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
+  _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
+  if (_zeroBackground) {
+      // to implement properly
+      _work->factory("nBkgP[0]");
+      std::cout << "Setting background to zero for pass pdf" << std::endl;
+  } else {
+      _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
+  }
   _work->factory("SUM::pdfPass(nSigP*sigPass,nBkgP*bkgPass)");
-
+      
   if (modelFSR) {
 
-      _work->factory("FCONV::sigMainFail(x, sigPhysFail , sigResFail)");
-      _work->factory("SUM::sigFail(fracMainF[0.95,0.8,1.0]*sigMainFail, sigFsrFail)");
       if (isMCfit) {
           _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
-          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+          if (_zeroBackground) {
+              // to implement properly
+              _work->factory("nBkgF[0]");
+              std::cout << "Setting background to zero for fail pdf" << std::endl;
+          } else {
+              _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+          }
       } else{ 
           _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
           _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
       }
+
+      _work->factory("FCONV::sigMainFail(x, sigPhysFail , sigResFail)");
+      _work->factory("SUM::sigFail(fracMainF[0.95,0.8,1.0]*sigMainFail, sigFsrFail)");
       _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
-      
+          
   } else {
 
-      _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
       if (isMCfit) {
           _work->factory(TString::Format("nSigF[%f,%f,%f]",_nTotF*0.9,_nTotF*0.85,_nTotF*1.5));
-          _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+          if (_zeroBackground) {
+              // to implement properly
+              _work->factory("nBkgF[0]");
+              std::cout << "Setting background to zero for fail pdf" << std::endl;
+          } else {
+              _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*0.15));
+          }
       } else{ 
           if (_work->var("maxFracSigF") != nullptr) {
               // std::cout << "Test setting signal fraction" << std::endl;
@@ -177,6 +197,7 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
               _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));          
           }
       }
+      _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
       _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
       
   }
@@ -187,7 +208,7 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace, bool isMCfit = 
 
 int tnpFitter::fits(std::string title) {
 
-  std::cout << " this is the title : " << title << std::endl;
+  // std::cout << " this is the title : " << title << std::endl;
 
   
   RooAbsPdf *pdfPass = _work->pdf("pdfPass");
@@ -197,7 +218,15 @@ int tnpFitter::fits(std::string title) {
   /// FC: I don't know why but the integral is done over the full range in the fit not on the reduced range
   _work->var("x")->setRange(_xFitMin,_xFitMax);
   _work->var("x")->setRange("fitMassRange",_xFitMin,_xFitMax);
-  RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(_strategyPassFit), PrintLevel(_printLevel));
+  RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),
+                                         //Minos(_useMinos),
+                                         _useMinos ? Minos("nSigP") : Minos(kFALSE),
+                                         _useMinos ? SumW2Error(kFALSE) : SumW2Error(kTRUE),
+                                         Save(),
+                                         Range("fitMassRange"),
+                                         Minimizer("Minuit2"),
+                                         Strategy(_strategyPassFit),
+                                         PrintLevel(_printLevel));
   //RooFitResult* resPass = pdfPass->fitTo(*_work->data("hPass"),Minos(_useMinos),SumW2Error(kTRUE),Save());
   if( _fixSigmaFtoSigmaP ) {
     _work->var("sigmaF")->setVal( _work->var("sigmaP")->getVal() );
@@ -206,7 +235,15 @@ int tnpFitter::fits(std::string title) {
 
   // _work->var("sigmaF")->setVal(_work->var("sigmaP")->getVal());
   // _work->var("sigmaF")->setRange(0.8* _work->var("sigmaP")->getVal(), 3.0* _work->var("sigmaP")->getVal());
-  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save(),Range("fitMassRange"),Strategy(_strategyFailFit), PrintLevel(_printLevel));
+  RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),
+                                         //Minos(_useMinos),
+                                         _useMinos ? Minos("nSigF") : Minos(kFALSE),
+                                         _useMinos ? SumW2Error(kFALSE) : SumW2Error(kTRUE),
+                                         Save(),
+                                         Range("fitMassRange"),
+                                         Minimizer("Minuit2"),
+                                         Strategy(_strategyFailFit),
+                                         PrintLevel(_printLevel));
 
   RooPlot *pPass = _work->var("x")->frame(_xFitMin,_xFitMax); // always plot 50 - 130
   RooPlot *pFail = _work->var("x")->frame(_xFitMin,_xFitMax);

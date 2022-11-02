@@ -1,6 +1,6 @@
 #include "RooCBExGaussShape.h" 
 
-// ClassImp(RooCBExGaussShape) 
+ClassImp(RooCBExGaussShape) 
 
 RooCBExGaussShape::RooCBExGaussShape(const char *name, const char *title, 
 				     RooAbsReal& _m,
@@ -55,9 +55,9 @@ Double_t RooCBExGaussShape::evaluate() const
       rval= exp(-0.5*t*t);
     }
     else {
-      //      Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
-      //      Double_t b= n/absAlpha - absAlpha; 
-      //      rval= a/TMath::Power(b - t, n);
+        // Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+        // Double_t b= n/absAlpha - absAlpha; 
+        // rval= a/TMath::Power(b - t, n);
       Double_t a = exp(-0.5*absAlpha*absAlpha);
       Double_t b = exp(n*(t+absAlpha));
       rval = a*b;

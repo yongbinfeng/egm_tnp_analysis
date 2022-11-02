@@ -33,7 +33,7 @@ public:
   inline ~RooCBExGaussShape(){}
   Double_t evaluate() const ;
   
-  // ClassDef(RooCBExGaussShape, 2)
+  ClassDef(RooCBExGaussShape, 2)
 
 protected:
 

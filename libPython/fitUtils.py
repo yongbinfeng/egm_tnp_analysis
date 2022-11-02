@@ -1,21 +1,4 @@
 import ROOT
-
-#for so in ['histFitter_C.so', 'histScaleFitter_C.so', 'RooCBExGaussShape_cc.so', 'RooCMSShape_cc.so']:
-#
-#    if so not in ROOT.gSystem.GetLibraries():
-#        print('need to build', so)
-#        ROOT.gROOT.ProcessLine('.L ./libCpp/{soC}+'.format(soC=so.replace('_C.so','.C').replace('_cc.so','.cc')))
-
-##ROOT.gROOT.ProcessLine('.L ./libCpp/histFitter.C+')
-#ROOT.gROOT.LoadMacro('./libCpp/histFitter.C+')
-##ROOT.gROOT.LoadMacro('./libCpp/histScaleFitter.C+')
-#ROOT.gROOT.LoadMacro('./libCpp/RooCBExGaussShape.cc+')
-#ROOT.gROOT.LoadMacro('./libCpp/RooCMSShape.cc+')
-#ROOT.gROOT.SetBatch(1)
-
-#from ROOT import RooFit,RooFitResult
-from ROOT import tnpFitter #,scaleFitter
-
 import re
 import math
 
@@ -157,7 +140,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
+    fitter = ROOT.tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     infile.Close()
 
     ## setup
@@ -202,7 +185,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 #############################################################
 ########## alternate signal fitter
 #############################################################
-def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=False):
+def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False,
+                      constrainSignalFailFromMC=False, zeroBackground=False):
 
     if sample.isMonteCarlo():
         tnpWorkspacePar = tnpWorkspaceParam
@@ -216,7 +200,8 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     if altSignalFail:
         tnpWorkspaceFunc = [
             "tailLeft[%d]" % (-1 if ptmin >= 35 else 1),
-            "RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
+            #"RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
+            "RooCBExGaussShape::sigResPass(x,meanP,sigmaP,alphaP,nP,sigmaP_2,tailLeft)",
             "Gaussian::sigResFail(x,meanF,sigmaF)",
             "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
             "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
@@ -224,8 +209,10 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     else:
         tnpWorkspaceFunc = [
             "tailLeft[%d]" % (-1 if ptmin >= 35 else 1),
-            "RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
-            "RooCBExGaussShape::sigResFail(x,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)",
+            #"RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
+            "RooCBExGaussShape::sigResPass(x,meanP,sigmaP,alphaP,nP,sigmaP_2,tailLeft)",
+            #"RooCBExGaussShape::sigResFail(x,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)",
+            "RooCBExGaussShape::sigResFail(x,meanF,sigmaF,alphaF,nF,sigmaF_2,tailLeft)",
             "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
             "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]
@@ -246,7 +233,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
+    fitter = ROOT.tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     #    fitter.fixSigmaFtoSigmaP()
     infile.Close()
 
@@ -258,6 +245,9 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setPrintLevel(-1)
     fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
 
+    if zeroBackground:
+       fitter.setZeroBackground()
+    
     if not analyticPhysicsShape:
         ## generated Z LineShape
         fileTruth = ROOT.TFile('etc/inputs/ZeeGenLevel.root','read')
@@ -297,7 +287,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     infile = ROOT.TFile(sample.getOutputPath(),'read')
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
     hF = infile.Get('%s_Fail' % tnpBin['name'] )
-    fitter = tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
+    fitter = ROOT.tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     infile.Close()
 
     ## setup
