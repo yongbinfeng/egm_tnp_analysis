@@ -1,4 +1,8 @@
 ### python specific import
+
+## example
+# python libPython/checkFitStatus.py plots/results_test_globalMuons_byCharge_noMinos_RooMinimizerMinuit2//efficiencies_GtoH/mu_iso_plus/mu_RunGtoH_mu_iso_plus.nominalFit.root
+
 import os
 import pickle
 import shutil
