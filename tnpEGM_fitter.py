@@ -126,16 +126,10 @@ else:
 #############################################################
 if typeflag == 'tracking':
     tnpParNomFit = [
-        #    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
-        #    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
-        #    "acmsP[60.,50.,80.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,3.0]",
-        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
     # these might be partially overridden when running the fit to data by taking the values from the MC fit and narrowing the rangein which they can float to help convergence
@@ -143,10 +137,8 @@ if typeflag == 'tracking':
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-12.0,12.0]",
         "sigmaF[2,0.7,12.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
     # for pt >= 55 and tracking (se also note above)
@@ -154,10 +146,8 @@ if typeflag == 'tracking':
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[4.0,-1.0,15.0]",
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,3.0]",
-        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #"acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
     if not args.mcSig:
@@ -174,16 +164,10 @@ if typeflag == 'tracking':
 else:
     
     tnpParNomFit = [
-        #    "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
-        #    "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
-        #    "acmsP[60.,50.,80.]","betaP[0.05,0.01,0.08]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #    "acmsF[60.,50.,80.]","betaF[0.05,0.01,0.08]","gammaF[0.1, 0, 1]","peakF[90.0]",
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         "meanF[-0.0,-10.0,10.0]","sigmaF[0.5,0.1,5.0]",
         "acmsP[60.,40.,140.]","betaP[0.05,0.01,0.5]","gammaP[0.1, 0, 1]","peakP[90.0]",
         "acmsF[60.,40.,140.]","betaF[0.05,0.01,0.5]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        #"acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        #"acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
     
     tnpParAltSigFit = [
@@ -192,8 +176,6 @@ else:
         "sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
         "acmsP[60.,40.,140.]","betaP[0.05,0.01,0.5]","gammaP[0.1, 0, 1]","peakP[90.0]",
         "acmsF[60.,40.,140.]","betaF[0.05,0.01,0.5]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        #"acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        #"acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
     ]
 
     # was to tune few bins, might be used everywhere
@@ -201,10 +183,8 @@ else:
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]" ,'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]","sosP[1,0.5,5.0]",
         "meanF[-0.0,-5.0,5.0]",
         "sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]","sosF[1,0.5,5.0]",
-        #"acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
-        #"acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "acmsP[60.]","betaP[0.05]","gammaP[0.1]","peakP[90.0]",
-        "acmsF[60.]","betaF[0.05]","gammaF[0.1]","peakF[90.0]",
+        "acmsP[60.,40.,130.]","betaP[0.05,0.01,0.11]","gammaP[0.1, 0, 1]","peakP[90.0]",
+        "acmsF[60.,40.,150.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
     ]
 
     if not args.mcSig and typeflag == "reco" and args.useTrackerMuons:
@@ -224,6 +204,29 @@ tnpParAltBkgFit = [
     "alphaP[0.,-5.,5.]",
     "alphaF[0.,-5.,5.]",
     ]
+
+
+# ##
+# ## Try to constrain some background parameters (for tracking might need to do it for signal instead, since S/B is small)
+parConstraints = [
+    # Passing
+    "Gaussian::constrainP_acmsP(acmsP,90,50)",
+    "Gaussian::constrainP_betaP(betaP,0.05,0.25)",
+    "Gaussian::constrainP_gammaP(gammaP,0.5,0.8)",
+    # failing
+    "Gaussian::constrainF_acmsF(acmsF,90,25)",
+    "Gaussian::constrainF_betaF(betaF,0.05,0.25)",
+    "Gaussian::constrainF_gammaF(gammaF,0.5,0.5)"
+]
+
+#parConstraints = []
+
+# tnpParNomFit.extend(parConstraints)
+# tnpParAltSigFit.extend(parConstraints)
+# if typeflag == 'tracking':
+#     tnpParAltSigFitTrackingHighPt.extend(parConstraints)
+# else:
+#     tnpParAltSigFitTuneRecoFail.extend(parConstraints)
 
 today = datetime.date.isoformat(datetime.date.today())
 #today='2021-10-05'
@@ -376,25 +379,25 @@ if  args.doFit:
                     # constrainSignalFailFromMC sets the data fit parameters to MC value +/- 3*uncertainty
                     if fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0: # force peak mean more on the right for high pt bins and tracking efficiency
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTrackingHighPt, massbins, massmin, massmax,
-                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True)
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True, constrainPars=parConstraints)
                     else:
                         fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
-                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True)
+                                                  altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainSignalFailFromMC=True, constrainPars=parConstraints)
                 elif typeflag == 'reco': 
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFitTuneRecoFail, massbins, massmin, massmax,
-                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False)
+                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=False, constrainPars=parConstraints)
                 else:
                     #fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
                     #                          altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR, zeroBackground=True)
                     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,
-                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR)
+                                              altSignalFail=altSignalFail, analyticPhysicsShape=True, modelFSR=modelFSR, constrainPars=parConstraints)
             elif not args.mcSig:
                 # do this only for data
                 if args.altBkg:
-                    fitUtils.histFitterAltBkg(sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
+                    fitUtils.histFitterAltBkg(sampleToFit, tnpBins['bins'][ib], tnpParAltBkgFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe, constrainPars=parConstraints)
                 else:
                     #useAllTemplateForFail = False if typeflag in ["tracking"] and fitUtils.ptMin(tnpBins['bins'][ib]) > 54.0 else True
-                    fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe)
+                    fitUtils.histFitterNominal( sampleToFit, tnpBins['bins'][ib], tnpParNomFit, massbins, massmin, massmax, useAllTemplateForFail, maxFailIntegralToUseAllProbe, constrainPars=parConstraints)
             # else:
             #     # nominal fit in MC still with analytc form but no background
             #     fitUtils.histFitterAltSig(sampleToFit, tnpBins['bins'][ib], tnpParAltSigFit, massbins, massmin, massmax,

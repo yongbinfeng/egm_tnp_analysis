@@ -120,7 +120,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, constrainSignal
 #############################################################
 ########## nominal fitter
 #############################################################
-def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1):
+def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[]):
         
     print('------- now nominal fitting bin:')
     for i in tnpBin:
@@ -134,8 +134,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspaceParam)
-    tnpWorkspace.extend(tnpWorkspaceFunc)
-    
+    tnpWorkspace.extend(tnpWorkspaceFunc)        
+        
     ## init fitter
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
@@ -150,6 +150,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
     fitter.setOutputFile(sample.nominalFit+'_bin_'+tnpBin['name'])
+    fitter.isMC(sample.isMonteCarlo())
     
     ## generated Z LineShape
     ## for high pT change the failing spectra to any probe to get statistics
@@ -169,6 +170,18 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()
 
+    if len(constrainPars):
+        tnpWorkspace.extend(constrainPars)
+        # ugly, just to define constraints for passing or failing
+        constraints = {"constrainP" : "",
+                       "constrainF" : ""}
+        cpass = list(filter(lambda x :  "constrainP" in x, constrainPars))
+        cfail = list(filter(lambda x :  "constrainF" in x, constrainPars))
+        constraints = {"constrainP" : ",".join([x.split("::")[1].split("(")[0] for x in cpass]),
+                       "constrainF" : ",".join([x.split("::")[1].split("(")[0] for x in cfail])}
+        for key in constraints.keys():
+            fitter.updateConstraints(key, constraints[key])
+        
     # python3rootfile.cd()
     ### set workspace
     workspace = ROOT.vector("string")()
@@ -186,7 +199,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 ########## alternate signal fitter
 #############################################################
 def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False,
-                      constrainSignalFailFromMC=False, zeroBackground=False):
+                      constrainSignalFailFromMC=False, zeroBackground=False, constrainPars=[]):
 
     if sample.isMonteCarlo():
         tnpWorkspacePar = tnpWorkspaceParam
@@ -228,7 +241,10 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspacePar)
     tnpWorkspace.extend(tnpWorkspaceFunc)
-        
+
+    if len(constrainPars):
+        tnpWorkspace.extend(constrainPars)
+    
     ## init fitter
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
@@ -244,6 +260,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
     fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
+    fitter.isMC(sample.isMonteCarlo())
 
     if zeroBackground:
        fitter.setZeroBackground()
@@ -270,7 +287,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 #############################################################
 ########## alternate background fitter
 #############################################################
-def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1):
+def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[]):
 
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
@@ -282,7 +299,10 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspaceParam)
     tnpWorkspace.extend(tnpWorkspaceFunc)
-            
+
+    if len(constrainPars):
+        tnpWorkspace.extend(constrainPars)
+    
     ## init fitter
     infile = ROOT.TFile(sample.getOutputPath(),'read')
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
@@ -297,6 +317,7 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
     fitter.setOutputFile(sample.altBkgFit+'_bin_'+tnpBin['name'])
+    fitter.isMC(sample.isMonteCarlo())
 
     ## generated Z LineShape
     ## for high pT change the failing spectra to any probe to get statistics

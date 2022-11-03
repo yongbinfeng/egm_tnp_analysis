@@ -22,7 +22,6 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 sys.path.append(os.getcwd() + "/libPython/")
 from plotUtils import *
 
-
 def checkFit(infile, outdir, fitName, hbins):
     hStatusPass = copy.deepcopy(hbins.Clone(f"{fitName}_pass_status"))
     hStatusPass.Reset("ICESM")
@@ -30,6 +29,14 @@ def checkFit(infile, outdir, fitName, hbins):
     hStatusFail = copy.deepcopy(hbins.Clone(f"{fitName}_fail_status"))
     hStatusFail.Reset("ICESM")
     hStatusFail.SetTitle(f"{fitName} fail")
+
+    hCovQualPass = copy.deepcopy(hbins.Clone(f"{fitName}_pass_covQual"))
+    hCovQualPass.Reset("ICESM")
+    hCovQualPass.SetTitle(f"{fitName} pass")
+    hCovQualFail = copy.deepcopy(hbins.Clone(f"{fitName}_fail_covQual"))
+    hCovQualFail.Reset("ICESM")
+    hCovQualFail.SetTitle(f"{fitName} fail")
+
     
     nEtaBins = hStatusPass.GetNbinsX()
     nPtBins = hStatusPass.GetNbinsY()
@@ -45,8 +52,10 @@ def checkFit(infile, outdir, fitName, hbins):
         npt = int((nbin / nEtaBins) + 1)
         if "_resP" in name:
             hStatusPass.SetBinContent(neta, npt, obj.status())
+            hCovQualPass.SetBinContent(neta, npt, obj.covQual())
         else:
             hStatusFail.SetBinContent(neta, npt, obj.status())
+            hCovQualFail.SetBinContent(neta, npt, obj.covQual())
     rootfileWithEffi.Close()
 
     canvas = ROOT.TCanvas("canvas","",800,800)
@@ -66,6 +75,23 @@ def checkFit(infile, outdir, fitName, hbins):
             hStatusFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
             draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
             palette=87, nContours=5, drawOption="colz")
+
+
+    maxStatus = int(hCovQualPass.GetBinContent(hCovQualPass.GetMaximumBin()))
+    zrange = f" max={maxStatus}::-1.5,4.5"    
+
+    drawTH2(hCovQualPass, "Muon #eta", "Muon p_{T} (GeV)", f"Fit cov. quality {zrange}",
+            hCovQualPass.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+            draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+            palette=87, nContours=6, drawOption="colz")
+
+    maxStatus = int(hCovQualFail.GetBinContent(hCovQualFail.GetMaximumBin()))
+    zrange = f" max={maxStatus}::-1.5,4.5"    
+
+    drawTH2(hCovQualFail, "Muon #eta", "Muon p_{T} (GeV)", f"Fit cov. quality {zrange}",
+            hCovQualFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+            draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+            palette=87, nContours=6, drawOption="colz")
 
     
 if __name__ == "__main__":
