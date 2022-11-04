@@ -120,7 +120,14 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, constrainSignal
 #############################################################
 ########## nominal fitter
 #############################################################
-def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[]):
+def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[], bkgShapes=[]):
+
+    analyticPhysicsShape = False
+
+    defaultBkgShapes = [
+        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+    ]
         
     print('------- now nominal fitting bin:')
     for i in tnpBin:
@@ -128,14 +135,14 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
-        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
-        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]
-
+    tnpWorkspaceFunc.extend(bkgShapes if len(bkgShapes) else defaultBkgShapes)
+    
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspaceParam)
     tnpWorkspace.extend(tnpWorkspaceFunc)        
-        
+
+    
     ## init fitter
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
@@ -187,7 +194,7 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     workspace = ROOT.vector("string")()
     for iw in tnpWorkspace:
         workspace.push_back(iw)
-    fitter.setWorkspace( workspace, sample.isMonteCarlo(), False, False )
+    fitter.setWorkspace( workspace, sample.isMonteCarlo(), analyticPhysicsShape, False )
 
     title = tnpBin['title'].replace(';',' - ')
     title = title.replace('probe_eta','#eta')
@@ -198,9 +205,11 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
 #############################################################
 ########## alternate signal fitter
 #############################################################
-def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, analyticPhysicsShape=True, modelFSR=False,
-                      constrainSignalFailFromMC=False, zeroBackground=False, constrainPars=[]):
+def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, altSignalFail=False, modelFSR=False,
+                      constrainSignalFailFromMC=False, zeroBackground=False, constrainPars=[], bkgShapes=[]):
 
+    analyticPhysicsShape = True
+    
     if sample.isMonteCarlo():
         tnpWorkspacePar = tnpWorkspaceParam
     else:
@@ -208,32 +217,30 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 
     ### tricky: use n < 0 for high pT bin (so need to remove param and add it back)
     ptmin = ptMin(tnpBin)        
+
+    defaultBkgShapes = [
+        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+    ]
     
-    # FIXME: is the tail not overridden inside createWorkspaceForAltSig?
     if altSignalFail:
         tnpWorkspaceFunc = [
             "tailLeft[%d]" % (-1 if ptmin >= 35 else 1),
-            #"RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
             "RooCBExGaussShape::sigResPass(x,meanP,sigmaP,alphaP,nP,sigmaP_2,tailLeft)",
             "Gaussian::sigResFail(x,meanF,sigmaF)",
-            "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
-            "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]
     else:
         tnpWorkspaceFunc = [
             "tailLeft[%d]" % (-1 if ptmin >= 35 else 1),
-            #"RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
             "RooCBExGaussShape::sigResPass(x,meanP,sigmaP,alphaP,nP,sigmaP_2,tailLeft)",
-            #"RooCBExGaussShape::sigResFail(x,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)",
             "RooCBExGaussShape::sigResFail(x,meanF,sigmaF,alphaF,nF,sigmaF_2,tailLeft)",
-            "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
-            "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]
 
-    if analyticPhysicsShape:
-        bwShapes = ["BreitWigner::sigPhysPass(x,91.1876,2.4952)",
-                    "BreitWigner::sigPhysFail(x,91.1876,2.4952)"]
-        tnpWorkspaceFunc.extend(bwShapes)
+    tnpWorkspaceFunc.extend(bkgShapes if len(bkgShapes) else defaultBkgShapes)
+        
+    bwShapes = ["BreitWigner::sigPhysPass(x,91.1876,2.4952)",
+                "BreitWigner::sigPhysFail(x,91.1876,2.4952)"]
+    tnpWorkspaceFunc.extend(bwShapes)
 
     if modelFSR:
         tnpWorkspaceFunc.append("Gaussian::sigFsrFail(x,fsrMeanF,fsrSigmaF)")
@@ -242,9 +249,6 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     tnpWorkspace.extend(tnpWorkspacePar)
     tnpWorkspace.extend(tnpWorkspaceFunc)
 
-    if len(constrainPars):
-        tnpWorkspace.extend(constrainPars)
-    
     ## init fitter
     infile = ROOT.TFile( sample.getOutputPath(), "read")
     hP = infile.Get('%s_Pass' % tnpBin['name'] )
@@ -252,7 +256,7 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter = ROOT.tnpFitter( hP, hF, tnpBin['name'], massbins, massmin, massmax )
     #    fitter.fixSigmaFtoSigmaP()
     infile.Close()
-
+    
     ## setup
     ## make configurable from outside
     # fitter.useMinos()
@@ -265,12 +269,18 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     if zeroBackground:
        fitter.setZeroBackground()
     
-    if not analyticPhysicsShape:
-        ## generated Z LineShape
-        fileTruth = ROOT.TFile('etc/inputs/ZeeGenLevel.root','read')
-        histZLineShape = fileTruth.Get('Mass')
-        fitter.setZLineShapes(histZLineShape,histZLineShape)
-        fileTruth.Close()
+    if len(constrainPars):
+        tnpWorkspace.extend(constrainPars)
+        # ugly, just to define constraints for passing or failing
+        constraints = {"constrainP" : "",
+                       "constrainF" : ""}
+        cpass = list(filter(lambda x :  "constrainP" in x, constrainPars))
+        cfail = list(filter(lambda x :  "constrainF" in x, constrainPars))
+        constraints = {"constrainP" : ",".join([x.split("::")[1].split("(")[0] for x in cpass]),
+                       "constrainF" : ",".join([x.split("::")[1].split("(")[0] for x in cfail])}
+        for key in constraints.keys():
+            if len(constraints[key]):
+                fitter.updateConstraints(key, constraints[key])
 
     ### set workspace
     workspace = ROOT.vector("string")()
@@ -287,14 +297,21 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
 #############################################################
 ########## alternate background fitter
 #############################################################
-def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[]):
+def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60, massmax=120, useAllTemplateForFail=False, maxFailIntegralToUseAllProbe=-1, constrainPars=[], bkgShapes=[]):
 
+    analyticPhysicsShape = False
+
+    defaultBkgShapes = [
+        "Exponential::bkgPass(x, expalphaP)",
+        "Exponential::bkgFail(x, expalphaF)",
+    ]
+        
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
-        "Exponential::bkgPass(x, alphaP)",
-        "Exponential::bkgFail(x, alphaF)",
         ]
+
+    tnpWorkspaceFunc.extend(bkgShapes if len(bkgShapes) else defaultBkgShapes)
 
     tnpWorkspace = []
     tnpWorkspace.extend(tnpWorkspaceParam)
@@ -337,11 +354,23 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setZLineShapes(histZLineShapeP,histZLineShapeF)
     fileTruth.Close()
 
+    if len(constrainPars):
+        tnpWorkspace.extend(constrainPars)
+        # ugly, just to define constraints for passing or failing
+        constraints = {"constrainP" : "",
+                       "constrainF" : ""}
+        cpass = list(filter(lambda x :  "constrainP" in x, constrainPars))
+        cfail = list(filter(lambda x :  "constrainF" in x, constrainPars))
+        constraints = {"constrainP" : ",".join([x.split("::")[1].split("(")[0] for x in cpass]),
+                       "constrainF" : ",".join([x.split("::")[1].split("(")[0] for x in cfail])}
+        for key in constraints.keys():
+            fitter.updateConstraints(key, constraints[key])
+
     ### set workspace
     workspace = ROOT.vector("string")()
     for iw in tnpWorkspace:
         workspace.push_back(iw)
-    fitter.setWorkspace( workspace, sample.isMonteCarlo(), False, False )
+    fitter.setWorkspace( workspace, sample.isMonteCarlo(), analyticPhysicsShape, False )
 
     title = tnpBin['title'].replace(';',' - ')
     fitter.fits(title)

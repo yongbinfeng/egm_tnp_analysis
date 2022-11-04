@@ -7,7 +7,7 @@ def mkdir(directory):
         os.makedirs(directory) 
 
 class tnpSample:
-    def __init__(self, sampleName, inputPath, outputPath, isMC, lumi):
+    def __init__(self, sampleName, inputPath, outputPath, isMC, lumi=None):
         self.inputPath  = inputPath
         self.outputPath = outputPath
         self.name = sampleName
@@ -55,8 +55,7 @@ class tnpSample:
         print("Name   :", self.getName())
         print("Input  :", self.getInputPath())
         print("Output :", self.getOutputPath())
-        if self.isMC:
-            print("Lumi   :", self.getLumi())
+        print("Lumi   :", self.getLumi())
         print("="*30)
 
 # class tnpVar:
