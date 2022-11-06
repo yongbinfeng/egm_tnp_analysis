@@ -187,8 +187,9 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
         constraints = {"constrainP" : ",".join([x.split("::")[1].split("(")[0] for x in cpass]),
                        "constrainF" : ",".join([x.split("::")[1].split("(")[0] for x in cfail])}
         for key in constraints.keys():
-            fitter.updateConstraints(key, constraints[key])
-        
+            if len(constraints[key]):
+                fitter.updateConstraints(key, constraints[key])
+            
     # python3rootfile.cd()
     ### set workspace
     workspace = ROOT.vector("string")()
@@ -364,7 +365,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
         constraints = {"constrainP" : ",".join([x.split("::")[1].split("(")[0] for x in cpass]),
                        "constrainF" : ",".join([x.split("::")[1].split("(")[0] for x in cfail])}
         for key in constraints.keys():
-            fitter.updateConstraints(key, constraints[key])
+            if len(constraints[key]):
+                fitter.updateConstraints(key, constraints[key])
 
     ### set workspace
     workspace = ROOT.vector("string")()

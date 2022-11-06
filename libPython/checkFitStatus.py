@@ -23,6 +23,9 @@ sys.path.append(os.getcwd() + "/libPython/")
 from plotUtils import *
 
 def checkFit(infile, outdir, fitName, hbins):
+
+    # TODO: avoid repeating code for each histogram, but fine for now
+    
     hStatusPass = copy.deepcopy(hbins.Clone(f"{fitName}_pass_status"))
     hStatusPass.Reset("ICESM")
     hStatusPass.SetTitle(f"{fitName} pass")
@@ -37,6 +40,21 @@ def checkFit(infile, outdir, fitName, hbins):
     hCovQualFail.Reset("ICESM")
     hCovQualFail.SetTitle(f"{fitName} fail")
 
+    hMeanPass = copy.deepcopy(hbins.Clone(f"{fitName}_pass_mean"))
+    hMeanPass.Reset("ICESM")
+    hMeanPass.SetTitle(f"{fitName} pass")
+    hMeanFail = copy.deepcopy(hbins.Clone(f"{fitName}_fail_mean"))
+    hMeanFail.Reset("ICESM")
+    hMeanFail.SetTitle(f"{fitName} fail")
+
+    # sigma only for nominal fit, it means how much the MC template is smeared, for the alternate fits there can be more sigma parameters instead 
+    if "nominal" in fitName:
+        hSigmaPass = copy.deepcopy(hbins.Clone(f"{fitName}_pass_sigma"))
+        hSigmaPass.Reset("ICESM")
+        hSigmaPass.SetTitle(f"{fitName} pass")
+        hSigmaFail = copy.deepcopy(hbins.Clone(f"{fitName}_fail_sigma"))
+        hSigmaFail.Reset("ICESM")
+        hSigmaFail.SetTitle(f"{fitName} fail")
     
     nEtaBins = hStatusPass.GetNbinsX()
     nPtBins = hStatusPass.GetNbinsY()
@@ -56,20 +74,31 @@ def checkFit(infile, outdir, fitName, hbins):
         else:
             hStatusFail.SetBinContent(neta, npt, obj.status())
             hCovQualFail.SetBinContent(neta, npt, obj.covQual())
+        for par in obj.floatParsFinal():
+            if par.GetName() == "meanP":
+                hMeanPass.SetBinContent(neta, npt, par.getVal())
+            elif par.GetName() == "meanF":
+                hMeanFail.SetBinContent(neta, npt, par.getVal())
+            if "nominal" in fitName:
+                if par.GetName() == "sigmaP":
+                    hSigmaPass.SetBinContent(neta, npt, par.getVal())
+                elif par.GetName() == "sigmaF":
+                    hSigmaFail.SetBinContent(neta, npt, par.getVal())
+
     rootfileWithEffi.Close()
 
     canvas = ROOT.TCanvas("canvas","",800,800)
 
-    maxStatus = int(hStatusPass.GetBinContent(hStatusPass.GetMaximumBin()))
-    zrange = f" max={maxStatus}::-0.5,4.5"    
+    maxZval = int(hStatusPass.GetBinContent(hStatusPass.GetMaximumBin()))
+    zrange = f" max={maxZval}::-0.5,4.5"    
 
     drawTH2(hStatusPass, "Muon #eta", "Muon p_{T} (GeV)", f"Fit status {zrange}",
             hStatusPass.GetName(), plotLabel="ForceTitle", outdir=outdir, 
             draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
             palette=87, nContours=5, drawOption="colz")
 
-    maxStatus = int(hStatusFail.GetBinContent(hStatusFail.GetMaximumBin()))
-    zrange = f" max={maxStatus}::-0.5,4.5"    
+    maxZval = int(hStatusFail.GetBinContent(hStatusFail.GetMaximumBin()))
+    zrange = f" max={maxZval}::-0.5,4.5"    
 
     drawTH2(hStatusFail, "Muon #eta", "Muon p_{T} (GeV)", f"Fit status {zrange}",
             hStatusFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
@@ -77,21 +106,56 @@ def checkFit(infile, outdir, fitName, hbins):
             palette=87, nContours=5, drawOption="colz")
 
 
-    maxStatus = int(hCovQualPass.GetBinContent(hCovQualPass.GetMaximumBin()))
-    zrange = f" max={maxStatus}::-1.5,4.5"    
+    maxZval = int(hCovQualPass.GetBinContent(hCovQualPass.GetMaximumBin()))
+    zrange = f" max={maxZval}::-1.5,4.5"    
 
     drawTH2(hCovQualPass, "Muon #eta", "Muon p_{T} (GeV)", f"Fit cov. quality {zrange}",
             hCovQualPass.GetName(), plotLabel="ForceTitle", outdir=outdir, 
             draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
             palette=87, nContours=6, drawOption="colz")
 
-    maxStatus = int(hCovQualFail.GetBinContent(hCovQualFail.GetMaximumBin()))
-    zrange = f" max={maxStatus}::-1.5,4.5"    
+    maxZval = int(hCovQualFail.GetBinContent(hCovQualFail.GetMaximumBin()))
+    zrange = f" max={maxZval}::-1.5,4.5"    
 
     drawTH2(hCovQualFail, "Muon #eta", "Muon p_{T} (GeV)", f"Fit cov. quality {zrange}",
             hCovQualFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
             draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
             palette=87, nContours=6, drawOption="colz")
+
+    maxZval = round(float(hMeanPass.GetBinContent(hStatusPass.GetMaximumBin())), 3)
+    zrange = f" max={maxZval}"    
+
+    drawTH2(hMeanPass, "Muon #eta", "Muon p_{T} (GeV)", f"Gauss mean {zrange} (GeV)",
+            hMeanPass.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+            draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+            palette=87, nContours=51, drawOption="colz")
+
+    maxZval = round(float(hMeanFail.GetBinContent(hMeanFail.GetMaximumBin())), 3)
+    zrange = f" max={maxZval}"    
+
+    drawTH2(hMeanFail, "Muon #eta", "Muon p_{T} (GeV)", f"Gauss mean {zrange} (GeV)",
+            hMeanFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+            draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+            palette=87, nContours=51, drawOption="colz")
+
+    if "nominal" in fitName:
+
+        maxZval = round(float(hSigmaPass.GetBinContent(hStatusPass.GetMaximumBin())), 3)
+        zrange = f" max={maxZval}"    
+        
+        drawTH2(hSigmaPass, "Muon #eta", "Muon p_{T} (GeV)", f"Gauss sigma {zrange} (GeV)",
+                hSigmaPass.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+                draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+                palette=87, nContours=51, drawOption="colz")
+        
+        maxZval = round(float(hSigmaFail.GetBinContent(hSigmaFail.GetMaximumBin())), 3)
+        zrange = f" max={maxZval}"    
+    
+        drawTH2(hSigmaFail, "Muon #eta", "Muon p_{T} (GeV)", f"Gauss sigma {zrange} (GeV)",
+                hSigmaFail.GetName(), plotLabel="ForceTitle", outdir=outdir, 
+                draw_both0_noLog1_onlyLog2=1, passCanvas=canvas,
+                palette=87, nContours=51, drawOption="colz")
+
 
     
 if __name__ == "__main__":
