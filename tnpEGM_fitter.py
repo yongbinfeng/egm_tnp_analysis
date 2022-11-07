@@ -237,24 +237,27 @@ elif typeflag == 'reco':
 
 else:
     
+    bkgParFit = [
+        "expalphaP[0.,-5.,5.]",
+        "expalphaF[0.,-5.,5.]",
+        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]"
+    ]
+    bkgShapes = [
+        "Exponential::bkgPass(x, expalphaP)",
+        "Exponential::bkgFail(x, expalphaF)",
+        "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F})",
+     ]
+
     tnpParNomFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
         "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.1,5.0]",
-        "expalphaP[0.,-5.,5.]",
-        "expalphaF[0.,-5.,5.]",
     ]
     
     tnpParAltSigFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
         "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
-        "expalphaP[0.,-5.,5.]",
-        "expalphaF[0.,-5.,5.]",
     ]
-
-    bkgShapes = [
-        "Exponential::bkgPass(x, expalphaP)",
-        "Exponential::bkgFail(x, expalphaF)",
-     ]
 
     parConstraints = []
 
