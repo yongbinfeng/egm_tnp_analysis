@@ -39,12 +39,13 @@ class tnpFitter {
 public:
   tnpFitter( TFile *file, std::string histname, int massbins, float massmin, float massmax  );
   tnpFitter( TH1 *hPass, TH1 *hFail, std::string histname, int massbins, float massmin, float massmax  );
-  ~tnpFitter(void) {if( _work != 0 ) delete _work; }
+    ~tnpFitter(); //{ if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
   void setWorkspace(const std::vector<std::string>&, bool, bool, bool);
   //python3void setOutputFile( TFile *fOut ) {_fOut = fOut;}
   //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
-    void setOutputFile(const std::string& fname ) {_fOut = new TFile(fname.c_str(), "recreate"); } 
+  //void setOutputFile(const std::string& fname ) {_fOut = new TFile(fname.c_str(), "recreate"); } 
+  void setOutputFile(const std::string& fname ); // {_fname = fname; } 
   int fits(const std::string& title = "");
   void useMinos(bool minos = true) {_useMinos = minos; }
   void isMC(bool isMC = true) {_isMC = isMC; }
@@ -65,6 +66,7 @@ private:
   RooWorkspace *_work;
   std::string _histname_base;
   TFile *_fOut;
+    //std::string _fname = "";
   double _nTotP, _nTotF;
   bool _useMinos = false;
   bool _isMC = false;
@@ -77,6 +79,7 @@ private:
   double _maxSignalFractionFail = -1; // not used by default if negative
   std::unordered_map<std::string, std::string> _constraints = {};
   int _nFitBins = -1;
+  bool _hasShape_bkgFailMC = false;
     
 };
 
@@ -90,12 +93,16 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float ma
   _nTotF = hFail->Integral();
   /// MC histos are done between 50-130 to do the convolution properly
   /// but when doing MC fit in 60-120, need to zero bins outside the range
-  for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
-   if(  hPass->GetXaxis()->GetBinCenter(ib) <= massmin || hPass->GetXaxis()->GetBinCenter(ib) >= massmax ) {
-     hPass->SetBinContent(ib,0);
-     hFail->SetBinContent(ib,0);
-   }
-  
+  for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ ) {
+      if(  hPass->GetXaxis()->GetBinCenter(ib) <= massmin || hPass->GetXaxis()->GetBinCenter(ib) >= massmax ) {
+          hPass->SetBinContent(ib,0);
+          hFail->SetBinContent(ib,0);
+      }
+      // protection for Chi2
+      if (hPass->GetBinError(ib) <= 0.0) hPass->SetBinError(ib, 1.0);
+      if (hFail->GetBinError(ib) <= 0.0) hFail->SetBinError(ib, 1.0);
+  }
+      
   _work = new RooWorkspace("w") ;
   //_work->factory("x[50,130]");
   _work->factory(TString::Format("x[%f,%f]",massmin, massmax));
@@ -117,11 +124,16 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins,
   _nTotF = hFail->Integral();
   /// MC histos are done between 50-130 to do the convolution properly
   /// but when doing MC fit in 60-120, need to zero bins outside the range
-  for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
-    if(  hPass->GetXaxis()->GetBinCenter(ib) <= massmin || hPass->GetXaxis()->GetBinCenter(ib) >= massmax ) {
-      hPass->SetBinContent(ib,0);
-      hFail->SetBinContent(ib,0);
-    }
+  for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ ) {
+      if (hPass->GetXaxis()->GetBinCenter(ib) < massmin or hPass->GetXaxis()->GetBinCenter(ib) > massmax) {
+          hPass->SetBinContent(ib,0);
+          hFail->SetBinContent(ib,0);
+      }
+      // protection for Chi2
+      if (hPass->GetBinError(ib) <= 0.0) hPass->SetBinError(ib, 1.0);
+      if (hFail->GetBinError(ib) <= 0.0) hFail->SetBinError(ib, 1.0);
+  }
+      
  
   _work = new RooWorkspace("w") ;
   //_work->factory("x[50,130]");
@@ -136,6 +148,48 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins,
   _xFitMax = massmax;
   _nFitBins = massbins;
   
+}
+
+tnpFitter::~tnpFitter() {
+    const char* fname = _fOut->GetName();
+    if( _work != 0 )
+        delete _work;
+    if (_fOut and _fOut->IsOpen()) {
+        // std::cout << ">>> Closing file " << fname << std::endl;
+        _fOut->Close();
+    }
+
+    // check goodness of file inside this job     
+    //std::cout << "Inside destructor: check goodness of file " << fname << std::endl;
+    bool isGood = true;
+    TFile* fcheck = TFile::Open(fname, "READ");
+    if (not fcheck or fcheck->IsZombie()) {
+        isGood = false;
+    } else {
+        if (fcheck->GetSize() < 512) isGood = false; // set limit at 0.5 kB, file is actually larger
+        //if (fcheck->GetSize() < 500000) isGood = false; // set limit at 500 kB, file is actually larger
+        else if (fcheck->TestBit(TFile::kRecovered)) isGood = false;
+        fcheck->Close();
+    }
+  
+    if (isGood) {
+        //std::cout << ">>>> File looks good" << std::endl;
+    } else {
+        std::cout << "#### File is bad or non existing. Will be deleted if existing" << std::endl;
+        if (not gSystem->AccessPathName(fname)) {
+            // file exists, let's delete it   
+            gSystem->Unlink(fname); // this works also for non-Unix systems, just in case
+        }
+    }
+    
+}
+
+void tnpFitter::setOutputFile(const std::string& fname) {
+    _fOut = new TFile(fname.c_str(), "recreate");
+    if (!_fOut || _fOut->IsZombie()) {
+        std::cout << "Error opening file " << fname << std::endl;
+        exit(1);
+    }
 }
 
 void tnpFitter::setConstantVariable(const std::string& name, const double& val = 0.0, const bool& removeRange = false) {
@@ -232,7 +286,10 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
 
   if (_work->pdf("bkgFailBackup") != nullptr)
       _work->factory("SUM::pdfFailBackup(nSigF*sigFail,nBkgF*bkgFailBackup)");
-  
+  if (_isMC and _work->pdf("bkgFailMC") != nullptr) {
+      _work->factory("SUM::pdfFailMC(nSigF*sigFail,nBkgF*bkgFailMC)");
+      _hasShape_bkgFailMC = true;
+  }
   //_work->Print(); // FIXME: might want to comment this one to avoid unnecessary output text
 
 }
@@ -246,7 +303,11 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
     std::string bkgPar = "nBkgP";
 
     if (not isPass) {
-        pdfName = (attempt == 2) ? "pdfFailBackup" : "pdfFail";
+        if (_isMC and _hasShape_bkgFailMC) {
+            pdfName = (attempt == 2) ? "pdfFailBackup" : "pdfFailMC";
+        } else {
+            pdfName = (attempt == 2) ? "pdfFailBackup" : "pdfFail";
+        }
         hName = "hFail";
         constrainName = "constrainF";
         sigPar = "nSigF";
@@ -257,7 +318,7 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
 
     // should check the parameters of the actual pdf being used rather than assuming that there are no constraints when attempt == 2
     const RooArgSet* constraint = (attempt == 2) ? nullptr : _work->set(constrainName.c_str());
-
+    if (_isMC and _hasShape_bkgFailMC) constraint = nullptr;
     // TODO: in case minos is used the uncertainties are asymmetric and one should get them accordingly
     
     RooAbsPdf *pdf = _work->pdf(pdfName.c_str());
@@ -275,6 +336,8 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
                                    PrintLevel(_printLevel),
                                    (constraint != nullptr) ? ExternalConstraints(*constraint) : RooCmdArg::none() );
 
+    if (attempt > 0) return res;
+
     RooChi2Var chi2("chi2", "chi2 var", *pdf, *((RooDataHist*) dh), Range(_xFitMin,_xFitMax));
     int ndof = _nFitBins - res->floatParsFinal().getSize();
     double chi2sigma = std::sqrt(2. * ndof);
@@ -283,8 +346,11 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
     // std::cout << pdfName << " --> status = " << res->status() << std::endl;
     // std::cout << pdfName << " --> cov. quality = " << res->covQual() << std::endl;
 
-    if (attempt > 0) return res;
-    if (goodChi2 and (res->status() == 0 or (res->status() == 1 and res->covQual() == 3))) return res;
+    if (_isMC) {
+        if (goodChi2 and (res->status() == 0 or res->status() == 1)) return res;
+    } else {
+        if (goodChi2 and res->covQual() == 3 and (res->status() == 0 or res->status() == 1)) return res;
+    }
     //std::cout << "Failed fit for " << pdfName << ": trying again ..." << std::endl;
     // if status != 0 try something, like checking background and if it is too small fit only signal
     // or just refit with ranges of parameters frm previous fit, but this might not work
@@ -344,8 +410,12 @@ int tnpFitter::fits(const std::string& title) {
   std::string bkgNamePass = "bkgPass";
   std::string bkgNameFail = "bkgFail";
   if (lastNamePassPDF.find("Backup") != std::string::npos) bkgNamePass += "Backup";
-  if (lastNameFailPDF.find("Backup") != std::string::npos) bkgNameFail += "Backup";
-  
+  if (lastNameFailPDF.find("Backup") != std::string::npos) {
+      bkgNameFail += "Backup";
+  } else {
+      if (_isMC and _hasShape_bkgFailMC) bkgNameFail = "bkgFailMC"; 
+  }
+      
   RooPlot *pPass = _work->var("x")->frame(_xFitMin,_xFitMax); // always plot 50 - 130
   RooPlot *pFail = _work->var("x")->frame(_xFitMin,_xFitMax);
   pPass->SetTitle("passing probe");
@@ -361,18 +431,22 @@ int tnpFitter::fits(const std::string& title) {
   _work->pdf(lastNameFailPDF.c_str())->plotOn( pFail, Components(bkgNameFail.c_str()),LineColor(kBlue),LineStyle(kDashed));
   _work->data("hFail") ->plotOn( pFail );
 
-  TCanvas * c = new TCanvas(TString::Format("%s_Canv",_histname_base.c_str()) ,TString::Format("%s_Canv",_histname_base.c_str()), 1150, 500);
+  std::string canvasName = _histname_base + "_Canv"; // TString::Format("%s_Canv",_histname_base.c_str()); 
+  TCanvas * c = new TCanvas(canvasName.c_str(), canvasName.c_str(), 1150, 500);
   c->Divide(3,1);
   TPad *padText = (TPad*)c->GetPad(1);
   textParForCanvas( resPass,resFail, padText );
-  c->cd(2); pPass->Draw();
-  c->cd(3); pFail->Draw();
+  c->cd(2);
+  pPass->Draw();
+  c->cd(3);
+  pFail->Draw();
 
+  //  TFile* _fOut = new TFile(_fname.c_str(), "recreate");
   _fOut->cd();
-  c->Write(TString::Format("%s_Canv",_histname_base.c_str()),TObject::kOverwrite);
-  resPass->Write(TString::Format("%s_resP",_histname_base.c_str()),TObject::kOverwrite);
-  resFail->Write(TString::Format("%s_resF",_histname_base.c_str()),TObject::kOverwrite);
-  _fOut->Close();
+  c->Write(canvasName.c_str(), TObject::kOverwrite);
+  resPass->Write(TString::Format("%s_resP",_histname_base.c_str()), TObject::kOverwrite);
+  resFail->Write(TString::Format("%s_resF",_histname_base.c_str()), TObject::kOverwrite);
+  //_fOut->Close(); // closed in the destructor
   
   return 1;
 

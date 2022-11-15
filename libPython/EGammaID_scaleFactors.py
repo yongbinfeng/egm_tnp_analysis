@@ -377,13 +377,17 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     h2EffDataAltSig = effGraph.ptEtaScaleFactor_2DHisto(42)
     h2EffMCAltSig   = effGraph.ptEtaScaleFactor_2DHisto(43)
     #h2SF      = effGraph.ptEtaScaleFactor_2DHisto(-1)
-    h2SF = h2EffData.Clone('h2_SF_nominal'); h2SF.SetTitle('SF nominal data / nominal MC')
+    h2SF = h2EffData.Clone('h2_SF_nominal');
+    h2SF.SetTitle('SF nominal data / nominal MC')
     h2SF.Divide(h2EffMC)
-    h2SFDataAltSig = h2EffDataAltSig.Clone('h2_SF_dataAltSig'); h2SFDataAltSig.SetTitle('SF altSig data / nominal MC')
+    h2SFDataAltSig = h2EffDataAltSig.Clone('h2_SF_dataAltSig');
+    h2SFDataAltSig.SetTitle('SF altSig data / nominal MC')
     h2SFDataAltSig.Divide(h2EffMC)
-    h2SFMCAltSig = h2EffData.Clone('h2_SF_MCAltSig'); h2SFMCAltSig.SetTitle('SF nominal data / altSig MC')
+    h2SFMCAltSig = h2EffData.Clone('h2_SF_MCAltSig');
+    h2SFMCAltSig.SetTitle('SF nominal data / altSig MC')
     h2SFMCAltSig.Divide(h2EffMCAltSig)
-    h2SFDataMCAltSig = h2EffDataAltSig.Clone('h2_SF_dataMCAltSig'); h2SFDataMCAltSig.SetTitle('SF altSig data / altSig MC')
+    h2SFDataMCAltSig = h2EffDataAltSig.Clone('h2_SF_dataMCAltSig');
+    h2SFDataMCAltSig.SetTitle('SF altSig data / altSig MC')
     h2SFDataMCAltSig.Divide(h2EffMCAltSig)
     h2Error   = effGraph.ptEtaScaleFactor_2DHisto( 0)  ## only error bars
 

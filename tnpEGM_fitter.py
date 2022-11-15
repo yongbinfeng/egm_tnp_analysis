@@ -1,3 +1,5 @@
+#!/usr/bin/env python3 
+
 ### python specific import
 import os
 import pickle
@@ -96,7 +98,8 @@ if typeflag == 'tracking':
 
 elif typeflag == 'reco':
     #binning_pt   = [24., 65.]
-    massbins, massmin, massmax = 52, 68, 120
+    #massbins, massmin, massmax = 52, 68, 120
+    massbins, massmin, massmax = 60, 60, 120
     if args.useTrackerMuons:
         binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
     else:
@@ -138,12 +141,12 @@ if typeflag == 'tracking':
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F,c4F})",
         #"Bernstein::bkgFailBackup(x,{b0F[0.5,0,1.0],b1F[0.5,0,1.0],b2F[0.5,0,1.0],b3F[0.5,0,1.0],b4F[0.5,0,1.0]})",
-        #"Exponential::bkgFailBackup(x, expalphaF)"
+        "Exponential::bkgFailMC(x, expalphaF)"
     ]
     
     tnpParNomFit = [
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,5.0]",
-        "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.05,3.0]",
+        "meanF[-0.0,-5.0,5.0]","sigmaF[0.5,0.02,3.0]",
     ]
 
     # these might be partially overridden when running the fit to data by taking the values from the MC fit and narrowing the range in which they can float to help convergence
@@ -169,9 +172,9 @@ if typeflag == 'tracking':
             tnpParAltSigFit.extend(["maxFracSigF[0.5]"])
             tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.5]"])
         else:
-            tnpParNomFit.extend(["maxFracSigF[0.15]"])
-            tnpParAltSigFit.extend(["maxFracSigF[0.15]"])
-            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.15]"])
+            tnpParNomFit.extend(["maxFracSigF[0.2]"])
+            tnpParAltSigFit.extend(["maxFracSigF[0.2]"])
+            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.2]"])
 
     # ## Try to constrain some background parameters (for tracking might need to do it for signal instead, since S/B is small)
     parConstraints = [
@@ -193,14 +196,17 @@ elif typeflag == 'reco':
         "expalphaP[0.,-5.,5.]",
         "expalphaF[0.,-5.,5.]",
         "acmsF[60.,40.,130.]","betaF[0.05,0.005,0.12]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]"
     ]
     bkgShapes = [
         "Exponential::bkgPass(x, expalphaP)",
         #"RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         #"Bernstein::bkgFailBackup(x,{c0F[0.5,0,1.0],c1F[0.5,0,1.0],c2F[0.5,0,1.0],c3F[0.5,0,1.0],c4F[0.5,0,1.0]})",
-        "Exponential::bkgFailBackup(x, expalphaF)"
+        #"Exponential::bkgFailBackup(x, expalphaF)"
+        "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F})",
         #"Chebychev::bkgFailBackup(x,{c1F[0.0,-1.0,1.0],c2F[-0.5,-1.0,1.0],c3F[0.0,-1.0,1.0],c4F[-0.5,-1.0,1.0]})",
+        "Exponential::bkgFailMC(x, expalphaF)"
     ]
 
     tnpParNomFit = [
@@ -258,7 +264,9 @@ else:
         "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
         "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
     ]
-
+    tnpParNomFit.extend(bkgParFit)
+    tnpParAltSigFit.extend(bkgParFit)
+    
     parConstraints = []
 
         
@@ -322,8 +330,8 @@ if args.createHists:
 samplesDef = {
     'data'   : samples_data,
     'mcNom'  : samples_dy,
-    'mcAlt'  : None, 
-    'tagSel' : None,
+    'mcAltSig'  : None, 
+    #'tagSel' : None,
 }
 
 #samplesDef["data"].printConfig()
@@ -411,7 +419,8 @@ if args.mcSig:
 if  args.doFit:
     print(">>> running fits")
     #print('sampleToFit.dump()', sampleToFit.dump())
-    useAllTemplateForFail = True # if typeflag in ["reco", "tracking"] else False # use all probes to build MC template for failing probes when fitting data nominal
+    # can't use all probes for cases with isolation, since the failing probe sample has the FSR and a second bump at low mass
+    useAllTemplateForFail = True if typeflag not in flagsWithFSR else False # use all probes to build MC template for failing probes when fitting data nominal
     maxFailIntegralToUseAllProbe = 300 if typeflag not in ["tracking"] else -1 # use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
     altSignalFail = True if typeflag in ["reco", "tracking", "veto"] else False # use Gaussian as resolution function for altSig model
     modelFSR = True if typeflag in flagsWithFSR else False # add Gaussian to model low mass bump from FSR, in altSig fit
@@ -478,20 +487,25 @@ if  args.doPlot:
         rootfileBin.Close()
         os.system('rm '+fileName+'_bin_bin*')
     else:
+        # TODO: check all files are present?
         os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*'))
-        os.system('sleep 1')
+        os.system('sleep 3')
         os.system('rm '+fileName+'_bin_bin*')
 
+    #quit()   
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
     if not os.path.exists( plottingDir ):
         os.makedirs( plottingDir )
     shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
 
     verbosePlotting = True
-    rootfile = safeOpenFile(f"{fileName}")
+    rootfile = safeOpenFile(f"{fileName}", mode="read")
     for ib in range(len(tnpBins['bins'])):
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
-            tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
+            binName = tnpBins['bins'][ib]['name']
+            c = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
+            c.SaveAs(f"{plottingDir}/{binName}.png")
+            #tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
     rootfile.Close()
     print(' ===> Plots saved in <=======')
 #    print('localhost/%s/' % plottingDir)
@@ -507,33 +521,36 @@ if args.sumUp:
     #pprint(vars(sampleToFit.mcRef))
     #print('done with dump')
     info = {
-        'data'        : sampleToFit.getOutputPath(),
+        #'data'        : sampleToFit.getOutputPath(),
         'dataNominal' : sampleToFit.nominalFit,
         'dataAltSig'  : sampleToFit.altSigFit ,
         'dataAltBkg'  : sampleToFit.altBkgFit ,
         'mcNominal'   : sampleToFit.mcRef.getOutputPath(),
-        'mcNominal_fit'   : sampleToFit.mcRef.nominalFit,
-        ## marc 'mcAlt'       : None,
-        'mcAlt'       : sampleToFit.mcRef.altSigFit,
+        'mcNominal_fit': sampleToFit.mcRef.nominalFit,
+        'mcAltSig'    : sampleToFit.mcRef.altSigFit,
         'mcAltBkg'    : sampleToFit.mcRef.altBkgFit,
         'tagSel'      : None
         }
 
-    if not samplesDef['mcAlt'] is None:
-        info['mcAlt'] = samplesDef['mcAlt'].getOutputPath()
-    if not samplesDef['tagSel'] is None:
+    if 'mcAltSig' in samplesDef.keys() and not (samplesDef['mcAltSig'] is None):
+        #print(samplesDef["mcAltSig"].getOutputPath())
+        #print(sampleToFit.mcRef.altSigFit)
+        info['mcAltSig'] = samplesDef["mcAltSig"].getOutputPath()
+    if 'tagSel' in samplesDef.keys() and not (samplesDef['tagSel'] is None):
         info['tagSel'] = samplesDef['tagSel'].getOutputPath()
-
     #print(info)
 
     effis = None
     effFileName = outputDirectory+'/allEfficiencies.txt'
-    fOut = open( effFileName,'w')
-
+    #fOut = open( effFileName,'w')
     def parallel_sumUp(_bin):
         effis = tnpRoot.getAllEffi( info, _bin )
         #print("effis =",effis)
-        #print('this is _bin', _bin)
+        #print('this is _bin', _bin)        
+        canvases = ["canv_mcAltSig", "canv_dataNominal", "dataAltSig"]
+        for c in canvases:
+            if c not in effis or effis[c] == None:
+                print(f"Canvas {c} not found or not available")
 
         ### formatting assuming 2D bining -- to be fixed
         v1Range = _bin['title'].split(';')[1].split('<')
@@ -563,19 +580,16 @@ if args.sumUp:
             effis['dataNominal'][0],effis['dataNominal'][1],
             effis['mcNominal'  ][0],effis['mcNominal'  ][1],
             effis['dataAltSig' ][0],effis['dataAltSig' ][1],
-            effis['mcAlt' ][0], effis['mcAlt' ][1],
+            effis['mcAltSig' ][0], effis['mcAltSig' ][1],
             effis['dataAltBkg' ][0],
             effis['tagSel'][0],
             )
         #print(astr)
         fOut.write( astr + '\n' )
-
         fOut.close()
-
         canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
         canv_all.Divide(3,3)
         canv_all.Draw()
-        ipad = 1
         canv_all.cd(0)
         txt = ROOT.TLatex()
         txt.SetTextFont(42)
@@ -583,12 +597,21 @@ if args.sumUp:
         txt.SetNDC()
         txt.DrawLatex(0.01, 0.97, '{n}'.format(n=_bin['name'].replace('_',' ').replace('To', '-').replace('probe ', '').replace('m','-').replace('pt','XX').replace('p','.').replace('XX','p_{T}')))
         txt.SetTextSize(0.08)
-        for ip, p in enumerate(effis['canv_mcAlt'].GetListOfPrimitives()):
+        ipad = 1
+        # if "canv_mcAltSig" not in effis:
+        #     print("WTF !!!")
+        # elif effis["canv_mcAltSig"] is None:
+        #     print("WAAAGH !!!" )            
+        # if effis["canv_mcAltSig"]:
+        #     mylist = effis["canv_mcAltSig"].GetListOfPrimitives()
+        #     print(f"{len(mylist)} {[x.GetName() for x in mylist]}")
+        for ip, p in enumerate(effis["canv_mcAltSig"].GetListOfPrimitives()):
             if not ip: continue
             canv_all.cd(ipad)
             p.SetPad(0.05, 0.00, 0.95, 0.90)
             p.Draw()
-            ipad+=1
+            ipad += 1
+        #ipad = 3
         canv_all.cd(ipad)
         txt.SetTextFont(62)
         txt.DrawLatex(0.00, 0.85, 'MC counting efficiency:')
@@ -599,7 +622,7 @@ if args.sumUp:
         txt.SetTextFont(62)
         txt.DrawLatex(0.10, 0.53, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
-        tmp = effis['mcAlt']
+        tmp = effis['mcAltSig']
         txt.SetTextFont(62)
         txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
         txt.SetTextFont(42)
@@ -614,7 +637,7 @@ if args.sumUp:
             canv_all.cd(ipad)
             p.SetPad(0.05, 0.00, 0.95, 0.90)
             p.Draw()
-            ipad+=1
+            ipad += 1
         canv_all.cd(ipad)
         tmp = effis['dataNominal']
         txt.SetTextFont(62)
@@ -625,7 +648,7 @@ if args.sumUp:
         txt.SetTextFont(62)
         txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
-        ipad+=1
+        ipad += 1
         for ip, p in enumerate(effis['canv_dataAltSig'].GetListOfPrimitives()):
             if not ip: continue
             canv_all.cd(ipad)
@@ -668,8 +691,6 @@ if args.sumUp:
     os.system('rm  '+' '.join(lsfiles))
 
     os.system('cp etc/inputs/index.php {d}/index.php'.format(d=outputDirectory+'/plots/'))
-
-
     #fOut.close()
 
     print('Efficiencies saved in file : ',  effFileName)
