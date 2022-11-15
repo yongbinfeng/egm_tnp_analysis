@@ -106,13 +106,12 @@ def computeEffi( n1,n2,e1,e2):
 
 def getAllEffi( info, bindef ):
     effis = {}
-    # print("inside getAllEffi")
-
+    #print("inside getAllEffi")
     binName = bindef["name"]
     for key in info.keys():
         value = info[key]
         if value is None or not os.path.isfile(value):
-            print(f"{key} -> {value}: returning empty output")
+            # print(f"{key} -> {value}: returning empty output")
             effis[key] = [-1,-1]
             effis[f"canv_{key}"] = None
         else:
@@ -135,7 +134,7 @@ def getAllEffi( info, bindef ):
                 fitresP = safeGetObject(rootfile, f"{binName}_resP", detach=False)
                 fitresF = safeGetObject(rootfile, f"{binName}_resF", detach=False)
                 canv = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
-                #effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"tmpcanv_{key}"))
+                #effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
                 effis[f"canv_{key}"] = copy.deepcopy(canv)
                 fitP = fitresP.floatParsFinal().find("nSigP")
                 fitF = fitresF.floatParsFinal().find("nSigF")
@@ -151,7 +150,7 @@ def getAllEffi( info, bindef ):
             # done with all cases
             effis[key] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
             #rootfile.Close() # try also not closing the file
-
+    #print("Outside getAllEffi")
     return effis
 
 

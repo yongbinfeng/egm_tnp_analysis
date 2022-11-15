@@ -408,9 +408,9 @@ for s in samplesDef.keys():
     sample =  samplesDef[s]
     if sample is None: continue
     setattr( sample, 'mcRef'     , sampleMC )
-    setattr( sample, 'nominalFit', '%s/%s_%s.nominalFit.root' % ( outputDirectory , sample.getName(), args.flag ) )
-    setattr( sample, 'altSigFit' , '%s/%s_%s.altSigFit.root'  % ( outputDirectory , sample.getName(), args.flag ) )
-    setattr( sample, 'altBkgFit' , '%s/%s_%s.altBkgFit.root'  % ( outputDirectory , sample.getName(), args.flag ) )
+    setattr( sample, 'nominalFit', '%s/%s_%s_nominalFit.root' % ( outputDirectory , sample.getName(), args.flag ) )
+    setattr( sample, 'altSigFit' , '%s/%s_%s_altSigFit.root'  % ( outputDirectory , sample.getName(), args.flag ) )
+    setattr( sample, 'altBkgFit' , '%s/%s_%s_altBkgFit.root'  % ( outputDirectory , sample.getName(), args.flag ) )
 
 ### change the sample to fit if mc fit
 if args.mcSig:
@@ -475,10 +475,11 @@ if  args.doPlot:
         fileName = sampleToFit.altBkgFit
         fitType  = 'altBkgFit'
 
+    fileNameNoExt = fileName.rstrip(".root")
     # if doing one bin get the new plots and update the file, don't overwrite it or all other bins are lost
     if args.binNumber >= 0:
         thisbin = tnpBins['bins'][args.binNumber]['name']
-        rootfileBin = safeOpenFile(f"{fileName}_bin_{thisbin}")
+        rootfileBin = safeOpenFile(f"{fileNameNoExt}_bin_{thisbin}.root")
         rootfile = safeOpenFile(f"{fileName}", mode="UPDATE")
         for k in rootfileBin.GetListOfKeys():
             obj = safeGetObject(rootfileBin, k.GetName(), detach=False)
@@ -488,9 +489,9 @@ if  args.doPlot:
         os.system('rm '+fileName+'_bin_bin*')
     else:
         # TODO: check all files are present?
-        os.system('hadd -f %s %s' % (fileName, fileName+'_bin_bin*'))
-        os.system('sleep 3')
-        os.system('rm '+fileName+'_bin_bin*')
+        os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
+        os.system("sleep 3")
+        os.system(f"rm {fileNameNoExt}_bin_bin*.root")
 
     #quit()   
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
@@ -547,11 +548,17 @@ if args.sumUp:
         effis = tnpRoot.getAllEffi( info, _bin )
         #print("effis =",effis)
         #print('this is _bin', _bin)        
-        canvases = ["canv_mcAltSig", "canv_dataNominal", "dataAltSig"]
+        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
+        padsFromCanvas = {}
         for c in canvases:
-            if c not in effis or effis[c] == None:
+            if c not in effis.keys() or effis[c] == None:
                 print(f"Canvas {c} not found or not available")
-
+            else:
+                if effis[c].ClassName() ==  "TCanvas":
+                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
+                else:
+                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
+                    return 0
         ### formatting assuming 2D bining -- to be fixed
         v1Range = _bin['title'].split(';')[1].split('<')
         v2Range = _bin['title'].split(';')[2].split('<')
@@ -605,7 +612,8 @@ if args.sumUp:
         # if effis["canv_mcAltSig"]:
         #     mylist = effis["canv_mcAltSig"].GetListOfPrimitives()
         #     print(f"{len(mylist)} {[x.GetName() for x in mylist]}")
-        for ip, p in enumerate(effis["canv_mcAltSig"].GetListOfPrimitives()):
+        #print(f"Printing canvas for {_bin['name']}")
+        for ip, p in enumerate(padsFromCanvas["canv_mcAltSig"]):
             if not ip: continue
             canv_all.cd(ipad)
             p.SetPad(0.05, 0.00, 0.95, 0.90)
@@ -632,7 +640,7 @@ if args.sumUp:
         txt.DrawLatex(0.10, 0.02, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad+=1
-        for ip, p in enumerate(effis['canv_dataNominal'].GetListOfPrimitives()):
+        for ip, p in enumerate(padsFromCanvas["canv_dataNominal"]):
             if not ip: continue
             canv_all.cd(ipad)
             p.SetPad(0.05, 0.00, 0.95, 0.90)
@@ -649,7 +657,7 @@ if args.sumUp:
         txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
         ipad += 1
-        for ip, p in enumerate(effis['canv_dataAltSig'].GetListOfPrimitives()):
+        for ip, p in enumerate(padsFromCanvas["canv_dataAltSig"]):
             if not ip: continue
             canv_all.cd(ipad)
             p.SetPad(0.05, 0.00, 0.95, 0.90)
@@ -665,18 +673,16 @@ if args.sumUp:
         txt.SetTextFont(62)
         txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
         txt.SetTextFont(42)
-
-        #effis['canv_dataAltSig'].Draw()
-
-        odllevel = ROOT.gErrorIgnoreLevel
-        ROOT.gErrorIgnoreLevel = ROOT.kWarning
+        #odllevel = ROOT.gErrorIgnoreLevel
+        #ROOT.gErrorIgnoreLevel = ROOT.kWarning
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
-        ROOT.gErrorIgnoreLevel = odllevel
+        #ROOT.gErrorIgnoreLevel = odllevel
     
     pool = Pool()
     pool.map(parallel_sumUp, tnpBins['bins'])
-    #parallel_sumUp(tnpBins['bins'])
+    #for thebin in tnpBins['bins']: 
+    #    parallel_sumUp(thebin)
 
     lsfiles = []
     alltmpfiles = os.listdir(outputDirectory)

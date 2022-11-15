@@ -131,9 +131,9 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
     ]
         
-    print('------- now nominal fitting bin:')
-    for i in tnpBin:
-        print(i, tnpBin[i])
+    #print('------- now nominal fitting bin:')
+    #for i in tnpBin:
+    #    print(i, tnpBin[i])
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
@@ -158,7 +158,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
-    fitter.setOutputFile(sample.nominalFit+'_bin_'+tnpBin['name'])
+    outFileName = sample.nominalFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
+    fitter.setOutputFile(outFileName)
     fitter.isMC(sample.isMonteCarlo())
     
     ## generated Z LineShape
@@ -266,7 +267,8 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
-    fitter.setOutputFile( sample.altSigFit+'_bin_'+tnpBin['name'])
+    outFileName = sample.altSigFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
+    fitter.setOutputFile(outFileName)
     fitter.isMC(sample.isMonteCarlo())
 
     if zeroBackground:
@@ -336,7 +338,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setPassStrategy(2)
     fitter.setFailStrategy(2)
     fitter.setPrintLevel(-1)
-    fitter.setOutputFile(sample.altBkgFit+'_bin_'+tnpBin['name'])
+    outFileName = sample.altBkgFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
+    fitter.setOutputFile(outFileName)
     fitter.isMC(sample.isMonteCarlo())
 
     ## generated Z LineShape
