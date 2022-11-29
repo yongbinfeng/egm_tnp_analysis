@@ -376,6 +376,10 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     h2EffMC         = effGraph.ptEtaScaleFactor_2DHisto(41)
     h2EffDataAltSig = effGraph.ptEtaScaleFactor_2DHisto(42)
     h2EffMCAltSig   = effGraph.ptEtaScaleFactor_2DHisto(43)
+    h2StatUncEffData       = effGraph.ptEtaScaleFactor_2DHisto(50)
+    h2StatUncEffMC         = effGraph.ptEtaScaleFactor_2DHisto(51)
+    h2StatUncEffDataAltSig = effGraph.ptEtaScaleFactor_2DHisto(52)
+    h2StatUncEffMCAltSig   = effGraph.ptEtaScaleFactor_2DHisto(53)
     #h2SF      = effGraph.ptEtaScaleFactor_2DHisto(-1)
     h2SF = h2EffData.Clone('h2_SF_nominal');
     h2SF.SetTitle('SF nominal data / nominal MC')
@@ -391,7 +395,7 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
     h2SFDataMCAltSig.Divide(h2EffMCAltSig)
     h2Error   = effGraph.ptEtaScaleFactor_2DHisto( 0)  ## only error bars
 
-    rt.gStyle.SetPalette(1)
+    rt.gStyle.SetPalette(87)
     rt.gStyle.SetPaintTextFormat('1.3f');
     rt.gStyle.SetOptTitle(1)
 
@@ -443,7 +447,7 @@ def doSFs(filein, lumi, axis = ['pT','eta'], plotdir='' ):
 
     cDummy.Print( pdfout + "]" )
 
-    allEffsAndSFs= [h2SF, h2EffData, h2EffMC, h2EffDataAltSig, h2EffMCAltSig, h2SFDataAltSig, h2SFMCAltSig, h2SFDataMCAltSig]
+    allEffsAndSFs= [h2SF, h2EffData, h2EffMC, h2EffDataAltSig, h2EffMCAltSig, h2SFDataAltSig, h2SFMCAltSig, h2SFDataMCAltSig, h2StatUncEffData, h2StatUncEffMC, h2StatUncEffDataAltSig, h2StatUncEffMCAltSig]
     canv = rt.TCanvas('c','c', 800, 800)
     canv.SetRightMargin(0.20)
     rt.gStyle.SetPalette(55)

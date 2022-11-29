@@ -271,6 +271,18 @@ class efficiencyList:
         if onlyError   == 43 :
             htitle = 'lepton efficiencies MC altSig'
             hname  = 'h2_effMCAltSig'             
+        if onlyError   == 50 :
+            htitle = 'lepton eff. stat. unc. data nominal'
+            hname  = 'h2_statUncEffDataNominal'
+        if onlyError   == 51 :
+            htitle = 'lepton eff. stat. unc. MC nominal'
+            hname  = 'h2_statUncEffMCNominal'
+        if onlyError   == 52 :
+            htitle = 'lepton eff. stat. unc. data altSig'
+            hname  = 'h2_statUncEffDataAltSig'
+        if onlyError   == 53 :
+            htitle = 'lepton eff. stat. unc. MC altSig'
+            hname  = 'h2_statUncEffMCAltSig'             
 
         h2 = rt.TH2F(hname,htitle,xbinsTab.size-1,xbinsTab,ybinsTab.size-1,ybinsTab)
         h2.Sumw2()
@@ -341,6 +353,14 @@ class efficiencyList:
                         if onlyError   == 43 :
                             h2.SetBinContent(ix,iy, self.effList[ptBin][etaBin].effAltSigMC)
                             h2.SetBinError  (ix,iy, self.effList[ptBin][etaBin].errAltSigMC)
+                        if onlyError   == 50 :
+                            h2.SetBinContent  (ix,iy, self.effList[ptBin][etaBin].errEffData)
+                        if onlyError   == 51 :
+                            h2.SetBinContent  (ix,iy, self.effList[ptBin][etaBin].errEffMC)
+                        if onlyError   == 52 :
+                            h2.SetBinContent  (ix,iy, self.effList[ptBin][etaBin].errAltSig)
+                        if onlyError   == 53 :
+                            h2.SetBinContent  (ix,iy, self.effList[ptBin][etaBin].errAltSigMC)
 
         h2.GetXaxis().SetTitle("#eta")
         h2.GetYaxis().SetTitle("p_{T} (GeV)")

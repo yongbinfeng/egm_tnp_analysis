@@ -134,8 +134,16 @@ def getAllEffi( info, bindef ):
                 fitresP = safeGetObject(rootfile, f"{binName}_resP", detach=False)
                 fitresF = safeGetObject(rootfile, f"{binName}_resF", detach=False)
                 canv = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
-                #effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
-                effis[f"canv_{key}"] = copy.deepcopy(canv)
+                #ROOT.SetOwnership(canv, False)
+                effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
+                #ROOT.SetOwnership(effis[f"canv_{key}"], False)
+                # effis[f"canv_{key}"] = []
+                # for ip,p in enumerate(canv.GetListOfPrimitives()):
+                #     # only get second and third pad with plots
+                #     if ip:
+                #         effis[f"canv_{key}"].append(copy.deepcopy(p.Clone(f"p{ip}_{key}_{binName}")))
+                #print(">>>>>")
+                #print(effis[f"canv_{key}"])
                 fitP = fitresP.floatParsFinal().find("nSigP")
                 fitF = fitresF.floatParsFinal().find("nSigF")
                 nP = fitP.getVal()
@@ -149,7 +157,7 @@ def getAllEffi( info, bindef ):
                     eF = max(math.sqrt(nF), eF)
             # done with all cases
             effis[key] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
-            #rootfile.Close() # try also not closing the file
+            rootfile.Close() # try also not closing the file
     #print("Outside getAllEffi")
     return effis
 

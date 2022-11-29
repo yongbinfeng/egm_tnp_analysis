@@ -21,14 +21,11 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gInterpreter.ProcessLine(".O3")
 
 from libPython.tnpClassUtils import tnpSample
-from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile
+from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile, createPlotDirAndCopyPhp
 
-if "/RooCBExGaussShape_cc.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("libCpp/RooCBExGaussShape.cc")
-if "/RooCMSShape_cc.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("libCpp/RooCMSShape.cc")
-if "/histFitter_C.so" not in ROOT.gSystem.GetLibraries():
-    compileMacro("libCpp/histFitter.C")
+compileMacro("libCpp/RooCBExGaussShape.cc")
+compileMacro("libCpp/RooCMSShape.cc")
+compileMacro("libCpp/histFitter.C")
 
 ### tnp library
 import libPython.binUtils  as tnpBiner
@@ -132,13 +129,15 @@ if typeflag == 'tracking':
     bkgParFit = [
         "expalphaP[0.,-5.,5.]",
         "expalphaF[0.,-5.,5.]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]","c4F[-0.5,-1.0,1.0]"
+        "acmsF[60.,40.,130.]","betaF[5.,0.1,40.]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]","c4F[-0.5,-1.0,1.0]",
+        #"argMassF[100.,80.,120.]","argSlopeF[5.,0.,20.]","argPowF[1.0,0.0,3.0]"
     ]
     bkgShapes = [
         "Exponential::bkgPass(x, expalphaP)",
         #"RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        #"ArgusBG::bkgFail(x,argMassF,argSlopeF,argPowF)",
         "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F,c4F})",
         #"Bernstein::bkgFailBackup(x,{b0F[0.5,0,1.0],b1F[0.5,0,1.0],b2F[0.5,0,1.0],b3F[0.5,0,1.0],b4F[0.5,0,1.0]})",
         "Exponential::bkgFailMC(x, expalphaF)"
@@ -151,14 +150,14 @@ if typeflag == 'tracking':
 
     # these might be partially overridden when running the fit to data by taking the values from the MC fit and narrowing the range in which they can float to help convergence
     tnpParAltSigFit = [
-        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
-        "meanF[-0.0,-12.0,12.0]","sigmaF[2,0.7,12.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,0.01,5]',"sigmaP_2[1.5,0.5,6.0]",
+        "meanF[-0.0,-12.0,12.0]","sigmaF[2,0.7,12.0]","alphaF[2.0,1.2,3.5]",'nF[3,0.01,5]',"sigmaF_2[2.0,0.5,6.0]",
     ]
 
     # for pt >= 55 and tracking (se also note above)
     tnpParAltSigFitTrackingHighPt = [
-        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
-        "meanF[4.0,-1.0,15.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,0,5]',"sigmaP_2[1.5,0.5,6.0]",
+        "meanF[4.0,-1.0,15.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,0,5]',"sigmaF_2[2.0,0.5,6.0]",
     ]
 
     tnpParNomFit.extend(bkgParFit)
@@ -184,25 +183,26 @@ if typeflag == 'tracking':
         #"Gaussian::constrainP_gammaP(gammaP,0.5,0.8)",
         # failing
         "Gaussian::constrainF_acmsF(acmsF,90,50)",
-        "Gaussian::constrainF_betaF(betaF,0.05,0.25)",
+        #"Gaussian::constrainF_betaF(betaF,0.05,0.25)",
+        "Gaussian::constrainF_betaF(betaF,5.0,25.0)",
         "Gaussian::constrainF_gammaF(gammaF,0.5,0.8)",
     ]
 
             
 elif typeflag == 'reco':
 
-    ## when forming the workspace in fitUtils.py the parameter with LOWPT or HIGHPT will be renamed without this keyword depending on pt >= 40
     bkgParFit = [
         "expalphaP[0.,-5.,5.]",
         "expalphaF[0.,-5.,5.]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.005,0.12]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]"
+        "acmsF[60.,40.,130.]","betaF[5.,0.1,40.]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]",
+        #"b0F[0.1,0,100]","b1F[0.1,0,100]","b2F[0.1,0,100]","b3F[0.1,0,100]"
     ]
     bkgShapes = [
         "Exponential::bkgPass(x, expalphaP)",
         #"RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
-        #"Bernstein::bkgFailBackup(x,{c0F[0.5,0,1.0],c1F[0.5,0,1.0],c2F[0.5,0,1.0],c3F[0.5,0,1.0],c4F[0.5,0,1.0]})",
+        #"Bernstein::bkgFailBackup(x,{b0F,b1F,b2F,b3F})",
         #"Exponential::bkgFailBackup(x, expalphaF)"
         "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F})",
         #"Chebychev::bkgFailBackup(x,{c1F[0.0,-1.0,1.0],c2F[-0.5,-1.0,1.0],c3F[0.0,-1.0,1.0],c4F[-0.5,-1.0,1.0]})",
@@ -213,17 +213,16 @@ elif typeflag == 'reco':
         "meanP[-0.0,-5.0,5.0]","sigmaP[0.5,0.1,3.0]",
         "meanF[-0.0,-3.0,3.0]","sigmaF[0.5,0.01,2.0]",
     ]
-    
+
     # was to tune few bins for reco, but currently used everywhere
     tnpParAltSigFit = [
-        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
-        "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,0.01,5]',"sigmaP_2[1.5,0.5,6.0]",
+        "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,5.0]","alphaF[2.0,1.2,3.5]",'nF[3,0.1,5]',"sigmaF_2[2.0,0.5,6.0]",
     ]
 
     tnpParNomFit.extend(bkgParFit)
     tnpParAltSigFit.extend(bkgParFit)
 
-    
     if not args.mcSig and args.useTrackerMuons:
         # for tracker muons
         tnpParNomFit.extend(["maxFracSigF[0.05]"] if args.binNumber in [24] else ["maxFracSigF[0.05]"] if args.binNumber in [50, 69, 79, 133, 420] else ["maxFracSigF[0.3]"])
@@ -236,23 +235,25 @@ elif typeflag == 'reco':
         #"Gaussian::constrainP_betaP(betaP,0.05,0.25)",
         #"Gaussian::constrainP_gammaP(gammaP,0.5,0.8)",
         # failing
-        #"Gaussian::constrainF_acmsF(acmsF,90,50)",
-        #"Gaussian::constrainF_betaF(betaF,0.05,0.25)",
-        #"Gaussian::constrainF_gammaF(gammaF,0.5,0.8)",
+        "Gaussian::constrainF_acmsF(acmsF,90,50)",
+        "Gaussian::constrainF_betaF(betaF,5.0,25.0)",
+        "Gaussian::constrainF_gammaF(gammaF,0.5,0.8)",
     ]
 
 else:
-    
+
     bkgParFit = [
         "expalphaP[0.,-5.,5.]",
         "expalphaF[0.,-5.,5.]",
-        "acmsF[60.,40.,130.]","betaF[0.05,0.01,0.11]","gammaF[0.1, 0, 1]","peakF[90.0]",
-        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]"
+        "acmsF[60.,40.,130.]","betaF[5.,0.1,40.]","gammaF[0.1, 0, 1]","peakF[90.0]",
+        "c1F[0.0,-1.0,1.0]","c2F[-0.5,-1.0,1.0]","c3F[0.0,-1.0,1.0]",
+        #"argMassF[90.,60.,120.]","argSlopeF[5.,0.,20.]","argPowF[1.0,0.0,3.0]"
     ]
     bkgShapes = [
         "Exponential::bkgPass(x, expalphaP)",
         "Exponential::bkgFail(x, expalphaF)",
         "Chebychev::bkgFailBackup(x,{c1F,c2F,c3F})",
+        #"ArgusBG::bkgFailBackup(x,argMassF,argSlopeF,argPowF)",
      ]
 
     tnpParNomFit = [
@@ -261,15 +262,15 @@ else:
     ]
     
     tnpParAltSigFit = [
-        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,-5,5]',"sigmaP_2[1.5,0.5,6.0]",
-        "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,-5,5]',"sigmaF_2[2.0,0.5,6.0]",
+        "meanP[-0.0,-5.0,5.0]","sigmaP[1,0.7,6.0]","alphaP[2.0,1.2,3.5]",'nP[3,0.01,5]',"sigmaP_2[1.5,0.5,6.0]",
+        "meanF[-0.0,-5.0,5.0]","sigmaF[2,0.7,15.0]","alphaF[2.0,1.2,3.5]",'nF[3,0.01,5]',"sigmaF_2[2.0,0.5,6.0]",
     ]
     tnpParNomFit.extend(bkgParFit)
     tnpParAltSigFit.extend(bkgParFit)
     
     parConstraints = []
+#####
 
-        
 # add second gaussian at low mass around 70 to model FSR bump for working points with isolation
 flagsWithFSR = ["iso", "trigger", "isonotrig"]
 if any(x in typeflag for x in flagsWithFSR):
@@ -354,7 +355,7 @@ if args.createBins:
     print(">>> create bins")
     if os.path.exists( outputDirectory ):
         shutil.rmtree( outputDirectory )
-    os.makedirs( outputDirectory )
+    createPlotDirAndCopyPhp(outputDirectory)
     tnpBins = tnpBiner.createBins(binningDef, None)
     pickle.dump( tnpBins, open( '%s/bining.pkl'%(outputDirectory),'wb') )
     print('created dir: {o} '.format(o= outputDirectory))
@@ -422,7 +423,7 @@ if  args.doFit:
     # can't use all probes for cases with isolation, since the failing probe sample has the FSR and a second bump at low mass
     useAllTemplateForFail = True if typeflag not in flagsWithFSR else False # use all probes to build MC template for failing probes when fitting data nominal
     maxFailIntegralToUseAllProbe = 300 if typeflag not in ["tracking"] else -1 # use all probes for the failing template only when stat is very small, otherwise sometimes the fit doesn't work well
-    altSignalFail = True if typeflag in ["reco", "tracking", "veto"] else False # use Gaussian as resolution function for altSig model
+    altSignalFail = True if typeflag in ["tracking", "reco", "veto"] else False # use Gaussian as resolution function for altSig model
     modelFSR = True if typeflag in flagsWithFSR else False # add Gaussian to model low mass bump from FSR, in altSig fit
     def parallel_fit(ib): ## parallel
         #print("tnpBins['bins'][ib] = ",tnpBins['bins'][ib])
@@ -486,7 +487,7 @@ if  args.doPlot:
             obj.Write(k.GetName(), ROOT.TObject.kOverwrite) # write in merged root file overwriting keys if they already existed
         rootfile.Close()
         rootfileBin.Close()
-        os.system('rm '+fileName+'_bin_bin*')
+        os.system(f"rm {fileNameNoExt}_bin_bin*.root")
     else:
         # TODO: check all files are present?
         os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
@@ -495,9 +496,8 @@ if  args.doPlot:
 
     #quit()   
     plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
-    if not os.path.exists( plottingDir ):
-        os.makedirs( plottingDir )
-    shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
+    createPlotDirAndCopyPhp(plottingDir)
+    #shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
 
     verbosePlotting = True
     rootfile = safeOpenFile(f"{fileName}", mode="read")
@@ -541,24 +541,12 @@ if args.sumUp:
         info['tagSel'] = samplesDef['tagSel'].getOutputPath()
     #print(info)
 
-    effis = None
     effFileName = outputDirectory+'/allEfficiencies.txt'
     #fOut = open( effFileName,'w')
     def parallel_sumUp(_bin):
         effis = tnpRoot.getAllEffi( info, _bin )
         #print("effis =",effis)
         #print('this is _bin', _bin)        
-        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
-        padsFromCanvas = {}
-        for c in canvases:
-            if c not in effis.keys() or effis[c] == None:
-                print(f"Canvas {c} not found or not available")
-            else:
-                if effis[c].ClassName() ==  "TCanvas":
-                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
-                else:
-                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
-                    return 0
         ### formatting assuming 2D bining -- to be fixed
         v1Range = _bin['title'].split(';')[1].split('<')
         v2Range = _bin['title'].split(';')[2].split('<')
@@ -581,7 +569,7 @@ if args.sumUp:
             #print(exp)
             fOut.write(exp)
 
-        astr =  '%-+8.3f\t%-+8.3f\t%-+8.3f\t%-+8.3f\t%-10.5f\t%-10.5f\t%-10.5f\t%-10.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-15.5f\t%-10.5f' % (
+        astr =  '%-+8.3f\t%-+8.3f\t%-+8.3f\t%-+8.3f\t%-10.6f\t%-10.6f\t%-10.6f\t%-10.6f\t%-15.6f\t%-15.6f\t%-15.6f\t%-15.6f\t%-15.6f\t%-10.5f' % (
             float(v1Range[0]), float(v1Range[2]),
             float(v2Range[0]), float(v2Range[2]),
             effis['dataNominal'][0],effis['dataNominal'][1],
@@ -594,6 +582,23 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
+        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
+        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
+        padsFromCanvas = {}
+        for c in canvases:
+            if c not in effis.keys() or effis[c] == None:                
+                print(f"Canvas {c} not found or not available")
+                return 0
+            else:
+                #padsFromCanvas[c] = list(effis[c])
+                ## the following was for when canvases where returned
+                if effis[c].ClassName() ==  "TCanvas":
+                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
+                    # print(padsFromCanvas[c])
+                else:
+                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
+                    return 0
+
         canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
         canv_all.Divide(3,3)
         canv_all.Draw()
@@ -678,7 +683,11 @@ if args.sumUp:
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
         #ROOT.gErrorIgnoreLevel = odllevel
-    
+        # for k in padsFromCanvas.keys():
+        #     for p in padsFromCanvas[k]:
+        #         p.Close()
+        # canv_all.Close()
+        
     pool = Pool()
     pool.map(parallel_sumUp, tnpBins['bins'])
     #for thebin in tnpBins['bins']: 
@@ -696,10 +705,13 @@ if args.sumUp:
     os.system('cat '+' '.join(lsfiles)+' > '+effFileName)
     os.system('rm  '+' '.join(lsfiles))
 
-    os.system('cp etc/inputs/index.php {d}/index.php'.format(d=outputDirectory+'/plots/'))
-    #fOut.close()
-
     print('Efficiencies saved in file : ',  effFileName)
+
+    outputDirectoryPlots = f"{outputDirectory}/plots/"
+    createPlotDirAndCopyPhp(outputDirectoryPlots)
+    #fOut.close()
+    outputDirectoryTH2 = f"{outputDirectoryPlots}/histo2D/"
+    createPlotDirAndCopyPhp(outputDirectoryTH2)
+
     import libPython.EGammaID_scaleFactors as makesf
-    makesf.doSFs(effFileName,luminosity,['pt', 'eta'], outputDirectory+'/plots/')
-    ## put here the new file for marco
+    makesf.doSFs(effFileName,luminosity,['pt', 'eta'], outputDirectoryTH2)

@@ -58,9 +58,9 @@ Double_t RooCBExGaussShape::evaluate() const
         // Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
         // Double_t b= n/absAlpha - absAlpha; 
         // rval= a/TMath::Power(b - t, n);
-      Double_t a = exp(-0.5*absAlpha*absAlpha);
-      Double_t b = exp(n*(t+absAlpha));
-      rval = a*b;
+        Double_t a = exp(-0.5*absAlpha*absAlpha);
+        Double_t b = exp(n*(t+absAlpha));
+        rval = a*b;
     }
   } else if (tailLeft < 0) {
     //// rather fit high tail for n < 0

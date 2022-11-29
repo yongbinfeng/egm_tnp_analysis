@@ -55,8 +55,8 @@ working_points_global = {
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_idip_data_vertexWeights1_oscharge1.root'],
     'mu_trigger_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerplus_mc_vertexWeights1_oscharge1.root',
                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerplus_data_vertexWeights1_oscharge1.root'],
-    #'mu_trigger_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerminus_mc_vertexWeights1_oscharge1.root',
-   #                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
+    'mu_trigger_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerminus_mc_vertexWeights1_oscharge1.root',
+                         '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
     'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_iso_mc_vertexWeights1_oscharge1.root',
                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ/tnp_iso_data_vertexWeights1_oscharge1.root'],
     #'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_EvenEvents/tnp_iso_mc_vertexWeights1_oscharge1.root',
@@ -93,12 +93,6 @@ working_points_tracker = {
     'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_veto_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/trackerMuons_highPurity_allWP/tnp_veto_data_vertexWeights1_oscharge1.root'],
 }
-
-
-#working_points = {'mu_iso_both': ['/home/users/rajarshi/Steve_Erc/Isolation_MC_full_2_08_2022.root','/home/users/rajarshi/Steve_Erc/Isolation_Data_full_2_08_2022.root'],}
-#for i in range(1,41):
-    #working_points['mu_trigger_both_qtbin{0}'.format(i)] = ['input_MC_file_{0}.root'.format(i),'input_Data_file_{0}.root'.format(i)] 
-#    working_points['mu_iso_both_qtbin{0}'.format(i)] = ['/home/users/rajarshi/Steve_Erc/Isolation_MC_2_08_2022_{0}.root'.format(i),'/home/users/rajarshi/Steve_Erc/Isolation_Data_2_08_2022_{0}.root'.format(i)] 
 
 
 parser = argparse.ArgumentParser()

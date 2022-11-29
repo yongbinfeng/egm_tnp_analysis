@@ -55,7 +55,8 @@ ClassImp(RooCMSShape)
   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE 
 
   //Double_t erf = TMath::Erfc((alpha - x) * beta);
-  Double_t erf = RooMath::erfc((alpha - x) * beta);
+  // Double_t erf = RooMath::erfc((alpha - x) * beta);
+  Double_t erf = (1.0 + RooMath::erf((x - alpha) / beta));
   Double_t u = (x - peak)*gamma;
 
   if(u < -70) u = 1e20;

@@ -15,6 +15,7 @@
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "RooChi2Var.h"
+#include "RooFFTConvPdf.h"
 /// include pdfs
 #include "RooCBExGaussShape.h"
 #include "RooCMSShape.h"
@@ -49,7 +50,7 @@ public:
   int fits(const std::string& title = "");
   void useMinos(bool minos = true) {_useMinos = minos; }
   void isMC(bool isMC = true) {_isMC = isMC; }
-  void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p);
+  void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p, double&, double&);
   void fixSigmaFtoSigmaP(bool fix=true) { _fixSigmaFtoSigmaP= fix; }
   void setFitRange(double xMin,double xMax) { _xFitMin = xMin; _xFitMax = xMax; }
   void setZeroBackground(bool zeroBkg = true) {_zeroBackground = zeroBkg; }
@@ -60,7 +61,7 @@ public:
   double getEfficiencyUncertainty(double nP, double nF, double e_nP, double e_nF);
   void updateConstraints(const std::string& key, const std::string& value) { _constraints[key] = value; }
   void setConstantVariable(const std::string& name, const double& val, const bool& removeRange);
-  RooFitResult* manageFit(bool, int, std::string*);
+  RooFitResult* manageFit(bool, int, std::string*, double*);
     
 private:
   RooWorkspace *_work;
@@ -221,11 +222,13 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
   // this x variable should only be needed for the convolution, since the actual binning comes from the histograms
   // increase number of bins and also the range so to span the whole range where the pdfs is larger than 0 (maybe the range is less important here)
   // see also https://root-forum.cern.ch/t/bad-fit-at-boundaries-for-convoluted-roohistpdf/21980/9
-  _work->var("x")->setBins(10000, "cache"); 
+  _work->var("x")->setBins(2000, "cache"); // sometimes 10k works, but in newer root version 10k is the maximum including the buffer apparently
   // _work->var("x")->setMin("cache", 50.0); 
   // _work->var("x")->setMax("cache", 130.0); 
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
-  _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
+  RooFFTConvPdf* convPass = (RooFFTConvPdf*) _work->factory("FCONV::sigPass(x, sigPhysPass , sigResPass)");
+  convPass->setBufferFraction(0.5);
+  
   if (_zeroBackground) {
       // to implement properly
       _work->factory("nBkgP[0]");
@@ -234,7 +237,7 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
       _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
   }
   _work->factory("SUM::pdfPass(nSigP*sigPass,nBkgP*bkgPass)");
-      
+  
   if (modelFSR) {
 
       if (isMCfit) {
@@ -251,7 +254,8 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
           _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
       }
 
-      _work->factory("FCONV::sigMainFail(x, sigPhysFail , sigResFail)");
+      RooFFTConvPdf* convFail = (RooFFTConvPdf*) _work->factory("FCONV::sigMainFail(x, sigPhysFail , sigResFail)");
+      convFail->setBufferFraction(0.5);
       _work->factory("SUM::sigFail(fracMainF[0.95,0.8,1.0]*sigMainFail, sigFsrFail)");
       _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
           
@@ -279,7 +283,8 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
               _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));          
           }
       }
-      _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
+      RooFFTConvPdf* convFail = (RooFFTConvPdf*) _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
+      convFail->setBufferFraction(0.5);
       _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
       
   }
@@ -294,7 +299,7 @@ void tnpFitter::setWorkspace(const std::vector<std::string>& workspace, bool isM
 
 }
 
-RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* lastNamePDF = nullptr) {
+RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* lastNamePDF = nullptr, double* chi2value = nullptr) {
     
     std::string pdfName = "pdfPass";
     std::string hName = "hPass";
@@ -336,15 +341,16 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
                                    PrintLevel(_printLevel),
                                    (constraint != nullptr) ? ExternalConstraints(*constraint) : RooCmdArg::none() );
 
-    if (attempt > 0) return res;
-
     RooChi2Var chi2("chi2", "chi2 var", *pdf, *((RooDataHist*) dh), Range(_xFitMin,_xFitMax));
+    *chi2value = chi2.getVal();
     int ndof = _nFitBins - res->floatParsFinal().getSize();
     double chi2sigma = std::sqrt(2. * ndof);
-    bool goodChi2 = std::fabs(chi2.getVal() - (double) ndof) < (10.0 * chi2sigma); 
+    bool goodChi2 = std::fabs(*chi2value - (double) ndof) < (10.0 * chi2sigma); 
     // std::cout << pdfName << " --> Chi2 / ndof = " << chi2.getVal() << " / " << ndof << "   good chi2 = " << goodChi2 << std::endl;
     // std::cout << pdfName << " --> status = " << res->status() << std::endl;
     // std::cout << pdfName << " --> cov. quality = " << res->covQual() << std::endl;
+
+    if (attempt > 0) return res;
 
     if (_isMC) {
         if (goodChi2 and (res->status() == 0 or res->status() == 1)) return res;
@@ -369,10 +375,10 @@ RooFitResult* tnpFitter::manageFit(bool isPass, int attempt = 0, std::string* la
             if (_work->var(bkgParNames[i].c_str()) == nullptr) continue;
             setConstantVariable(bkgParNames[i], _work->var(bkgParNames[i].c_str())->getVal());
         }
-        return manageFit(isPass, 1, lastNamePDF);
+        return manageFit(isPass, 1, lastNamePDF, chi2value);
     } else {
         if (isPass) return res;
-        else        return manageFit(isPass, 2, lastNamePDF);
+        else        return manageFit(isPass, 2, lastNamePDF, chi2value);
     }
     
 }
@@ -398,13 +404,15 @@ int tnpFitter::fits(const std::string& title) {
   }
 
   std::string lastNamePassPDF = "";
+  double chi2valuePass = 0.0;
   //std::cout << "Fit for passing probes" << std::endl;
-  RooFitResult* resPass = manageFit(true, 0, &lastNamePassPDF);
+  RooFitResult* resPass = manageFit(true, 0, &lastNamePassPDF, &chi2valuePass);
   // std::cout << "Last used pass pdf  -> " << lastNameFailPDF << std::endl;
   
   //std::cout << "Fit for failing probes" << std::endl;
   std::string lastNameFailPDF = "";
-  RooFitResult* resFail = manageFit(false, 0, &lastNameFailPDF);
+  double chi2valueFail = 0.0;
+  RooFitResult* resFail = manageFit(false, 0, &lastNameFailPDF, &chi2valueFail);
   // std::cout << "Last used fail pdf  -> " << lastNameFailPDF << std::endl;
 
   std::string bkgNamePass = "bkgPass";
@@ -435,7 +443,7 @@ int tnpFitter::fits(const std::string& title) {
   TCanvas * c = new TCanvas(canvasName.c_str(), canvasName.c_str(), 1150, 500);
   c->Divide(3,1);
   TPad *padText = (TPad*)c->GetPad(1);
-  textParForCanvas( resPass,resFail, padText );
+  textParForCanvas( resPass,resFail, padText, chi2valuePass, chi2valueFail);
   c->cd(2);
   pPass->Draw();
   c->cd(3);
@@ -444,6 +452,8 @@ int tnpFitter::fits(const std::string& title) {
   //  TFile* _fOut = new TFile(_fname.c_str(), "recreate");
   _fOut->cd();
   c->Write(canvasName.c_str(), TObject::kOverwrite);
+  pPass->Write(TString::Format("%s_rooplotP", _histname_base.c_str()), TObject::kOverwrite);
+  pFail->Write(TString::Format("%s_rooplotF", _histname_base.c_str()), TObject::kOverwrite);
   resPass->Write(TString::Format("%s_resP",_histname_base.c_str()), TObject::kOverwrite);
   resFail->Write(TString::Format("%s_resF",_histname_base.c_str()), TObject::kOverwrite);
   //_fOut->Close(); // closed in the destructor
@@ -462,7 +472,7 @@ double tnpFitter::getEfficiencyUncertainty(double nP, double nF, double e_nP, do
 }
 
 /////// Stupid parameter dumper /////////
-void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p) {
+void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p, double& chi2valuePass, double& chi2valueFail) {
 
   double eff = -1;
   double e_eff = 0;
@@ -493,11 +503,17 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
   text1->SetBorderSize(0);
   text1->SetTextAlign(12);
 
-  for (UInt_t i = 0 ; i < resP->numStatusHistory(); i++) {
-      text1->AddText(TString::Format("%s status: pass %d, fail %d", resP->statusLabelHistory(i), resP->statusCodeHistory(i), resF->statusCodeHistory(i)));
-  }
-  //text1->AddText(TString::Format("* fit status pass: %d, fail : %d",resP->status(),resF->status()));
+  // better to just print the status at the end, it is what really matters and it is less lines to print
+  // for (UInt_t i = 0 ; i < resP->numStatusHistory(); i++) {
+  //     text1->AddText(TString::Format("%s status: pass %d, fail %d", resP->statusLabelHistory(i), resP->statusCodeHistory(i), resF->statusCodeHistory(i)));
+  // }
+  text1->AddText(TString::Format("fit status:  pass %d, fail %d",resP->status(),resF->status()));
   text1->AddText(TString::Format("cov quality: pass %d, fail %d",resP->covQual(),resF->covQual()));
+  int ndofP = _nFitBins - resP->floatParsFinal().getSize();
+  int ndofF = _nFitBins - resF->floatParsFinal().getSize();
+  double chi2probPass = 100.0 * TMath::Prob(chi2valuePass, ndofP);
+  double chi2probFail = 100.0 * TMath::Prob(chi2valueFail, ndofF);
+  text1->AddText(TString::Format("#Chi^{2} (prob): P %.1f/%d (%.1f%%), F %.1f/%d (%.1f%%)", chi2valuePass, ndofP, chi2probPass, chi2valueFail, ndofF, chi2probFail));
   //text1->SetTextFont(62);
   if (not _isMC and (e_eff_corr > e_eff) ) {
       text1->AddText(TString::Format("* eff = %1.4f #pm %1.4f (%1.4f)",eff,e_eff, e_eff_corr));
