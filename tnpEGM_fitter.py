@@ -21,11 +21,12 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gInterpreter.ProcessLine(".O3")
 
 from libPython.tnpClassUtils import tnpSample
-from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile, createPlotDirAndCopyPhp
+from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile, createPlotDirAndCopyPhp, compileFileMerger
 
 compileMacro("libCpp/RooCBExGaussShape.cc")
 compileMacro("libCpp/RooCMSShape.cc")
 compileMacro("libCpp/histFitter.C")
+compileFileMerger("libCpp/FileMerger.C")
 
 ### tnp library
 import libPython.binUtils  as tnpBiner
@@ -490,7 +491,8 @@ if  args.doPlot:
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
     else:
         # TODO: check all files are present?
-        os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
+        #os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
+        os.system(f"./libCpp/FileMerger {fileName} {fileNameNoExt}_bin_bin*.root")
         os.system("sleep 3")
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
 
