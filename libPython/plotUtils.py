@@ -44,6 +44,14 @@ def compileMacro(x): #, basedir=os.environ['PWD']):
         print("Loading and compiling %s failed! Exit" % x)
         quit()
 
+def compileFileMerger(x):
+    y=x.strip(".C")
+    if not os.path.exists(y):
+        os.system(f"g++ `root-config --libs --cflags --glibs` -O3 {x} -o {y}")
+        if not os.path.exists(y):
+            print("Compiling %s failed! Exit" % x)
+            quit()
+
 
 def testBinning(bins, testbins, var="var", flag="workingPoint"):
     if bins != testbins:
