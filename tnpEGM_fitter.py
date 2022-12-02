@@ -492,7 +492,8 @@ if  args.doPlot:
     else:
         # TODO: check all files are present?
         #os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
-        os.system(f"./libCpp/FileMerger {fileName} {fileNameNoExt}_bin_bin*.root")
+        NumberOfBins=(len(binning_eta)-1)*(len(binning_pt)-1)
+        os.system(f"./libCpp/FileMerger {NumberOfBins} {fileName} {fileNameNoExt}_bin_bin*.root")
         os.system("sleep 3")
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
 
