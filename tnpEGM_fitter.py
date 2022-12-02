@@ -301,16 +301,14 @@ dataName = f"mu_Run{args.era}"
 samples_data = tnpSample(dataName,
                          args.inputData,
                          f"{outputDirectory}/{dataName}_{args.flag}.root",
-                         False,
-                         luminosity)
+                         False)
 
 eraMC = "postVFP" if args.era == "GtoH" else "preVFP"
 mcName = f"mu_DY_{eraMC}"
 samples_dy = tnpSample(mcName,
                        args.inputMC,
                        f"{outputDirectory}/{mcName}_{args.flag}.root",
-                       True,
-                       luminosity)
+                       True)
 #samples_data.printConfig()
 #samples_dy.printConfig()
 
@@ -583,21 +581,21 @@ if args.sumUp:
         fOut.write( astr + '\n' )
         fOut.close()
         return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
-        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
-        padsFromCanvas = {}
-        for c in canvases:
-            if c not in effis.keys() or effis[c] == None:                
-                print(f"Canvas {c} not found or not available")
-                return 0
-            else:
-                #padsFromCanvas[c] = list(effis[c])
-                ## the following was for when canvases where returned
-                if effis[c].ClassName() ==  "TCanvas":
-                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
-                    # print(padsFromCanvas[c])
-                else:
-                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
-                    return 0
+        # canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
+        # padsFromCanvas = {}
+        # for c in canvases:
+        #     if c not in effis.keys() or effis[c] == None:                
+        #         print(f"Canvas {c} not found or not available")
+        #         return 0
+        #     else:
+        #         #padsFromCanvas[c] = list(effis[c])
+        #         ## the following was for when canvases where returned
+        #         if effis[c].ClassName() ==  "TCanvas":
+        #             padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
+        #             # print(padsFromCanvas[c])
+        #         else:
+        #             print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
+        #             return 0
 
         canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
         canv_all.Divide(3,3)
