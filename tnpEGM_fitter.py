@@ -8,6 +8,7 @@ from multiprocessing import Pool
 import datetime
 import copy
 import argparse
+import re
 
 ## safe batch mode
 import sys
@@ -26,7 +27,8 @@ from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOp
 compileMacro("libCpp/RooCBExGaussShape.cc")
 compileMacro("libCpp/RooCMSShape.cc")
 compileMacro("libCpp/histFitter.C")
-compileFileMerger("libCpp/FileMerger.C")
+#compileFileMerger("libCpp/FileMerger.C")
+compileMacro("libCpp/FileMerger.C")
 
 ### tnp library
 import libPython.binUtils  as tnpBiner
@@ -479,6 +481,9 @@ if  args.doFit:
 ####################################################################
 if  args.doPlot:
 
+    print()
+    print("Merging root files ...")
+    print(f"Output: {fileName}")
     fileNameNoExt = fileName.rstrip(".root")
     # if doing one bin get the new plots and update the file, don't overwrite it or all other bins are lost
     if args.binNumber >= 0:
@@ -493,12 +498,34 @@ if  args.doPlot:
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
     else:
         # TODO: check all files are present?
-        #os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
-        NumberOfBins=(len(binning_eta)-1)*(len(binning_pt)-1)
-        os.system(f"./libCpp/FileMerger {NumberOfBins} {fileName} {fileNameNoExt}_bin_bin*.root")
+        ## hadd doesn't always work for some reason, it leads to crashes
+        # os.system(f"hadd -f {fileName} {fileNameNoExt}_bin_bin*.root")
+        ## C++ helper works fine for merging 
+        # NumberOfBins = (len(binning_eta)-1) * (len(binning_pt)-1)
+        # os.system(f"./libCpp/FileMerger {NumberOfBins} {fileName} {fileNameNoExt}_bin_bin*.root")
+        ## test python version to call the C++ helper
+        numberOfBins = len(tnpBins['bins'])
+        regexp = re.compile(f"{os.path.basename(fileNameNoExt)}_bin_bin.*.root")
+        outpath = os.path.dirname(fileName) + "/"
+        vec = ROOT.std.vector["std::string"]()
+        for f in os.listdir(outpath):
+            if os.path.isfile(os.path.join(outpath, f)) and regexp.match(f):
+                #print(outpath+f)
+                #print(">>> Storing it")
+                vec.push_back(os.path.join(outpath, f))
+        if vec.size() != numberOfBins:
+            print(f"Error: number of files ({vec.size()}) does not coincide with number of bins ({numberOfBins})")
+            vec.clear()
+            os.system("sleep 3")
+            print("Deleting temporary files and exiting")
+            os.system(f"rm {fileNameNoExt}_bin_bin*.root")
+            quit()
+        ROOT.FileMerger(numberOfBins, fileName, vec)
+        vec.clear()
         os.system("sleep 3")
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
-
+    print("Done with merging :-)")
+    print()
     #quit()
 
     ## currently done in the C++ class directly
@@ -512,7 +539,7 @@ if  args.doPlot:
     #         c.SaveAs(f"{plottingDir}/{binName}.png")
     #         #tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
     # rootfile.Close()
-    print(' ===> Plots saved in <=======')
+    # print(' ===> Plots saved in <=======')
 #    print('localhost/%s/' % plottingDir)
 
 
@@ -586,22 +613,22 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
-        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
-        # canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
-        # padsFromCanvas = {}
-        # for c in canvases:
-        #     if c not in effis.keys() or effis[c] == None:                
-        #         print(f"Canvas {c} not found or not available")
-        #         return 0
-        #     else:
-        #         #padsFromCanvas[c] = list(effis[c])
-        #         ## the following was for when canvases where returned
-        #         if effis[c].ClassName() ==  "TCanvas":
-        #             padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
-        #             # print(padsFromCanvas[c])
-        #         else:
-        #             print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
-        #             return 0
+        #return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
+        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
+        padsFromCanvas = {}
+        for c in canvases:
+            if c not in effis.keys() or effis[c] == None:                
+                print(f"Canvas {c} not found or not available")
+                return 0
+            else:
+                #padsFromCanvas[c] = list(effis[c])
+                ## the following was for when canvases where returned
+                if effis[c].ClassName() ==  "TCanvas":
+                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
+                    # print(padsFromCanvas[c])
+                else:
+                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
+                    return 0
 
         canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
         canv_all.Divide(3,3)

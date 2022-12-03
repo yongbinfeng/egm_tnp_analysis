@@ -33,8 +33,8 @@ def addStringToEnd(name, matchToAdd, notAddIfEndswithMatch=False):
 def createPlotDirAndCopyPhp(outdir):
     if outdir and not os.path.exists(outdir):
         os.makedirs(outdir)
-        htmlpath = "etc/inputs/index.php"
-        shutil.copy(htmlpath, outdir)
+    htmlpath = "etc/inputs/index.php"
+    shutil.copy(htmlpath, outdir)
 
 
 def compileMacro(x): #, basedir=os.environ['PWD']):
@@ -46,11 +46,11 @@ def compileMacro(x): #, basedir=os.environ['PWD']):
 
 def compileFileMerger(x):
     y=x.strip(".C")
-    if not os.path.exists(y):
-        os.system(f"g++ `root-config --libs --cflags --glibs` -O3 {x} -o {y}")
-        if not os.path.exists(y):
-            print("Compiling %s failed! Exit" % x)
-            quit()
+    print(f"Compiling {x} into {y}")
+    res = os.system(f"g++ `root-config --libs --cflags --glibs` -O3 {x} -o {y}")
+    if res:
+        print("Compiling %s failed! Exit" % x)
+        quit()
 
 
 def testBinning(bins, testbins, var="var", flag="workingPoint"):

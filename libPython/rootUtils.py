@@ -134,13 +134,13 @@ def getAllEffi( info, bindef ):
                 fitresP = safeGetObject(rootfile, f"{binName}_resP", detach=False)
                 fitresF = safeGetObject(rootfile, f"{binName}_resF", detach=False)
                 canv = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
-                rpPass = safeGetObject(rootfile, f"{binName}_rooplotP", detach=False)
-                rpFail = safeGetObject(rootfile, f"{binName}_rooplotF", detach=False)
                 #ROOT.SetOwnership(canv, False)
-                #effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
-                effis[f"rpPass_{key}"] = copy.deepcopy(rpPass.Clone(f"rpP_{key}_{binName}"))
-                effis[f"rpFail_{key}"] = copy.deepcopy(rpFail.Clone(f"rpF_{key}_{binName}"))
+                effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
                 #ROOT.SetOwnership(effis[f"canv_{key}"], False)
+                #rpPass = safeGetObject(rootfile, f"{binName}_rooplotP", detach=False)
+                #rpFail = safeGetObject(rootfile, f"{binName}_rooplotF", detach=False)
+                #effis[f"rpPass_{key}"] = copy.deepcopy(rpPass.Clone(f"rpP_{key}_{binName}"))
+                #effis[f"rpFail_{key}"] = copy.deepcopy(rpFail.Clone(f"rpF_{key}_{binName}"))
                 # effis[f"canv_{key}"] = []
                 # for ip,p in enumerate(canv.GetListOfPrimitives()):
                 #     # only get second and third pad with plots
@@ -163,9 +163,9 @@ def getAllEffi( info, bindef ):
             effis[key] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
             rootfile.Close() # try also not closing the file
     #print("Outside getAllEffi")
-    for key,val in effis.items():
-        if val is None:
-            print(f"   ===>>> effis[{key}] is None")
+    # for key,val in effis.items():
+    #     if val is None:
+    #         print(f"   ===>>> effis[{key}] is None")
     return effis
 
 
