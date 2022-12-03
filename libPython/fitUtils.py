@@ -3,7 +3,9 @@
 import ROOT
 import re
 import math
+import os
 
+from .plotUtils import safeOpenFile, safeGetObject
 
 def ptMin( tnpBin ):
     ptmin = 1
@@ -16,10 +18,10 @@ def ptMin( tnpBin ):
 def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam, constrainSignalFailFromMC=False):
     
     fileref = sample.mcRef.altSigFit
-    filemc  = ROOT.TFile(fileref,'read')
+    filemc  = safeOpenFile(fileref,mode='READ')
 
-    fitresP = filemc.Get( '%s_resP' % tnpBin['name']  )
-    fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
+    fitresP = safeGetObject(filemc, '%s_resP' % tnpBin['name'], detach=False)
+    fitresF = safeGetObject(filemc, '%s_resF' % tnpBin['name'], detach=False)
 
     listOfParamP = ['meanP', 'sigmaP', 'nP', 'alphaP', 'sigmaP', 'sigmaP_2']
     listOfParamF = ['meanF', 'sigmaF', 'nF', 'alphaF', 'sigmaF', 'sigmaF_2', 'fsrMeanF', 'fsrSigmaF']
@@ -160,6 +162,8 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=6
     fitter.setPrintLevel(-1)
     outFileName = sample.nominalFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
     fitter.setOutputFile(outFileName)
+    plotPath = os.path.abspath(os.path.dirname(outFileName)) + f"/plots/{sample.getName()}/nominalFit/"
+    fitter.setPlotOutputPath(plotPath)
     fitter.isMC(sample.isMonteCarlo())
     
     ## generated Z LineShape
@@ -269,6 +273,8 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setPrintLevel(-1)
     outFileName = sample.altSigFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
     fitter.setOutputFile(outFileName)
+    plotPath = os.path.abspath(os.path.dirname(outFileName)) + f"/plots/{sample.getName()}/altSigFit/"
+    fitter.setPlotOutputPath(plotPath)
     fitter.isMC(sample.isMonteCarlo())
 
     if zeroBackground:
@@ -340,6 +346,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam, massbins=60, massmin=60
     fitter.setPrintLevel(-1)
     outFileName = sample.altBkgFit.rstrip(".root") + "_bin_" + tnpBin["name"] + ".root"
     fitter.setOutputFile(outFileName)
+    plotPath = os.path.abspath(os.path.dirname(outFileName)) + f"/plots/{sample.getName()}/altBkgFit/"
+    fitter.setPlotOutputPath(plotPath)
     fitter.isMC(sample.isMonteCarlo())
 
     ## generated Z LineShape

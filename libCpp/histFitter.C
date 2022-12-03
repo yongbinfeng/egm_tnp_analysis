@@ -20,6 +20,8 @@
 #include "RooCBExGaussShape.h"
 #include "RooCMSShape.h"
 
+#include <cstdlib>
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -43,10 +45,10 @@ public:
     ~tnpFitter(); //{ if( _work != 0 ) delete _work; }
   void setZLineShapes(TH1 *hZPass, TH1 *hZFail );
   void setWorkspace(const std::vector<std::string>&, bool, bool, bool);
-  //python3void setOutputFile( TFile *fOut ) {_fOut = fOut;}
-  //void setOutputFile(TString fname ) {_fOut = new TFile(fname, "UPDATE");}
   //void setOutputFile(const std::string& fname ) {_fOut = new TFile(fname.c_str(), "recreate"); } 
-  void setOutputFile(const std::string& fname ); // {_fname = fname; } 
+  void setOutputFile(const std::string& fname );
+    //void setOutputFile(const std::string& fname ) {_fname = fname; } 
+  void setPlotOutputPath(const std::string& fname) { _outPlotPath = fname;}
   int fits(const std::string& title = "");
   void useMinos(bool minos = true) {_useMinos = minos; }
   void isMC(bool isMC = true) {_isMC = isMC; }
@@ -65,9 +67,9 @@ public:
     
 private:
   RooWorkspace *_work;
-  std::string _histname_base;
+  std::string _histname_base = "";
   TFile *_fOut;
-    //std::string _fname = "";
+  std::string _fname = "";
   double _nTotP, _nTotF;
   bool _useMinos = false;
   bool _isMC = false;
@@ -81,6 +83,7 @@ private:
   std::unordered_map<std::string, std::string> _constraints = {};
   int _nFitBins = -1;
   bool _hasShape_bkgFailMC = false;
+  std::string _outPlotPath = "";
     
 };
 
@@ -88,8 +91,19 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname, int massbins, float ma
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
   _histname_base = histname;  
 
-  TH1 *hPass = (TH1*) filein->Get(TString::Format("%s_Pass",histname.c_str()).Data());
-  TH1 *hFail = (TH1*) filein->Get(TString::Format("%s_Fail",histname.c_str()).Data());
+  std::string namePass = TString::Format("%s_Pass",histname.c_str()).Data();
+  std::string nameFail = TString::Format("%s_Fail",histname.c_str()).Data();
+  TH1 *hPass = (TH1*) filein->Get(namePass.c_str());
+  TH1 *hFail = (TH1*) filein->Get(nameFail.c_str());
+  if (hPass == nullptr) {
+      std::cout << "Error reading " << namePass << " from " << filein->GetName() << std::endl;
+      exit(EXIT_FAILURE);
+  }
+  if (hFail == nullptr) {
+      std::cout << "Error reading " << nameFail << " from " << filein->GetName() << std::endl;
+      exit(EXIT_FAILURE);
+  }
+  
   _nTotP = hPass->Integral();
   _nTotF = hFail->Integral();
   /// MC histos are done between 50-130 to do the convolution properly
@@ -133,13 +147,11 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname, int massbins,
       // protection for Chi2
       if (hPass->GetBinError(ib) <= 0.0) hPass->SetBinError(ib, 1.0);
       if (hFail->GetBinError(ib) <= 0.0) hFail->SetBinError(ib, 1.0);
-  }
-      
+  }      
  
   _work = new RooWorkspace("w") ;
   //_work->factory("x[50,130]");
   _work->factory(TString::Format("x[%f,%f]",massmin, massmax));
-
 
   RooDataHist rooPass("hPass","hPass",*_work->var("x"),hPass);
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
@@ -185,11 +197,12 @@ tnpFitter::~tnpFitter() {
     
 }
 
+//// Let's open this file directly before using it, to avoid root sorceries with memory and object ownership
 void tnpFitter::setOutputFile(const std::string& fname) {
     _fOut = new TFile(fname.c_str(), "recreate");
     if (!_fOut || _fOut->IsZombie()) {
         std::cout << "Error opening file " << fname << std::endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -449,11 +462,18 @@ int tnpFitter::fits(const std::string& title) {
   c->cd(3);
   pFail->Draw();
 
-  //  TFile* _fOut = new TFile(_fname.c_str(), "recreate");
+  c->cd(0);
+  c->SaveAs(TString::Format("%s%s.png", _outPlotPath.c_str(), canvasName.c_str())); // not sure .pdf would save all 3 pads, maybe not that simply
+  
+  // _fOut = new TFile(_fname.c_str(), "recreate");
+  // if (!_fOut || _fOut->IsZombie()) {
+  //     std::cout << "Error opening file " << _fname << std::endl;
+  //     exit(EXIT_FAILURE);
+  // }
   _fOut->cd();
   c->Write(canvasName.c_str(), TObject::kOverwrite);
-  pPass->Write(TString::Format("%s_rooplotP", _histname_base.c_str()), TObject::kOverwrite);
-  pFail->Write(TString::Format("%s_rooplotF", _histname_base.c_str()), TObject::kOverwrite);
+  // pPass->Write(TString::Format("%s_rooplotP", _histname_base.c_str()), TObject::kOverwrite);
+  // pFail->Write(TString::Format("%s_rooplotF", _histname_base.c_str()), TObject::kOverwrite);
   resPass->Write(TString::Format("%s_resP",_histname_base.c_str()), TObject::kOverwrite);
   resFail->Write(TString::Format("%s_resF",_histname_base.c_str()), TObject::kOverwrite);
   //_fOut->Close(); // closed in the destructor

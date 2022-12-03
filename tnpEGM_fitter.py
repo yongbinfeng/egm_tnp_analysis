@@ -416,6 +416,18 @@ for s in samplesDef.keys():
 if args.mcSig:
     sampleToFit = samplesDef['mcNom']
 
+fileName = sampleToFit.nominalFit
+fitType  = 'nominalFit'
+if args.altSig :
+    fileName = sampleToFit.altSigFit
+    fitType  = 'altSigFit'
+if args.altBkg :
+    fileName = sampleToFit.altBkgFit
+    fitType  = 'altBkgFit'
+
+plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
+createPlotDirAndCopyPhp(plottingDir)
+    
 if  args.doFit:
     print(">>> running fits")
     #print('sampleToFit.dump()', sampleToFit.dump())
@@ -466,14 +478,6 @@ if  args.doFit:
 ##### dumping plots
 ####################################################################
 if  args.doPlot:
-    fileName = sampleToFit.nominalFit
-    fitType  = 'nominalFit'
-    if args.altSig :
-        fileName = sampleToFit.altSigFit
-        fitType  = 'altSigFit'
-    if args.altBkg :
-        fileName = sampleToFit.altBkgFit
-        fitType  = 'altBkgFit'
 
     fileNameNoExt = fileName.rstrip(".root")
     # if doing one bin get the new plots and update the file, don't overwrite it or all other bins are lost
@@ -495,20 +499,19 @@ if  args.doPlot:
         os.system("sleep 3")
         os.system(f"rm {fileNameNoExt}_bin_bin*.root")
 
-    #quit()   
-    plottingDir = '%s/plots/%s/%s' % (outputDirectory,sampleToFit.getName(),fitType)
-    createPlotDirAndCopyPhp(plottingDir)
-    #shutil.copy('etc/inputs/index.php.listPlots','%s/index.php' % plottingDir)
+    #quit()
 
-    verbosePlotting = True
-    rootfile = safeOpenFile(f"{fileName}", mode="read")
-    for ib in range(len(tnpBins['bins'])):
-        if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
-            binName = tnpBins['bins'][ib]['name']
-            c = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
-            c.SaveAs(f"{plottingDir}/{binName}.png")
-            #tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
-    rootfile.Close()
+    ## currently done in the C++ class directly
+    ## keep for reference or debugging
+    # verbosePlotting = True
+    # rootfile = safeOpenFile(f"{fileName}", mode="read")
+    # for ib in range(len(tnpBins['bins'])):
+    #     if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
+    #         binName = tnpBins['bins'][ib]['name']
+    #         c = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
+    #         c.SaveAs(f"{plottingDir}/{binName}.png")
+    #         #tnpRoot.histPlotter(rootfile, tnpBins['bins'][ib], plottingDir, -1, verbosePlotting ) ## the -1 is form marc, something with replica
+    # rootfile.Close()
     print(' ===> Plots saved in <=======')
 #    print('localhost/%s/' % plottingDir)
 

@@ -8,9 +8,10 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 
 void FileMerger(const char* NumberOfBins, const char* filename, std::vector<std::string> names) {
-	istringstream myStream(NumberOfBins);
+    std::istringstream myStream(NumberOfBins);
 	unsigned int bins = 0;
 	myStream >> bins;
 	if (bins!=names.size()) throw std::runtime_error("The number of RooFit output files does not correspond to the number of bins.");
@@ -29,7 +30,7 @@ void FileMerger(const char* NumberOfBins, const char* filename, std::vector<std:
 		while ((key = (TKey *) next())) {
 			obj = file->Get(key->GetName()); // copy object to memory
 			outputfile->cd();
-			obj->Write();
+			obj->Write(key->GetName());
 		}
 		file->Close();
 	}
