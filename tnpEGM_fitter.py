@@ -576,6 +576,10 @@ if args.sumUp:
     #print(info)
 
     effFileName = outputDirectory+'/allEfficiencies.txt'
+    # security check, if the code crashes the temporary files are still present, let's remove them before executing parallel_sumUp
+    if any ("_tmpTMP_" in f for f in os.listdir(outputDirectory)):
+        os.system(f"rm {effFileName}_tmpTMP_*")
+            
     #fOut = open( effFileName,'w')
     def parallel_sumUp(_bin):
         effis = tnpRoot.getAllEffi( info, _bin )
@@ -616,7 +620,7 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
-        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
+        #return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
         canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
         padsFromCanvas = {}
         for c in canvases:
@@ -717,10 +721,11 @@ if args.sumUp:
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
         canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
         #ROOT.gErrorIgnoreLevel = odllevel
-        # for k in padsFromCanvas.keys():
-        #     for p in padsFromCanvas[k]:
-        #         p.Close()
-        # canv_all.Close()
+        #for k in padsFromCanvas.keys():
+        #    for p in padsFromCanvas[k]:
+        #        p.Close()
+        #canv_all.Close()
+        effis = {}
         
     pool = Pool()
     pool.map(parallel_sumUp, tnpBins['bins'])
@@ -767,3 +772,6 @@ if args.sumUp:
     tag = "MC" if "_DY_" in fileName else "Data"
     fitName = f"Eff{tag}_" + fitType
     checkFit(fileName, outdirCheckPlots, fitName, th2ForBinning)
+    print("================================================")
+    print("THE END!")
+    print("================================================")
