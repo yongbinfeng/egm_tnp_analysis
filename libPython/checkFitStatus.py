@@ -85,7 +85,7 @@ def checkFit(infile, outdir, fitName, hbins):
                 elif par.GetName() == "sigmaF":
                     hSigmaFail.SetBinContent(neta, npt, par.getVal())
 
-    rootfileWithEffi.Close()
+    f.Close()
 
     canvas = ROOT.TCanvas("canvas","",800,800)
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     rootfileWithEffi.Close()
     
     tag = "MC" if "_DY_" in infile else "Data"
-    fitName = f"Eff{tag}_" + infile.split(".")[1]
+    fitName = f"Eff{tag}_" + infile.split("_")[-1].split(".")[0]
 
     checkFit(infile, outdir, fitName, htmp)
 

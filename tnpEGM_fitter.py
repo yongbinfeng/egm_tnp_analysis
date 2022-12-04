@@ -9,6 +9,7 @@ import datetime
 import copy
 import argparse
 import re
+from array import array
 
 ## safe batch mode
 import sys
@@ -23,6 +24,7 @@ ROOT.gInterpreter.ProcessLine(".O3")
 
 from libPython.tnpClassUtils import tnpSample
 from libPython.plotUtils import compileMacro, testBinning, safeGetObject, safeOpenFile, createPlotDirAndCopyPhp, compileFileMerger
+from libPython.checkFitStatus import checkFit
 
 compileMacro("libCpp/RooCBExGaussShape.cc")
 compileMacro("libCpp/RooCMSShape.cc")
@@ -174,9 +176,10 @@ if typeflag == 'tracking':
             tnpParAltSigFit.extend(["maxFracSigF[0.5]"])
             tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.5]"])
         else:
-            tnpParNomFit.extend(["maxFracSigF[0.2]"])
-            tnpParAltSigFit.extend(["maxFracSigF[0.2]"])
-            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.2]"])
+            # use 0.2 if not using MergedStandAlone_nValidHits > 0
+            tnpParNomFit.extend(["maxFracSigF[0.5]"])
+            tnpParAltSigFit.extend(["maxFracSigF[0.5]"])
+            tnpParAltSigFitTrackingHighPt.extend(["maxFracSigF[0.5]"])
 
     # ## Try to constrain some background parameters (for tracking might need to do it for signal instead, since S/B is small)
     parConstraints = [
@@ -613,7 +616,7 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
-        #return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
+        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
         canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
         padsFromCanvas = {}
         for c in canvases:
@@ -746,3 +749,21 @@ if args.sumUp:
 
     import libPython.EGammaID_scaleFactors as makesf
     makesf.doSFs(effFileName,luminosity,['pt', 'eta'], outputDirectoryTH2)
+
+    # plotting sanity-check plots on fitresults
+    print()
+    print("Plotting sanity-check histograms from fit results in this file")
+    print(f">>> {fileName}")
+    basePath = os.path.dirname(fileName)
+    outdirCheckPlots = basePath + "/plots/checkFitStatus/"
+    createPlotDirAndCopyPhp(outdirCheckPlots)
+    # get histogram to read binning, it is passed to checkFit
+    #rootfileWithEffi = safeOpenFile(basePath + "/allEfficiencies_2D.root")
+    #th2ForBinning = safeGetObject(rootfileWithEffi, "SF2D_nominal", detach=True)
+    #rootfileWithEffi.Close()
+    th2ForBinning = ROOT.TH2D("th2ForBinning", "", len(binning_eta)-1, array("d", binning_eta), len(binning_pt)-1, array("d", binning_pt))
+    print(f"Eta binning: {binning_eta}")
+    print(f"Pt binning : {binning_pt}")
+    tag = "MC" if "_DY_" in fileName else "Data"
+    fitName = f"Eff{tag}_" + fitType
+    checkFit(fileName, outdirCheckPlots, fitName, th2ForBinning)
