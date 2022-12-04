@@ -135,8 +135,10 @@ def getAllEffi( info, bindef ):
                 fitresF = safeGetObject(rootfile, f"{binName}_resF", detach=False)
                 canv = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
                 #ROOT.SetOwnership(canv, False)
-                effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
+                #effis[f"canv_{key}"] = copy.deepcopy(canv)
                 #ROOT.SetOwnership(effis[f"canv_{key}"], False)
+                effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
+                #effis[f"canv_{key}"] = canv
                 #rpPass = safeGetObject(rootfile, f"{binName}_rooplotP", detach=False)
                 #rpFail = safeGetObject(rootfile, f"{binName}_rooplotF", detach=False)
                 #effis[f"rpPass_{key}"] = copy.deepcopy(rpPass.Clone(f"rpP_{key}_{binName}"))

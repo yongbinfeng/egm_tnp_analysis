@@ -633,6 +633,10 @@ if args.sumUp:
                 if effis[c].ClassName() ==  "TCanvas":
                     padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
                     # print(padsFromCanvas[c])
+                    for p in padsFromCanvas[c]:
+                        ROOT.SetOwnership(p, False)
+                    #effis[c] = None
+                    #ROOT.SetOwnership(effis[c], False)
                 else:
                     print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
                     return 0
