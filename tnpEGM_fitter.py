@@ -90,7 +90,7 @@ if typeflag == 'tracking':
     #binning_pt  = [15., 25.,35.,45.,55.,65.,80.]
     #massbins, massmin, massmax = 100, 40, 140
     #binning_pt  = [55., 65.]
-    binning_pt  = [25., 35., 45., 55., 65.]  # [24., 65.]
+    binning_pt  = [24., 35., 45., 55., 65.]  # [24., 65.]
     #massbins, massmin, massmax = 100, 50, 150
     massbins, massmin, massmax = 80, 50, 130
     binningDef = {
