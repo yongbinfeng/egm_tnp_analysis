@@ -284,7 +284,7 @@ class efficiencyList:
             htitle = 'lepton eff. stat. unc. MC altSig'
             hname  = 'h2_statUncEffMCAltSig'             
 
-        h2 = rt.TH2F(hname,htitle,xbinsTab.size-1,xbinsTab,ybinsTab.size-1,ybinsTab)
+        h2 = rt.TH2D(hname,htitle,xbinsTab.size-1,xbinsTab,ybinsTab.size-1,ybinsTab)
         h2.Sumw2()
 
         ## init histogram efficiencies and errors to 100%
