@@ -620,7 +620,7 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
-        #return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
+        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
         canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
         padsFromCanvas = {}
         for c in canvases:

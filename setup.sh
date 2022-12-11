@@ -1,18 +1,18 @@
 #!/bin/bash 
 
-if [[ `uname -n` == *"lxplus"* ]] || [[ `uname -n` == *"cmswmass2"* ]]; then 
-## install gcc 4.9
-    echo sourcing all the things
-    optVer=x86_64-slc6-gcc49-opt
-    optVer=x86_64-slc6-gcc48-opt
+# if [[ `uname -n` == *"lxplus"* ]] || [[ `uname -n` == *"cmswmass2"* ]]; then 
+# ## install gcc 4.9
+#     echo sourcing all the things
+#     optVer=x86_64-slc6-gcc49-opt
+#     optVer=x86_64-slc6-gcc48-opt
 
-    . /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.16.00/x86_64-centos7-gcc48-opt/bin/thisroot.sh 
+#     . /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.16.00/x86_64-centos7-gcc48-opt/bin/thisroot.sh 
 
-## add python lib
-    . /opt/rh/python27/enable
-    export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64/:$LD_LIBRARY_PATH
+# ## add python lib
+#     . /opt/rh/python27/enable
+#     export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64/:$LD_LIBRARY_PATH
 
-fi
+# fi
 
 export PYTHONPATH=.:$PYTHONPATH
 
