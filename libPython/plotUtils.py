@@ -53,7 +53,7 @@ def compileFileMerger(x):
         quit()
 
 
-def testBinning(bins, testbins, var="var", flag="workingPoint"):
+def testBinning(bins, testbins, var="var", flag="workingPoint", allowRebin=False):
     if bins != testbins:
         if bins[0] in testbins:
             firstTestIdx = testbins.index(bins[0])
@@ -68,14 +68,25 @@ def testBinning(bins, testbins, var="var", flag="workingPoint"):
                 print()
                 print()
                 return 0
-            else:
-                pass
+            elif allowRebin and all(bins[i] in testbins for i in range(len(bins))):
+                print()
+                print("PLEASE READ!")
+                print()
+                print(f"Warning: {var} binning not consistent with the one in histograms for {flag}")
+                print(f"{bins}")
+                print(f"{testbins}")
+                print(f"However it seems to be a subset of it, so I will continue assuming you wanted to rebin. Proceed with caution!")
+                print()
+                print()
+                return 0
         print(f"Error: {var} binning not consistent with the one in histograms for {flag}")
         print(f"{bins}")
         print(f"{testbins}")
         print("Please check!")
-        quit()
-
+        return -1
+    else:
+        return 0
+    
 def safeGetObject(fileObject, objectName, quitOnFail=True, silent=False, detach=True):
     obj = fileObject.Get(objectName)
     if obj == None:

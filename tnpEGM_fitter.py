@@ -71,16 +71,10 @@ massbins, massmin, massmax = 60, 60, 120
 
 ## define the binning here, much easier...
 binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
-#binning_eta = [-2.4+0.1*i for i in range(4) ]
-#binning_eta = [-2.4, -2.25, -2.10, -1.95, -1.8, -1.7, -1.:q
-#binning_eta = [0.+0.2*i for i in range(13) ]
+#binning_eta = [round(-2.4+0.4*i,2) for i in range(13) ]
 
-#binning_pt  = [25., 35., 45., 55., 65.]#27.5, 30., 32., 34, 36., 38., 40., 42., 44., 47., 50., 55., 65]
 binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
-#binning_pt  = [24., 26., 28., 30.]
-
-#binning_pt  = [-15., -7.5, -5., -2.5, 0., 2.5, 5., 7.5, 15.]  ## ALERT
-
+#binning_pt  = [24., 28., 32., 36., 40., 47., 55., 65.]
 
 typeflag = args.flag.split('_')[1]
 
@@ -327,10 +321,12 @@ if args.createHists:
         print(f"Error: you are trying to use a wider mass range ({massmin}-{massmax}) than the histograms for {typeflag}")
         quit()
     this_binning_pt = [round(htest.GetYaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsY()+2) ]
-    testBinning(binning_pt, this_binning_pt, "pt", typeflag)
+    resTestPt = testBinning(binning_pt, this_binning_pt, "pt", typeflag, allowRebin=True)
     this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsZ()+2) ]
-    testBinning(binning_eta, this_binning_eta, "eta", typeflag)
+    resTestEta = testBinning(binning_eta, this_binning_eta, "eta", typeflag, allowRebin=True)
     ftest.Close()
+    if resTestPt or resTestEta:
+        exit(-1)
 
 samplesDef = {
     'data'   : samples_data,

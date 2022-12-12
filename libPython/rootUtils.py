@@ -47,17 +47,19 @@ def makePassFailHistograms(sample, bins, bindef, var ):
         h_name = ib['name' ]
         h_title= ib['title']
 
-        tmp_valpt  = ib['vars'][probe_var_pt ]['min']
-        tmp_valeta = ib['vars'][probe_var_eta]['min']
+        tmp_valpt_min  = ib['vars'][probe_var_pt ]['min']
+        tmp_valeta_min = ib['vars'][probe_var_eta]['min']
+        tmp_valpt_max  = ib['vars'][probe_var_pt ]['max']
+        tmp_valeta_max = ib['vars'][probe_var_eta]['max']
 
         epsilon = 0.001 # safety thing when picking the bin edges using FindFixBin
-        ibin_pt  = h_tmp_pass.GetYaxis().FindFixBin(tmp_valpt + epsilon)
-        ibin_eta = h_tmp_pass.GetZaxis().FindFixBin(tmp_valeta+ epsilon)
-        #print('i am at ibin_pt  {ipt}  and pt  {pt:.1f} '.format(ipt = ibin_pt , pt = tmp_valpt ))
-        #print('i am at ibin_eta {ieta} and eta {eta:.1f}'.format(ieta= ibin_eta, eta= tmp_valeta))
+        ibin_pt_low  = h_tmp_pass.GetYaxis().FindFixBin(tmp_valpt_min  + epsilon)
+        ibin_eta_low = h_tmp_pass.GetZaxis().FindFixBin(tmp_valeta_min + epsilon)
+        ibin_pt_high  = h_tmp_pass.GetYaxis().FindFixBin(tmp_valpt_max  - epsilon)
+        ibin_eta_high = h_tmp_pass.GetZaxis().FindFixBin(tmp_valeta_max - epsilon)
 
-        h_pass = h_tmp_pass.ProjectionX(h_name+'_Pass', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
-        h_fail = h_tmp_fail.ProjectionX(h_name+'_Fail', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
+        h_pass = h_tmp_pass.ProjectionX(h_name+'_Pass', ibin_pt_low, ibin_pt_high, ibin_eta_low, ibin_eta_high)
+        h_fail = h_tmp_fail.ProjectionX(h_name+'_Fail', ibin_pt_low, ibin_pt_high, ibin_eta_low, ibin_eta_high)
         h_pass.SetTitle(h_title+' passing')
         h_fail.SetTitle(h_title+' failing')
         removeNegativeBins(h_pass)
@@ -65,7 +67,7 @@ def makePassFailHistograms(sample, bins, bindef, var ):
         h_pass.Write(h_pass.GetName())
         h_fail.Write(h_fail.GetName())
         if h_tmp_pass_alt:
-            h_pass_alt = h_tmp_pass_alt.ProjectionX(h_name+'_Pass_alt', ibin_pt, ibin_pt, ibin_eta, ibin_eta)
+            h_pass_alt = h_tmp_pass_alt.ProjectionX(h_name+'_Pass_alt', ibin_pt_low, ibin_pt_high, ibin_eta_low, ibin_eta_high)
             h_pass_alt.SetTitle(h_title+' passing alternate')
             removeNegativeBins(h_pass_alt)
             h_pass_alt.Write(h_pass_alt.GetName())
