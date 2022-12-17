@@ -106,16 +106,18 @@ def computeEffi( n1,n2,e1,e2):
     return effout
 
 
-def getAllEffi( info, bindef ):
+def getAllEffi(info, bindef, outputDirectory, saveCanvas=False):
+    # FIXME: this function often leads to crashes,
+    #        probably because of reading canvases but it is not clear
     effis = {}
-    #print("inside getAllEffi")
+    effis_canvas = {}
     binName = bindef["name"]
+    canvasesToGet = ["dataNominal", "dataAltSig", "mcAltSig"]
     for key in info.keys():
         value = info[key]
         if value is None or not os.path.isfile(value):
-            # print(f"{key} -> {value}: returning empty output")
             effis[key] = [-1,-1]
-            effis[f"canv_{key}"] = None
+            effis_canvas[f"canv_{key}"] = None
         else:
             rootfile = safeOpenFile(value, mode="read")
             # some customization
@@ -132,26 +134,15 @@ def getAllEffi( info, bindef ):
                 eP = float(ePc.value)
                 eF = float(eFc.value)
             else:
-                #print(key)
                 fitresP = safeGetObject(rootfile, f"{binName}_resP", detach=False)
                 fitresF = safeGetObject(rootfile, f"{binName}_resF", detach=False)
-                canv = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
-                #ROOT.SetOwnership(canv, False)
-                #effis[f"canv_{key}"] = copy.deepcopy(canv)
-                #ROOT.SetOwnership(effis[f"canv_{key}"], False)
-                effis[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
-                #effis[f"canv_{key}"] = canv
+                if key in canvasesToGet and saveCanvas:
+                    effis_canvas[f"canv_{key}"] = safeGetObject(rootfile, f"{binName}_Canv", detach=False)
+                    #effis_canvas[f"canv_{key}"] = copy.deepcopy(canv.Clone(f"{key}_{binName}"))
                 #rpPass = safeGetObject(rootfile, f"{binName}_rooplotP", detach=False)
                 #rpFail = safeGetObject(rootfile, f"{binName}_rooplotF", detach=False)
                 #effis[f"rpPass_{key}"] = copy.deepcopy(rpPass.Clone(f"rpP_{key}_{binName}"))
                 #effis[f"rpFail_{key}"] = copy.deepcopy(rpFail.Clone(f"rpF_{key}_{binName}"))
-                # effis[f"canv_{key}"] = []
-                # for ip,p in enumerate(canv.GetListOfPrimitives()):
-                #     # only get second and third pad with plots
-                #     if ip:
-                #         effis[f"canv_{key}"].append(copy.deepcopy(p.Clone(f"p{ip}_{key}_{binName}")))
-                #print(">>>>>")
-                #print(effis[f"canv_{key}"])
                 fitP = fitresP.floatParsFinal().find("nSigP")
                 fitF = fitresF.floatParsFinal().find("nSigF")
                 nP = fitP.getVal()
@@ -166,10 +157,120 @@ def getAllEffi( info, bindef ):
             # done with all cases
             effis[key] = computeEffi(nP,nF,eP,eF) +[nP, nF, eP, eF]
             rootfile.Close() # try also not closing the file
-    #print("Outside getAllEffi")
-    # for key,val in effis.items():
-    #     if val is None:
-    #         print(f"   ===>>> effis[{key}] is None")
+    ##
+    ##
+    ## Saving canvases here, let's test if this also leads to crashes
+    ##
+    # canvases = [f"canv_{x}" for x in canvasesToGet]
+    # padsFromCanvas = {}
+    # for c in canvases:
+    #     if c not in effis_canvas.keys() or effis_canvas[c] == None:                
+    #         print(f"Canvas {c} not found or not available")
+    #         return 0
+    #     else:
+    #         #padsFromCanvas[c] = list(effis[c])
+    #         ## the following was for when canvases where returned
+    #         if effis_canvas[c].ClassName() ==  "TCanvas":
+    #             padsFromCanvas[c] = [p for p in effis_canvas[c].GetListOfPrimitives()]
+    #             # print(padsFromCanvas[c])
+    #             for p in padsFromCanvas[c]:
+    #                 ROOT.SetOwnership(p, False)
+    #             #effis_canvas[c] = None
+    #             #ROOT.SetOwnership(effis_canvas[c], False)
+    #         else:
+    #             print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {bindef['name']}")
+    #             return 0
+
+    if not saveCanvas:
+        return effis
+
+    canv_all = ROOT.TCanvas(bindef['name'], bindef['name'], 1200, 1200)
+    canv_all.Divide(3,3)
+    canv_all.Draw()
+    canv_all.cd(0)
+    txt = ROOT.TLatex()
+    txt.SetTextFont(42)
+    txt.SetTextSize(0.03)
+    txt.SetNDC()
+    txt.DrawLatex(0.01, 0.97, '{n}'.format(n=bindef['name'].replace('_',' ').replace('To', '-').replace('probe ', '').replace('m','-').replace('pt','XX').replace('p','.').replace('XX','p_{T}')))
+    txt.SetTextSize(0.08)
+    ipad = 1
+    # for ip, p in enumerate(padsFromCanvas["canv_mcAltSig"]):
+    for ip, p in enumerate(effis_canvas["canv_mcAltSig"].GetListOfPrimitives()):
+        if not ip: continue
+        canv_all.cd(ipad)
+        newp = p.Clone(f"tmp_mcAltSig_{ip}")
+        newp.SetPad(0.05, 0.00, 0.95, 0.90)
+        newp.Draw()
+        ipad += 1
+    canv_all.cd(ipad)
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.00, 0.85, 'MC counting efficiency:')
+    txt.SetTextFont(42)
+    tmp = effis['mcNominal']
+    txt.DrawLatex(0.10, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+    txt.DrawLatex(0.10, 0.64, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.10, 0.53, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+    txt.SetTextFont(42)
+    tmp = effis['mcAltSig']
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
+    txt.SetTextFont(42)
+    txt.DrawLatex(0.10, 0.24, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+    txt.DrawLatex(0.10, 0.13, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.10, 0.02, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+    txt.SetTextFont(42)
+    ipad+=1
+    #for ip, p in enumerate(padsFromCanvas["canv_dataNominal"]):
+    for ip, p in enumerate(effis_canvas["canv_dataNominal"].GetListOfPrimitives()):
+        if not ip: continue
+        canv_all.cd(ipad)
+        newp = p.Clone(f"tmp_dataNominal_{ip}")
+        newp.SetPad(0.05, 0.00, 0.95, 0.90)
+        newp.Draw()
+        ipad += 1
+    canv_all.cd(ipad)
+    tmp = effis['dataNominal']
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.00, 0.65, 'data nominal:')
+    txt.SetTextFont(42)
+    txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+    txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+    txt.SetTextFont(42)
+    ipad += 1
+    #for ip, p in enumerate(padsFromCanvas["canv_dataAltSig"]):
+    for ip, p in enumerate(effis_canvas["canv_dataAltSig"].GetListOfPrimitives()):
+        if not ip: continue
+        canv_all.cd(ipad)
+        newp = p.Clone(f"tmp_dataAltSig_{ip}")
+        newp.SetPad(0.05, 0.00, 0.95, 0.90)
+        newp.Draw()
+        ipad+=1
+    canv_all.cd(ipad)
+    tmp = effis['dataAltSig']
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.00, 0.65, 'data alternative:')
+    txt.SetTextFont(42)
+    txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
+    txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
+    txt.SetTextFont(62)
+    txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
+    txt.SetTextFont(42)
+    canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=bindef['name']))
+    canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=bindef['name']))
+    # not sure if the following helps removing crashes
+    #canv_all = None
+    #canv_all.Clear()
+    #for c in effis_canvas:
+    #    c.Clear()
+    #effis_canvas = {}
+    ###
+    ###
+    # only return numbers and not canvases
     return effis
 
 

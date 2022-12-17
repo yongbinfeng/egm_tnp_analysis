@@ -578,7 +578,7 @@ if args.sumUp:
             
     #fOut = open( effFileName,'w')
     def parallel_sumUp(_bin):
-        effis = tnpRoot.getAllEffi( info, _bin )
+        effis = tnpRoot.getAllEffi( info, _bin, outputDirectory, saveCanvas=True)
         #print("effis =",effis)
         #print('this is _bin', _bin)        
         ### formatting assuming 2D bining -- to be fixed
@@ -616,121 +616,15 @@ if args.sumUp:
         #print(astr)
         fOut.write( astr + '\n' )
         fOut.close()
-        return 0 # currently the following leads to crashes, something with TPad and memory management between python and ROOT
-        canvases = ["canv_dataNominal", "canv_dataAltSig", "canv_mcAltSig"]
-        padsFromCanvas = {}
-        for c in canvases:
-            if c not in effis.keys() or effis[c] == None:                
-                print(f"Canvas {c} not found or not available")
-                return 0
-            else:
-                #padsFromCanvas[c] = list(effis[c])
-                ## the following was for when canvases where returned
-                if effis[c].ClassName() ==  "TCanvas":
-                    padsFromCanvas[c] = [p for p in effis[c].GetListOfPrimitives()]
-                    # print(padsFromCanvas[c])
-                    for p in padsFromCanvas[c]:
-                        ROOT.SetOwnership(p, False)
-                    #effis[c] = None
-                    #ROOT.SetOwnership(effis[c], False)
-                else:
-                    print(f"SOMETHING SCREWED UP WITH TCANVAS for bin {_bin['name']}")
-                    return 0
-
-        canv_all = ROOT.TCanvas(_bin['name'], _bin['name'], 1200, 1200)
-        canv_all.Divide(3,3)
-        canv_all.Draw()
-        canv_all.cd(0)
-        txt = ROOT.TLatex()
-        txt.SetTextFont(42)
-        txt.SetTextSize(0.03)
-        txt.SetNDC()
-        txt.DrawLatex(0.01, 0.97, '{n}'.format(n=_bin['name'].replace('_',' ').replace('To', '-').replace('probe ', '').replace('m','-').replace('pt','XX').replace('p','.').replace('XX','p_{T}')))
-        txt.SetTextSize(0.08)
-        ipad = 1
-        # if "canv_mcAltSig" not in effis:
-        #     print("WTF !!!")
-        # elif effis["canv_mcAltSig"] is None:
-        #     print("WAAAGH !!!" )            
-        # if effis["canv_mcAltSig"]:
-        #     mylist = effis["canv_mcAltSig"].GetListOfPrimitives()
-        #     print(f"{len(mylist)} {[x.GetName() for x in mylist]}")
-        #print(f"Printing canvas for {_bin['name']}")
-        for ip, p in enumerate(padsFromCanvas["canv_mcAltSig"]):
-            if not ip: continue
-            canv_all.cd(ipad)
-            p.SetPad(0.05, 0.00, 0.95, 0.90)
-            p.Draw()
-            ipad += 1
-        #ipad = 3
-        canv_all.cd(ipad)
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.00, 0.85, 'MC counting efficiency:')
-        txt.SetTextFont(42)
-        tmp = effis['mcNominal']
-        txt.DrawLatex(0.10, 0.75, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.64, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.53, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-        txt.SetTextFont(42)
-        tmp = effis['mcAltSig']
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.00, 0.35, 'MC fitted signal:')
-        txt.SetTextFont(42)
-        txt.DrawLatex(0.10, 0.24, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.13, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.02, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-        txt.SetTextFont(42)
-        ipad+=1
-        for ip, p in enumerate(padsFromCanvas["canv_dataNominal"]):
-            if not ip: continue
-            canv_all.cd(ipad)
-            p.SetPad(0.05, 0.00, 0.95, 0.90)
-            p.Draw()
-            ipad += 1
-        canv_all.cd(ipad)
-        tmp = effis['dataNominal']
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.00, 0.65, 'data nominal:')
-        txt.SetTextFont(42)
-        txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-        txt.SetTextFont(42)
-        ipad += 1
-        for ip, p in enumerate(padsFromCanvas["canv_dataAltSig"]):
-            if not ip: continue
-            canv_all.cd(ipad)
-            p.SetPad(0.05, 0.00, 0.95, 0.90)
-            p.Draw()
-            ipad+=1
-        canv_all.cd(ipad)
-        tmp = effis['dataAltSig']
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.00, 0.65, 'data alternative:')
-        txt.SetTextFont(42)
-        txt.DrawLatex(0.10, 0.54, 'passing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[2],ne=tmp[4]))
-        txt.DrawLatex(0.10, 0.43, 'failing: {n:.1f} #pm {ne:.1f}'.format(n=tmp[3],ne=tmp[5]))
-        txt.SetTextFont(62)
-        txt.DrawLatex(0.10, 0.32, 'efficiency: {e:.2f} #pm {ee:.2f} %'.format(e=tmp[0]*100., ee=tmp[1]*100.))
-        txt.SetTextFont(42)
-        #odllevel = ROOT.gErrorIgnoreLevel
-        #ROOT.gErrorIgnoreLevel = ROOT.kWarning
-        canv_all.SaveAs(outputDirectory+'/plots/{n}_all.pdf'.format(n=_bin['name']))
-        canv_all.SaveAs(outputDirectory+'/plots/{n}_all.png'.format(n=_bin['name']))
-        #ROOT.gErrorIgnoreLevel = odllevel
-        #for k in padsFromCanvas.keys():
-        #    for p in padsFromCanvas[k]:
-        #        p.Close()
-        #canv_all.Close()
         effis = {}
         
+    #odllevel = ROOT.gErrorIgnoreLevel
+    #ROOT.gErrorIgnoreLevel = ROOT.kWarning
     pool = Pool()
     pool.map(parallel_sumUp, tnpBins['bins'])
     #for thebin in tnpBins['bins']: 
     #    parallel_sumUp(thebin)
+    #ROOT.gErrorIgnoreLevel = odllevel
 
     lsfiles = []
     alltmpfiles = os.listdir(outputDirectory)

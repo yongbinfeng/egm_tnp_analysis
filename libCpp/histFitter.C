@@ -442,14 +442,14 @@ int tnpFitter::fits(const std::string& title) {
   pPass->SetTitle("passing probe");
   pFail->SetTitle("failing probe");
 
-  _work->data("hPass") ->plotOn( pPass );
-  _work->pdf(lastNamePassPDF.c_str())->plotOn( pPass, LineColor(kRed) );
-  _work->pdf(lastNamePassPDF.c_str())->plotOn( pPass, Components(bkgNamePass.c_str()),LineColor(kBlue),LineStyle(kDashed));
+  _work->data("hPass") ->plotOn( pPass, Name("data_pass") );
+  _work->pdf(lastNamePassPDF.c_str())->plotOn( pPass, LineColor(kRed), Name("model_pass") );
+  _work->pdf(lastNamePassPDF.c_str())->plotOn( pPass, Components(bkgNamePass.c_str()),LineColor(kBlue),LineStyle(kDashed), Name("bkg_pass"));
   _work->data("hPass") ->plotOn( pPass );
   
-  _work->data("hFail") ->plotOn( pFail );
-  _work->pdf(lastNameFailPDF.c_str())->plotOn( pFail, LineColor(kRed) );
-  _work->pdf(lastNameFailPDF.c_str())->plotOn( pFail, Components(bkgNameFail.c_str()),LineColor(kBlue),LineStyle(kDashed));
+  _work->data("hFail") ->plotOn( pFail, Name("data_fail") );
+  _work->pdf(lastNameFailPDF.c_str())->plotOn( pFail, LineColor(kRed), Name("model_fail") );
+  _work->pdf(lastNameFailPDF.c_str())->plotOn( pFail, Components(bkgNameFail.c_str()),LineColor(kBlue),LineStyle(kDashed),Name("bkg_fail"));
   _work->data("hFail") ->plotOn( pFail );
 
   std::string canvasName = _histname_base + "_Canv"; // TString::Format("%s_Canv",_histname_base.c_str()); 
