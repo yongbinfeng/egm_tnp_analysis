@@ -29,6 +29,8 @@ def runCommands(wp, era, inputMC, inputData, options):
     cmds.append(['python', ex, opt_e, opt_f, '--sumUp'                        ])
 
     for cmd in cmds:
+        if args.onlySumUp and "--sumUp" not in cmd:
+            continue
         if outdir:
             cmd.append(f"--outdir={outdir}")
         if options.useTrackerMuons:
@@ -41,18 +43,28 @@ def runCommands(wp, era, inputMC, inputData, options):
 working_points_global = {
     ## for global muons
     ##
-    # 'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_mc_vertexWeights1_oscharge1.root',
-    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_allWP_mass60to120_noTracking/tnp_reco_data_vertexWeights1_oscharge1.root'],
-    # 'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_mc_vertexWeights1_oscharge0.root',
-    #                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/newHisto_tracking_pt25to65_mass50to130_4ptbins/tnp_tracking_data_vertexWeights1_oscharge0.root'],
     'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_reco_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_reco_data_vertexWeights1_oscharge1.root'],
-    #'mu_reco_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity/tnp_reco_mc_vertexWeights1_oscharge1.root',
-    #                 '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity/tnp_reco_data_vertexWeights1_oscharge1.root'],
+    'mu_reco_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recoplus_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recoplus_data_vertexWeights1_oscharge1.root'],
+    'mu_reco_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominus_mc_vertexWeights1_oscharge1.root',
+                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominus_data_vertexWeights1_oscharge1.root'],
+    # 'mu_reco_minusodd': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominusodd_mc_vertexWeights1_oscharge1.root',
+    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominusodd_data_vertexWeights1_oscharge1.root'],
+    # 'mu_reco_minuseven': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominuseven_mc_vertexWeights1_oscharge1.root',
+    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_recominuseven_data_vertexWeights1_oscharge1.root'],
     'mu_tracking_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_mc_vertexWeights1_oscharge0.root',
                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_data_vertexWeights1_oscharge0.root'],
-    #'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idip_mc_vertexWeights1_oscharge1.root',
-    #                 '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idip_data_vertexWeights1_oscharge1.root'],
+    'mu_tracking_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_mc_vertexWeights1_oscharge0_tagChargeMinus.root',
+                             '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_data_vertexWeights1_oscharge0_tagChargeMinus.root'],
+    'mu_tracking_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_mc_vertexWeights1_oscharge0_tagChargePlus.root',
+                            '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_tracking_data_vertexWeights1_oscharge0_tagChargePlus.root'],
+    # 'mu_tracking_odd': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_trackingodd_mc_vertexWeights1_oscharge0.root',
+    #                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_trackingodd_data_vertexWeights1_oscharge0.root'],
+    # 'mu_tracking_even': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_trackingeven_mc_vertexWeights1_oscharge0.root',
+    #                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_trackingeven_data_vertexWeights1_oscharge0.root'],
+    'mu_idip_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idip_mc_vertexWeights1_oscharge1.root',
+                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idip_data_vertexWeights1_oscharge1.root'],
     'mu_idip_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idipplus_mc_vertexWeights1_oscharge1.root',
                      '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idipplus_data_vertexWeights1_oscharge1.root'],
     'mu_idip_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_idipminus_mc_vertexWeights1_oscharge1.root',
@@ -63,16 +75,10 @@ working_points_global = {
                          '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_triggerminus_data_vertexWeights1_oscharge1.root'],
     'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_iso_mc_vertexWeights1_oscharge1.root',
                     '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_iso_data_vertexWeights1_oscharge1.root'],
-    #'mu_iso_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_EvenEvents/tnp_iso_mc_vertexWeights1_oscharge1.root',
-    #                '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_EvenEvents/tnp_iso_data_vertexWeights1_oscharge1.root'],
-    # 'mu_iso_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_byCharge/tnp_isoplus_mc_vertexWeights1_oscharge1.root',
-    #                 '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_byCharge/tnp_isoplus_data_vertexWeights1_oscharge1.root'],
-    # 'mu_iso_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_byCharge/tnp_isominus_mc_vertexWeights1_oscharge1.root',
-    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_byCharge/tnp_isominus_data_vertexWeights1_oscharge1.root'],
-    # 'mu_iso_odd': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_OddEvents/tnp_iso_mc_vertexWeights1_oscharge1.root',
-    #                '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_OddEvents/tnp_iso_data_vertexWeights1_oscharge1.root'],
-    # 'mu_iso_even': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_EvenEvents/tnp_iso_mc_vertexWeights1_oscharge1.root',
-    #                  '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_EvenEvents/tnp_iso_data_vertexWeights1_oscharge1.root'],
+    'mu_iso_plus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isoplus_mc_vertexWeights1_oscharge1.root',
+                    '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isoplus_data_vertexWeights1_oscharge1.root'],
+    'mu_iso_minus': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isominus_mc_vertexWeights1_oscharge1.root',
+                    '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isominus_data_vertexWeights1_oscharge1.root'],
     'mu_isonotrig_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isonotrig_mc_vertexWeights1_oscharge1.root',
                           '/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_isonotrig_data_vertexWeights1_oscharge1.root'],
     'mu_veto_both': ['/home/m/mciprian/tnp/Steve_Marc_Raj/outputs/test_globalMuons_highPurity_XYZ_1orMoreValidHitsSA/tnp_veto_mc_vertexWeights1_oscharge1.root',
@@ -111,6 +117,8 @@ parser.add_argument('-s','--steps', default=None, nargs='*', type=str, choices=l
 parser.add_argument('-x','--exclude', default=None, nargs='*', type=str, choices=list([x.split("_")[1] for x in working_points_global.keys()]),
                     help='Default runs all working points, but can exclude some if needed')
 parser.add_argument('--useTrackerMuons', action='store_true'  , help = 'Measuring efficiencies specific for tracker muons (different tunings needed')
+parser.add_argument('--onlySumUp', action='store_true',
+                    help='Execute only the final command with --sumUp')
 args = parser.parse_args()
 
 tstart = time.time()
