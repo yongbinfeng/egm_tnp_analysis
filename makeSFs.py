@@ -21,8 +21,8 @@ resdir = args.inputdir[0]
 
 for ch in ['plus', 'minus', 'both']:
     for era in ['GtoH']:
-        #for tnp in ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig', 'veto']:
-        for tnp in ['reco', 'tracking']:
+        for tnp in ['reco', 'tracking', 'idip', 'trigger', 'iso', 'isonotrig']:
+        #for tnp in ['reco', 'tracking']:
             for fl in ['mu']:
                 if (ch in ["plus", "minus"] and tnp not in args.workinPointsByCharge): continue
                 if (ch in ["both"] and tnp in args.workinPointsByCharge): continue

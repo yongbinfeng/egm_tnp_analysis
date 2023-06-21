@@ -14,7 +14,9 @@
 
 # fi
 
-export PYTHONPATH=.:$PYTHONPATH
+#export PYTHONPATH=.:$PYTHONPATH
+# next line allows the setup to be run from anywhere, but will still use the location of the setup.sh file to set the python path
+export PYTHONPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ):$PYTHONPATH"
 
 #/data/shared/singularity/pythonrootdevf32.sif
 
@@ -28,5 +30,5 @@ export PYTHONPATH=.:$PYTHONPATH
 ## cmsrel CMSSW_11_2_0
 ## cd CMSSW_11_2_0
 ## cmsenv
-alias python=python3
-source /cvmfs/sft.cern.ch/lcg/views/LCG_99/x86_64-centos8-gcc10-opt/setup.sh
+#alias python=python3
+#source /cvmfs/sft.cern.ch/lcg/views/LCG_99/x86_64-centos8-gcc10-opt/setup.sh
