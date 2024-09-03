@@ -72,8 +72,10 @@ massbins, massmin, massmax = 60, 60, 120
 ## define the binning here, much easier...
 binning_eta = [round(-2.4+0.1*i,2) for i in range(49) ]
 #binning_eta = [round(-2.4+0.4*i,2) for i in range(13) ]
+binning_eta = [-2.4, -2.1, -1.8, -1.5, -1.2, -0.9, -0.6, -0.3, -0.15, 0.15, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4]
 
 binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
+binning_pt = [22, 40.0, 50, 13000]
 #binning_pt  = [24., 28., 32., 36., 40., 47., 55., 65.]
 
 typeflag = args.flag.split('_')[1]
@@ -84,7 +86,7 @@ if typeflag == 'tracking':
     #binning_pt  = [15., 25.,35.,45.,55.,65.,80.]
     #massbins, massmin, massmax = 100, 40, 140
     #binning_pt  = [55., 65.]
-    binning_pt  = [24., 35., 45., 55., 65.]  # [24., 65.]
+    #binning_pt  = [24., 35., 45., 55., 65.]  # [24., 65.]
     #massbins, massmin, massmax = 100, 50, 150
     massbins, massmin, massmax = 80, 50, 130
     binningDef = {
@@ -96,10 +98,10 @@ elif typeflag == 'reco':
     #binning_pt   = [24., 65.]
     #massbins, massmin, massmax = 52, 68, 120
     massbins, massmin, massmax = 60, 60, 120
-    if args.useTrackerMuons:
-        binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
-    else:
-        binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]
+    #if args.useTrackerMuons:
+    #    binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 65.]
+    #else:
+    #    binning_pt  = [24., 26., 30., 34., 38., 42., 46., 50., 55., 60., 65.]
     #binning_pt  = [24., 26., 28., 30., 32., 34., 36., 38., 40., 42., 44., 47., 50., 55., 60., 65.]
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
@@ -107,7 +109,7 @@ elif typeflag == 'reco':
     }
 
 elif typeflag == 'veto':
-    binning_pt = [(15. + 5.*i) for i in range(11)]
+    #binning_pt = [(15. + 5.*i) for i in range(11)]
     binningDef = {
         'eta' : {'var' : 'eta', 'type': 'float', 'bins': binning_eta},
         'pt'  : {'var' : 'pt' , 'type': 'float', 'bins': binning_pt }
@@ -322,7 +324,7 @@ if args.createHists:
         quit()
     this_binning_pt = [round(htest.GetYaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsY()+2) ]
     resTestPt = testBinning(binning_pt, this_binning_pt, "pt", typeflag, allowRebin=True)
-    this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 1) for i in range(1, htest.GetNbinsZ()+2) ]
+    this_binning_eta = [round(htest.GetZaxis().GetBinLowEdge(i), 2) for i in range(1, htest.GetNbinsZ()+2) ]
     resTestEta = testBinning(binning_eta, this_binning_eta, "eta", typeflag, allowRebin=True)
     ftest.Close()
     if resTestPt or resTestEta:
